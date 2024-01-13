@@ -6,6 +6,7 @@ apscheduler
 aria2p
 asyncio
 cloudscraper
+databases[aiosqlite]
 dnspython
 feedparser
 flask
@@ -16,13 +17,13 @@ google-auth-oauthlib
 gunicorn
 httpx
 lxml
-motor
+myjdapi
 natsort
 pillow
 psutil
 pycryptodome
-pymongo
 pyrogram
+pyrocon
 python-dotenv
 python-magic
 qbittorrent-api

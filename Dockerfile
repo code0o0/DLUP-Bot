@@ -1,4 +1,4 @@
-FROM anasty17/mltb:dev
+FROM sdd02/rmltg:dev
 
 WORKDIR /usr/src/app
 RUN chmod 777 /usr/src/app

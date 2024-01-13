@@ -53,7 +53,6 @@ from bot.helper.telegram_helper.message_utils import (
 )
 
 START = 0
-STATE = "view"
 handler_dict = {}
 default_values = {
     "AUTO_DELETE_MESSAGE_DURATION": 30,
@@ -70,13 +69,105 @@ default_values = {
 async def get_buttons(key=None, edit_type=None):
     buttons = ButtonMaker()
     if key is None:
-        buttons.ibutton("Config Variables", "botset var")
-        buttons.ibutton("Private Files", "botset private")
+        buttons.ibutton("Config Settings", "botset var")
         buttons.ibutton("Qbit Settings", "botset qbit")
         buttons.ibutton("Aria2c Settings", "botset aria")
-        buttons.ibutton("JDownloader Sync", "botset syncjd")
+        buttons.ibutton("Private Files", "botset private")
+        # buttons.ibutton("JDownloader Sync", "botset syncjd")
         buttons.ibutton("Close", "botset close")
         msg = "Bot Settings:"
+    elif key == "var":
+        for k in ["BotSettings", "DownloadSettings", "UploadSettings", "GdriveTools", "LeechSettings", "Additional"]:
+            buttons.ibutton(k, f"botset botvar {k}")
+        buttons.ibutton("Default", "botset resetvar")
+        buttons.ibutton("Back", "botset back")
+        buttons.ibutton("Close", "botset close")
+        msg = f"Config Config"
+    elif key == "private":
+        buttons.ibutton("Back", "botset back")
+        buttons.ibutton("Close", "botset close")
+        msg = """Send private file: config.env, token.pickle, rclone.conf, accounts.zip, list_drives.txt, cookies.txt, terabox.txt, .netrc or any other private file!
+To delete private file send only the file name as text message.
+Note: Changing .netrc will not take effect for aria2c until restart.
+Timeout: 60 sec"""
+    elif key == "aria":
+        msg = f"Aria2c Options | Page: {int(START/8)}"
+        for k in list(aria2_options.keys())[START : 8 + START]:
+            buttons.ibutton(k, f"botset ariavar {k}")
+            msg += f"\n<b>{k}</b>: <code>{aria2_options[k]}</code>"
+        buttons.ibutton("Add new key", "botset ariavar newkey")
+        buttons.ibutton("Back", "botset back")
+        buttons.ibutton("Close", "botset close")
+        for x in range(0, len(aria2_options), 8):
+            buttons.ibutton(f"{int(x/8)}", f"botset start aria {x}", position="footer")
+    elif key == "qbit":
+        msg = f"Qbittorrent Options | Page: {int(START/10)}"
+        qb_list = ['dl_limit', 'up_limit', 'max_connec', 'max_connec_per_torrent', 'disk_cache','disk_cache_ttl',
+                   'preallocate_all', 'dht', 'pex', 'lsd', 'encryption', 'anonymous_mode', 'proxy_type',
+                   'proxy_peer_connections', 'proxy_torrents_only', 'proxy_link']
+        for k in qb_list[START : 10 + START]:
+            buttons.ibutton(k, f"botset qbitvar {k}")
+            if k == "proxy_link":
+                if qbit_options["proxy_auth_enabled"]:
+                    proxy_link = f'{qbit_options["proxy_username"]}:{qbit_options["proxy_password"]}@\
+                        {qbit_options["proxy_ip"]}:{qbit_options["proxy_port"]}'
+                else:
+                    proxy_link = f'{qbit_options["proxy_ip"]}:{qbit_options["proxy_port"]}'
+                msg += f"\n<b>{k}</b>: <code>{proxy_link}</code>"
+            else:
+                msg += f"\n<b>{k}</b>: <code>{qbit_options[k]}</code>"
+        buttons.ibutton("Back", "botset back")
+        buttons.ibutton("Close", "botset close")
+        for x in range(0, qb_list, 10):
+            buttons.ibutton(f"{int(x/10)}", f"botset start qbit {x}", position="footer")
+    
+    
+
+
+    
+    
+    elif key == 'botvar':
+        if edit_type == 'BotSettings':
+            msg = "<b>Bot Settings</b>\n"
+            for k in ["STATUS_UPDATE_INTERVAL", "AUTO_DELETE_MESSAGE_DURATION", "STATUS_LIMIT", "QUEUE_ALL", 
+                      "QUEUE_DOWNLOAD", "QUEUE_UPLOAD", "USER_SESSION_STRING", "CMD_SUFFIX", "UPSTREAM_REPO", 
+                      "UPSTREAM_BRANCH"]:
+                msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
+                buttons.ibutton(k, f"botset botvar BotSettings {k}")
+        elif edit_type == 'DownloadSettings':
+            msg = "<b>Download Settings</b>\n"
+            for k in ["BASE_URL", "BASE_URL_PORT", "WEB_PINCODE", "INCOMPLETE_TASK_NOTIFIER", "YT_DLP_OPTIONS",
+                      "TORRENT_TIMEOUT"]:
+                msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
+                buttons.ibutton(k, f"botset botvar DownloadSettings {k}")
+        elif edit_type == 'UploadSettings':
+            msg = "<b>Upload Settings</b>\n"
+            for k in ["DEFAULT_UPLOAD", "EXTENSION_FILTER", "USE_SERVICE_ACCOUNTS"]:
+                msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
+                buttons.ibutton(k, f"botset botvar UploadSettings {k}")
+        elif edit_type == 'GdriveTools':
+            msg = "<b>Gdrive Tools</b>\n"
+            for k in ["GDRIVE_ID", "STOP_DUPLICATE", "IS_TEAM_DRIVE", "INDEX_URL"]:
+                msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
+                buttons.ibutton(k, f"botset botvar GdriveTools {k}")
+        elif edit_type == 'LeechSettings':
+            msg = "<b>Leech Settings</b>\n"
+            for k in ["MAX_SPLIT_SIZE", "LEECH_SPLIT_SIZE", "AS_DOCUMENT", "EQUAL_SPLITS", "MEDIA_GROUP",
+                      "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX", "LEECH_DUMP_CHAT"]:
+                msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
+                buttons.ibutton(k, f"botset botvar LeechSettings {k}")
+        elif edit_type == 'Additional':
+            msg = "<b>Additional</b>\n"
+            for k in ["JD_EMAIL", "JD_PASS", "JD_SYNC", "SEARCH_PLUGINS", "SEARCH_API_LINK", "RCLONE_PATH", 
+                      "RCLONE_FLAGS", "RCLONE_SERVE_URL", "RCLONE_SERVE_PORT", "RCLONE_SERVE_USER", "RCLONE_SERVE_PASS"]:
+                if k != "JD_SYNC":
+                    msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
+                buttons.ibutton(k, f"botset botvar Additional {k}")
+        buttons.ibutton("Back", "botset back var")
+        buttons.ibutton("Close", "botset close")
+
+
+
     elif edit_type is not None:
         if edit_type == "botvar":
             msg = ""
@@ -84,19 +175,6 @@ async def get_buttons(key=None, edit_type=None):
             if key not in ["TELEGRAM_HASH", "TELEGRAM_API", "OWNER_ID", "BOT_TOKEN"]:
                 buttons.ibutton("Default", f"botset resetvar {key}")
             buttons.ibutton("Close", "botset close")
-            if key in [
-                "SUDO_USERS",
-                "CMD_SUFFIX",
-                "OWNER_ID",
-                "USER_SESSION_STRING",
-                "TELEGRAM_HASH",
-                "TELEGRAM_API",
-                "AUTHORIZED_CHATS",
-                "DATABASE_URL",
-                "BOT_TOKEN",
-                "DOWNLOAD_DIR",
-            ]:
-                msg += "Restart required for this edit to take effect!\n\n"
             msg += f"Send a valid value for {key}. Current value is '{config_dict[key]}'. Timeout: 60 sec"
         elif edit_type == "ariavar":
             buttons.ibutton("Back", "botset aria")
@@ -114,50 +192,9 @@ async def get_buttons(key=None, edit_type=None):
             buttons.ibutton("Empty String", f"botset emptyqbit {key}")
             buttons.ibutton("Close", "botset close")
             msg = f"Send a valid value for {key}. Current value is '{qbit_options[key]}'. Timeout: 60 sec"
-    elif key == "var":
-        for k in list(config_dict.keys())[START : 10 + START]:
-            buttons.ibutton(k, f"botset botvar {k}")
-        if STATE == "view":
-            buttons.ibutton("Edit", "botset edit var")
-        else:
-            buttons.ibutton("View", "botset view var")
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
-        for x in range(0, len(config_dict), 10):
-            buttons.ibutton(f"{int(x/10)}", f"botset start var {x}", position="footer")
-        msg = f"Config Variables | Page: {int(START/10)} | State: {STATE}"
-    elif key == "private":
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
-        msg = """Send private file: config.env, token.pickle, rclone.conf, accounts.zip, list_drives.txt, cookies.txt, terabox.txt, .netrc or any other private file!
-To delete private file send only the file name as text message.
-Note: Changing .netrc will not take effect for aria2c until restart.
-Timeout: 60 sec"""
-    elif key == "aria":
-        for k in list(aria2_options.keys())[START : 10 + START]:
-            buttons.ibutton(k, f"botset ariavar {k}")
-        if STATE == "view":
-            buttons.ibutton("Edit", "botset edit aria")
-        else:
-            buttons.ibutton("View", "botset view aria")
-        buttons.ibutton("Add new key", "botset ariavar newkey")
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
-        for x in range(0, len(aria2_options), 10):
-            buttons.ibutton(f"{int(x/10)}", f"botset start aria {x}", position="footer")
-        msg = f"Aria2c Options | Page: {int(START/10)} | State: {STATE}"
-    elif key == "qbit":
-        for k in list(qbit_options.keys())[START : 10 + START]:
-            buttons.ibutton(k, f"botset qbitvar {k}")
-        if STATE == "view":
-            buttons.ibutton("Edit", "botset edit qbit")
-        else:
-            buttons.ibutton("View", "botset view qbit")
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
-        for x in range(0, len(qbit_options), 10):
-            buttons.ibutton(f"{int(x/10)}", f"botset start qbit {x}", position="footer")
-        msg = f"Qbittorrent Options | Page: {int(START/10)} | State: {STATE}"
+
+
+
     button = buttons.build_menu(1) if key is None else buttons.build_menu(2)
     return msg, button
 
@@ -564,65 +601,24 @@ async def edit_bot_settings(client, query):
         pfunc = partial(update_private_file, pre_message=message)
         rfunc = partial(update_buttons, message)
         await event_handler(client, query, pfunc, rfunc, True)
-    elif data[1] == "botvar" and STATE == "edit":
+    elif data[1] == "botvar":
         await query.answer()
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_variable, pre_message=message, key=data[2])
         rfunc = partial(update_buttons, message, "var")
         await event_handler(client, query, pfunc, rfunc)
-    elif data[1] == "botvar" and STATE == "view":
-        value = config_dict[data[2]]
-        if len(str(value)) > 200:
-            await query.answer()
-            with BytesIO(str.encode(value)) as out_file:
-                out_file.name = f"{data[2]}.txt"
-                await sendFile(message, out_file)
-            return
-        elif value == "":
-            value = None
-        await query.answer(f"{value}", show_alert=True)
-    elif data[1] == "ariavar" and (STATE == "edit" or data[2] == "newkey"):
+    elif data[1] == "ariavar" and data[2] == "newkey":
         await query.answer()
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_aria, pre_message=message, key=data[2])
         rfunc = partial(update_buttons, message, "aria")
         await event_handler(client, query, pfunc, rfunc)
-    elif data[1] == "ariavar" and STATE == "view":
-        value = aria2_options[data[2]]
-        if len(str(value)) > 200:
-            await query.answer()
-            with BytesIO(str.encode(value)) as out_file:
-                out_file.name = f"{data[2]}.txt"
-                await sendFile(message, out_file)
-            return
-        elif value == "":
-            value = None
-        await query.answer(f"{value}", show_alert=True)
-    elif data[1] == "qbitvar" and STATE == "edit":
+    elif data[1] == "qbitvar":
         await query.answer()
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_qbit, pre_message=message, key=data[2])
         rfunc = partial(update_buttons, message, "var")
         await event_handler(client, query, pfunc, rfunc)
-    elif data[1] == "qbitvar" and STATE == "view":
-        value = qbit_options[data[2]]
-        if len(str(value)) > 200:
-            await query.answer()
-            with BytesIO(str.encode(value)) as out_file:
-                out_file.name = f"{data[2]}.txt"
-                await sendFile(message, out_file)
-            return
-        elif value == "":
-            value = None
-        await query.answer(f"{value}", show_alert=True)
-    elif data[1] == "edit":
-        await query.answer()
-        globals()["STATE"] = "edit"
-        await update_buttons(message, data[2])
-    elif data[1] == "view":
-        await query.answer()
-        globals()["STATE"] = "view"
-        await update_buttons(message, data[2])
     elif data[1] == "start":
         await query.answer()
         if START != int(data[3]):
@@ -658,110 +654,21 @@ async def bot_settings(_, message):
     await sendMessage(message, msg, button)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 async def load_config():
-    BOT_TOKEN = environ.get("BOT_TOKEN", "")
-    if len(BOT_TOKEN) == 0:
-        BOT_TOKEN = config_dict["BOT_TOKEN"]
-
-    TELEGRAM_API = environ.get("TELEGRAM_API", "")
-    if len(TELEGRAM_API) == 0:
-        TELEGRAM_API = config_dict["TELEGRAM_API"]
-    else:
-        TELEGRAM_API = int(TELEGRAM_API)
-
-    TELEGRAM_HASH = environ.get("TELEGRAM_HASH", "")
-    if len(TELEGRAM_HASH) == 0:
-        TELEGRAM_HASH = config_dict["TELEGRAM_HASH"]
-
-    OWNER_ID = environ.get("OWNER_ID", "")
-    OWNER_ID = config_dict["OWNER_ID"] if len(OWNER_ID) == 0 else int(OWNER_ID)
-
-    DATABASE_URL = environ.get("DATABASE_URL", "")
-    if len(DATABASE_URL) == 0:
-        DATABASE_URL = ""
-
-    DOWNLOAD_DIR = environ.get("DOWNLOAD_DIR", "")
-    if len(DOWNLOAD_DIR) == 0:
-        DOWNLOAD_DIR = "/usr/src/app/downloads/"
-    elif not DOWNLOAD_DIR.endswith("/"):
-        DOWNLOAD_DIR = f"{DOWNLOAD_DIR}/"
-
-    GDRIVE_ID = environ.get("GDRIVE_ID", "")
-    if len(GDRIVE_ID) == 0:
-        GDRIVE_ID = ""
-
-    RCLONE_PATH = environ.get("RCLONE_PATH", "")
-    if len(RCLONE_PATH) == 0:
-        RCLONE_PATH = ""
-
-    DEFAULT_UPLOAD = environ.get("DEFAULT_UPLOAD", "")
-    if DEFAULT_UPLOAD != "rc":
-        DEFAULT_UPLOAD = "gd"
-
-    RCLONE_FLAGS = environ.get("RCLONE_FLAGS", "")
-    if len(RCLONE_FLAGS) == 0:
-        RCLONE_FLAGS = ""
-
-    AUTHORIZED_CHATS = environ.get("AUTHORIZED_CHATS", "")
-    if len(AUTHORIZED_CHATS) != 0:
-        aid = AUTHORIZED_CHATS.split()
-        for id_ in aid:
-            user_data[int(id_.strip())] = {"is_auth": True}
-
-    SUDO_USERS = environ.get("SUDO_USERS", "")
-    if len(SUDO_USERS) != 0:
-        aid = SUDO_USERS.split()
-        for id_ in aid:
-            user_data[int(id_.strip())] = {"is_sudo": True}
-
-    EXTENSION_FILTER = environ.get("EXTENSION_FILTER", "")
-    if len(EXTENSION_FILTER) > 0:
-        fx = EXTENSION_FILTER.split()
-        GLOBAL_EXTENSION_FILTER.clear()
-        GLOBAL_EXTENSION_FILTER.extend(["aria2", "!qB"])
-        for x in fx:
-            if x.strip().startswith("."):
-                x = x.lstrip(".")
-            GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
-
-    JD_EMAIL = environ.get("JD_EMAIL", "")
-    JD_PASS = environ.get("JD_PASS", "")
-    if len(JD_EMAIL) == 0 or len(JD_PASS) == 0:
-        JD_EMAIL = ""
-        JD_PASS = ""
-
-    FILELION_API = environ.get("FILELION_API", "")
-    if len(FILELION_API) == 0:
-        FILELION_API = ""
-
-    STREAMWISH_API = environ.get("STREAMWISH_API", "")
-    if len(STREAMWISH_API) == 0:
-        STREAMWISH_API = ""
-
-    INDEX_URL = environ.get("INDEX_URL", "").rstrip("/")
-    if len(INDEX_URL) == 0:
-        INDEX_URL = ""
-
-    SEARCH_API_LINK = environ.get("SEARCH_API_LINK", "").rstrip("/")
-    if len(SEARCH_API_LINK) == 0:
-        SEARCH_API_LINK = ""
-
-    LEECH_FILENAME_PREFIX = environ.get("LEECH_FILENAME_PREFIX", "")
-    if len(LEECH_FILENAME_PREFIX) == 0:
-        LEECH_FILENAME_PREFIX = ""
-
-    SEARCH_PLUGINS = environ.get("SEARCH_PLUGINS", "")
-    if len(SEARCH_PLUGINS) == 0:
-        SEARCH_PLUGINS = ""
-
-    MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
-
-    LEECH_SPLIT_SIZE = environ.get("LEECH_SPLIT_SIZE", "")
-    if len(LEECH_SPLIT_SIZE) == 0 or int(LEECH_SPLIT_SIZE) > MAX_SPLIT_SIZE:
-        LEECH_SPLIT_SIZE = MAX_SPLIT_SIZE
-    else:
-        LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE)
-
+    #BOT
     STATUS_UPDATE_INTERVAL = environ.get("STATUS_UPDATE_INTERVAL", "")
     if len(STATUS_UPDATE_INTERVAL) == 0:
         STATUS_UPDATE_INTERVAL = 10
@@ -773,40 +680,47 @@ async def load_config():
             Intervals["status"][key] = setInterval(
                 STATUS_UPDATE_INTERVAL, update_status_message, key
             )
-
     AUTO_DELETE_MESSAGE_DURATION = environ.get("AUTO_DELETE_MESSAGE_DURATION", "")
     if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
         AUTO_DELETE_MESSAGE_DURATION = 30
     else:
         AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
-
+    STATUS_LIMIT = environ.get("STATUS_LIMIT", "")
+    STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+    QUEUE_ALL = environ.get("QUEUE_ALL", "")
+    QUEUE_ALL = "" if len(QUEUE_ALL) == 0 else int(QUEUE_ALL)
+    QUEUE_DOWNLOAD = environ.get("QUEUE_DOWNLOAD", "")
+    QUEUE_DOWNLOAD = "" if len(QUEUE_DOWNLOAD) == 0 else int(QUEUE_DOWNLOAD)
+    QUEUE_UPLOAD = environ.get("QUEUE_UPLOAD", "")
+    QUEUE_UPLOAD = "" if len(QUEUE_UPLOAD) == 0 else int(QUEUE_UPLOAD)
+    USER_SESSION_STRING = environ.get("USER_SESSION_STRING", "")
+    CMD_SUFFIX = environ.get("CMD_SUFFIX", "")
+    UPSTREAM_REPO = environ.get("UPSTREAM_REPO", "")
+    if len(UPSTREAM_REPO) == 0:
+        UPSTREAM_REPO = ""
+    UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH", "")
+    if len(UPSTREAM_BRANCH) == 0:
+        UPSTREAM_BRANCH = "master"
+    #DOWNLOAD
+    BASE_URL_PORT = environ.get("BASE_URL_PORT", "")
+    BASE_URL_PORT = 80 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
+    await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
+    BASE_URL = environ.get("BASE_URL", "").rstrip("/")
+    if len(BASE_URL) == 0:
+        BASE_URL = ""
+    else:
+        await create_subprocess_shell(
+            f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent"
+        )
+    WEB_PINCODE = environ.get("WEB_PINCODE", "")
+    WEB_PINCODE = WEB_PINCODE.lower() == "true"
+    INCOMPLETE_TASK_NOTIFIER = environ.get("INCOMPLETE_TASK_NOTIFIER", "")
+    INCOMPLETE_TASK_NOTIFIER = INCOMPLETE_TASK_NOTIFIER.lower() == "true"
+    if not INCOMPLETE_TASK_NOTIFIER and DATABASE_URL:
+        await DbManger().trunc_table("tasks")
     YT_DLP_OPTIONS = environ.get("YT_DLP_OPTIONS", "")
     if len(YT_DLP_OPTIONS) == 0:
         YT_DLP_OPTIONS = ""
-
-    SEARCH_LIMIT = environ.get("SEARCH_LIMIT", "")
-    SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
-
-    LEECH_DUMP_CHAT = environ.get("LEECH_DUMP_CHAT", "")
-    LEECH_DUMP_CHAT = "" if len(LEECH_DUMP_CHAT) == 0 else LEECH_DUMP_CHAT
-    if LEECH_DUMP_CHAT.isdigit() or LEECH_DUMP_CHAT.startswith("-"):
-        LEECH_DUMP_CHAT = int(LEECH_DUMP_CHAT)
-
-    STATUS_LIMIT = environ.get("STATUS_LIMIT", "")
-    STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
-
-    RSS_CHAT = environ.get("RSS_CHAT", "")
-    RSS_CHAT = "" if len(RSS_CHAT) == 0 else RSS_CHAT
-    if RSS_CHAT.isdigit() or RSS_CHAT.startswith("-"):
-        RSS_CHAT = int(RSS_CHAT)
-
-    RSS_DELAY = environ.get("RSS_DELAY", "")
-    RSS_DELAY = 600 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
-
-    CMD_SUFFIX = environ.get("CMD_SUFFIX", "")
-
-    USER_SESSION_STRING = environ.get("USER_SESSION_STRING", "")
-
     TORRENT_TIMEOUT = environ.get("TORRENT_TIMEOUT", "")
     downloads = aria2.get_downloads()
     if len(TORRENT_TIMEOUT) == 0:
@@ -820,9 +734,6 @@ async def load_config():
                     )
                 except Exception as e:
                     LOGGER.error(e)
-        aria2_options["bt-stop-timeout"] = "0"
-        if DATABASE_URL:
-            await DbManger().update_aria2("bt-stop-timeout", "0")
         TORRENT_TIMEOUT = ""
     else:
         for download in downloads:
@@ -835,93 +746,107 @@ async def load_config():
                     )
                 except Exception as e:
                     LOGGER.error(e)
-        aria2_options["bt-stop-timeout"] = TORRENT_TIMEOUT
-        if DATABASE_URL:
-            await DbManger().update_aria2("bt-stop-timeout", TORRENT_TIMEOUT)
         TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
-
-    QUEUE_ALL = environ.get("QUEUE_ALL", "")
-    QUEUE_ALL = "" if len(QUEUE_ALL) == 0 else int(QUEUE_ALL)
-
-    QUEUE_DOWNLOAD = environ.get("QUEUE_DOWNLOAD", "")
-    QUEUE_DOWNLOAD = "" if len(QUEUE_DOWNLOAD) == 0 else int(QUEUE_DOWNLOAD)
-
-    QUEUE_UPLOAD = environ.get("QUEUE_UPLOAD", "")
-    QUEUE_UPLOAD = "" if len(QUEUE_UPLOAD) == 0 else int(QUEUE_UPLOAD)
-
-    INCOMPLETE_TASK_NOTIFIER = environ.get("INCOMPLETE_TASK_NOTIFIER", "")
-    INCOMPLETE_TASK_NOTIFIER = INCOMPLETE_TASK_NOTIFIER.lower() == "true"
-    if not INCOMPLETE_TASK_NOTIFIER and DATABASE_URL:
-        await DbManger().trunc_table("tasks")
-
-    STOP_DUPLICATE = environ.get("STOP_DUPLICATE", "")
-    STOP_DUPLICATE = STOP_DUPLICATE.lower() == "true"
-
-    IS_TEAM_DRIVE = environ.get("IS_TEAM_DRIVE", "")
-    IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == "true"
-
+    #UPLOAD
+    DEFAULT_UPLOAD = environ.get("DEFAULT_UPLOAD", "")
+    if DEFAULT_UPLOAD != "rc":
+        DEFAULT_UPLOAD = "gd"
+    EXTENSION_FILTER = environ.get("EXTENSION_FILTER", "")
+    if len(EXTENSION_FILTER) > 0:
+        fx = EXTENSION_FILTER.split()
+        GLOBAL_EXTENSION_FILTER.clear()
+        GLOBAL_EXTENSION_FILTER.extend(["aria2", "!qB"])
+        for x in fx:
+            if x.strip().startswith("."):
+                x = x.lstrip(".")
+            GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
     USE_SERVICE_ACCOUNTS = environ.get("USE_SERVICE_ACCOUNTS", "")
     USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == "true"
-
-    WEB_PINCODE = environ.get("WEB_PINCODE", "")
-    WEB_PINCODE = WEB_PINCODE.lower() == "true"
-
-    AS_DOCUMENT = environ.get("AS_DOCUMENT", "")
-    AS_DOCUMENT = AS_DOCUMENT.lower() == "true"
-
-    EQUAL_SPLITS = environ.get("EQUAL_SPLITS", "")
-    EQUAL_SPLITS = EQUAL_SPLITS.lower() == "true"
-
-    MEDIA_GROUP = environ.get("MEDIA_GROUP", "")
-    MEDIA_GROUP = MEDIA_GROUP.lower() == "true"
-
-    USER_TRANSMISSION = environ.get("USER_TRANSMISSION", "")
-    USER_TRANSMISSION = USER_TRANSMISSION.lower() == "true" and IS_PREMIUM_USER
-
-    BASE_URL_PORT = environ.get("BASE_URL_PORT", "")
-    BASE_URL_PORT = 80 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
-
-    RCLONE_SERVE_URL = environ.get("RCLONE_SERVE_URL", "")
+    # GDrive Tools
+    GDRIVE_ID = environ.get("GDRIVE_ID", "")
+    if len(GDRIVE_ID) == 0:
+        GDRIVE_ID = ""
+    STOP_DUPLICATE = environ.get("STOP_DUPLICATE", "")
+    STOP_DUPLICATE = STOP_DUPLICATE.lower() == "true"
+    IS_TEAM_DRIVE = environ.get("IS_TEAM_DRIVE", "")
+    IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == "true"
+    INDEX_URL = environ.get("INDEX_URL", "").rstrip("/")
+    if len(INDEX_URL) == 0:
+        INDEX_URL = ""
+    # Rclone
+    RCLONE_PATH = environ.get("RCLONE_PATH", "")
+    if len(RCLONE_PATH) == 0:
+        RCLONE_PATH = ""
+    RCLONE_FLAGS = environ.get("RCLONE_FLAGS", "")
+    if len(RCLONE_FLAGS) == 0:
+        RCLONE_FLAGS = ""
+    RCLONE_SERVE_URL = environ.get("RCLONE_SERVE_URL", "").rstrip("/")
     if len(RCLONE_SERVE_URL) == 0:
         RCLONE_SERVE_URL = ""
-
     RCLONE_SERVE_PORT = environ.get("RCLONE_SERVE_PORT", "")
     RCLONE_SERVE_PORT = 8080 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
-
     RCLONE_SERVE_USER = environ.get("RCLONE_SERVE_USER", "")
     if len(RCLONE_SERVE_USER) == 0:
         RCLONE_SERVE_USER = ""
-
     RCLONE_SERVE_PASS = environ.get("RCLONE_SERVE_PASS", "")
     if len(RCLONE_SERVE_PASS) == 0:
         RCLONE_SERVE_PASS = ""
-
-    await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
-    BASE_URL = environ.get("BASE_URL", "").rstrip("/")
-    if len(BASE_URL) == 0:
-        BASE_URL = ""
+    # Leech
+    MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
+    LEECH_SPLIT_SIZE = environ.get("LEECH_SPLIT_SIZE", "")
+    if len(LEECH_SPLIT_SIZE) == 0 or int(LEECH_SPLIT_SIZE) > MAX_SPLIT_SIZE:
+        LEECH_SPLIT_SIZE = MAX_SPLIT_SIZE
     else:
-        await create_subprocess_shell(
-            f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent"
-        )
-
-    UPSTREAM_REPO = environ.get("UPSTREAM_REPO", "")
-    if len(UPSTREAM_REPO) == 0:
-        UPSTREAM_REPO = ""
-
-    UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH", "")
-    if len(UPSTREAM_BRANCH) == 0:
-        UPSTREAM_BRANCH = "master"
+        LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE)
+    AS_DOCUMENT = environ.get("AS_DOCUMENT", "")
+    AS_DOCUMENT = AS_DOCUMENT.lower() == "true"
+    EQUAL_SPLITS = environ.get("EQUAL_SPLITS", "")
+    EQUAL_SPLITS = EQUAL_SPLITS.lower() == "true"
+    MEDIA_GROUP = environ.get("MEDIA_GROUP", "")
+    MEDIA_GROUP = MEDIA_GROUP.lower() == "true"
+    USER_TRANSMISSION = environ.get("USER_TRANSMISSION", "")
+    USER_TRANSMISSION = USER_TRANSMISSION.lower() == "true" and IS_PREMIUM_USER
+    LEECH_FILENAME_PREFIX = environ.get("LEECH_FILENAME_PREFIX", "")
+    if len(LEECH_FILENAME_PREFIX) == 0:
+        LEECH_FILENAME_PREFIX = ""
+    LEECH_DUMP_CHAT = environ.get("LEECH_DUMP_CHAT", "")
+    LEECH_DUMP_CHAT = "" if len(LEECH_DUMP_CHAT) == 0 else LEECH_DUMP_CHAT
+    if LEECH_DUMP_CHAT.isdigit() or LEECH_DUMP_CHAT.startswith("-"):
+        LEECH_DUMP_CHAT = int(LEECH_DUMP_CHAT)
+    # Additional
+    JD_EMAIL = environ.get("JD_EMAIL", "")
+    JD_PASS = environ.get("JD_PASS", "")
+    if len(JD_EMAIL) == 0 or len(JD_PASS) == 0:
+        JD_EMAIL = ""
+        JD_PASS = ""
+    FILELION_API = environ.get("FILELION_API", "")
+    if len(FILELION_API) == 0:
+        FILELION_API = ""
+    STREAMWISH_API = environ.get("STREAMWISH_API", "")
+    if len(STREAMWISH_API) == 0:
+        STREAMWISH_API = ""
+    RSS_CHAT = environ.get("RSS_CHAT", "")
+    RSS_CHAT = "" if len(RSS_CHAT) == 0 else RSS_CHAT
+    if RSS_CHAT.isdigit() or RSS_CHAT.startswith("-"):
+        RSS_CHAT = int(RSS_CHAT)
+    RSS_DELAY = environ.get("RSS_DELAY", "")
+    RSS_DELAY = 600 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
+    SEARCH_API_LINK = environ.get("SEARCH_API_LINK", "").rstrip("/")
+    if len(SEARCH_API_LINK) == 0:
+        SEARCH_API_LINK = ""
+    SEARCH_LIMIT = environ.get("SEARCH_LIMIT", "")
+    SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
+    SEARCH_PLUGINS = environ.get("SEARCH_PLUGINS", "")
+    if len(SEARCH_PLUGINS) == 0:
+        SEARCH_PLUGINS = ""
 
     DRIVES_IDS.clear()
     DRIVES_NAMES.clear()
     INDEX_URLS.clear()
-
     if GDRIVE_ID:
         DRIVES_NAMES.append("Main")
         DRIVES_IDS.append(GDRIVE_ID)
         INDEX_URLS.append(INDEX_URL)
-
     if await aiopath.exists("list_drives.txt"):
         async with aiopen("list_drives.txt", "r+") as f:
             lines = await f.readlines()
@@ -933,65 +858,56 @@ async def load_config():
                     INDEX_URLS.append(temp[2])
                 else:
                     INDEX_URLS.append("")
-
     config_dict.update(
         {
-            "AS_DOCUMENT": AS_DOCUMENT,
-            "AUTHORIZED_CHATS": AUTHORIZED_CHATS,
-            "AUTO_DELETE_MESSAGE_DURATION": AUTO_DELETE_MESSAGE_DURATION,
-            "BASE_URL": BASE_URL,
-            "BASE_URL_PORT": BASE_URL_PORT,
-            "BOT_TOKEN": BOT_TOKEN,
-            "CMD_SUFFIX": CMD_SUFFIX,
-            "DATABASE_URL": DATABASE_URL,
-            "DEFAULT_UPLOAD": DEFAULT_UPLOAD,
-            "DOWNLOAD_DIR": DOWNLOAD_DIR,
-            "EQUAL_SPLITS": EQUAL_SPLITS,
-            "EXTENSION_FILTER": EXTENSION_FILTER,
-            "FILELION_API": FILELION_API,
-            "GDRIVE_ID": GDRIVE_ID,
-            "INCOMPLETE_TASK_NOTIFIER": INCOMPLETE_TASK_NOTIFIER,
-            "INDEX_URL": INDEX_URL,
-            "IS_TEAM_DRIVE": IS_TEAM_DRIVE,
-            "JD_EMAIL": JD_EMAIL,
-            "JD_PASS": JD_PASS,
-            "LEECH_DUMP_CHAT": LEECH_DUMP_CHAT,
-            "LEECH_FILENAME_PREFIX": LEECH_FILENAME_PREFIX,
-            "LEECH_SPLIT_SIZE": LEECH_SPLIT_SIZE,
-            "MEDIA_GROUP": MEDIA_GROUP,
-            "OWNER_ID": OWNER_ID,
-            "QUEUE_ALL": QUEUE_ALL,
-            "QUEUE_DOWNLOAD": QUEUE_DOWNLOAD,
-            "QUEUE_UPLOAD": QUEUE_UPLOAD,
-            "RCLONE_FLAGS": RCLONE_FLAGS,
-            "RCLONE_PATH": RCLONE_PATH,
-            "RCLONE_SERVE_URL": RCLONE_SERVE_URL,
-            "RCLONE_SERVE_USER": RCLONE_SERVE_USER,
-            "RCLONE_SERVE_PASS": RCLONE_SERVE_PASS,
-            "RCLONE_SERVE_PORT": RCLONE_SERVE_PORT,
-            "RSS_CHAT": RSS_CHAT,
-            "RSS_DELAY": RSS_DELAY,
-            "SEARCH_API_LINK": SEARCH_API_LINK,
-            "SEARCH_LIMIT": SEARCH_LIMIT,
-            "SEARCH_PLUGINS": SEARCH_PLUGINS,
-            "STATUS_LIMIT": STATUS_LIMIT,
-            "STATUS_UPDATE_INTERVAL": STATUS_UPDATE_INTERVAL,
-            "STOP_DUPLICATE": STOP_DUPLICATE,
-            "STREAMWISH_API": STREAMWISH_API,
-            "SUDO_USERS": SUDO_USERS,
-            "TELEGRAM_API": TELEGRAM_API,
-            "TELEGRAM_HASH": TELEGRAM_HASH,
-            "TORRENT_TIMEOUT": TORRENT_TIMEOUT,
-            "USER_TRANSMISSION": USER_TRANSMISSION,
-            "UPSTREAM_REPO": UPSTREAM_REPO,
-            "UPSTREAM_BRANCH": UPSTREAM_BRANCH,
-            "USER_SESSION_STRING": USER_SESSION_STRING,
-            "USE_SERVICE_ACCOUNTS": USE_SERVICE_ACCOUNTS,
-            "WEB_PINCODE": WEB_PINCODE,
-            "YT_DLP_OPTIONS": YT_DLP_OPTIONS,
+            'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
+            'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
+            'STATUS_LIMIT': STATUS_LIMIT,
+            'QUEUE_ALL': QUEUE_ALL,
+            'QUEUE_DOWNLOAD': QUEUE_DOWNLOAD,
+            'QUEUE_UPLOAD': QUEUE_UPLOAD,
+            'USER_SESSION_STRING': USER_SESSION_STRING,
+            'CMD_SUFFIX': CMD_SUFFIX,
+            'UPSTREAM_REPO': UPSTREAM_REPO,
+            'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
+            'BASE_URL_PORT': BASE_URL_PORT,
+            'BASE_URL': BASE_URL,
+            'WEB_PINCODE': WEB_PINCODE,
+            'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
+            'YT_DLP_OPTIONS': YT_DLP_OPTIONS,
+            'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
+            'DEFAULT_UPLOAD': DEFAULT_UPLOAD,
+            'EXTENSION_FILTER': EXTENSION_FILTER,
+            'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
+            'GDRIVE_ID': GDRIVE_ID,
+            'STOP_DUPLICATE': STOP_DUPLICATE,
+            'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
+            'INDEX_URL': INDEX_URL,
+            'RCLONE_PATH': RCLONE_PATH,
+            'RCLONE_FLAGS': RCLONE_FLAGS,
+            'RCLONE_SERVE_URL': RCLONE_SERVE_URL,
+            'RCLONE_SERVE_PORT': RCLONE_SERVE_PORT,
+            'RCLONE_SERVE_USER': RCLONE_SERVE_USER,
+            'RCLONE_SERVE_PASS': RCLONE_SERVE_PASS,
+            'MAX_SPLIT_SIZE': MAX_SPLIT_SIZE,
+            'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
+            'AS_DOCUMENT': AS_DOCUMENT,
+            'EQUAL_SPLITS': EQUAL_SPLITS,
+            'MEDIA_GROUP': MEDIA_GROUP,
+            'USER_TRANSMISSION': USER_TRANSMISSION,
+            'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
+            'LEECH_DUMP_CHAT': LEECH_DUMP_CHAT,
+            'JD_EMAIL': JD_EMAIL,
+            'JD_PASS': JD_PASS,
+            'FILELION_API': FILELION_API,
+            'STREAMWISH_API': STREAMWISH_API,
+            'RSS_CHAT': RSS_CHAT,
+            'RSS_DELAY': RSS_DELAY,
+            'SEARCH_API_LINK': SEARCH_API_LINK,
+            'SEARCH_LIMIT': SEARCH_LIMIT,
+            'SEARCH_PLUGINS': SEARCH_PLUGINS
         }
     )
-
     if DATABASE_URL:
         await DbManger().update_config(config_dict)
     await gather(initiate_search_tools(), start_from_queued(), rclone_serve_booter())

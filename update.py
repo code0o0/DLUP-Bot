@@ -6,10 +6,11 @@ from logging import (
     error as log_error,
     info as log_info,
 )
-from os import path, environ, remove
+from os import path, environ, remove, makedirs
 from subprocess import run as srun
-from dotenv import load_dotenv, dotenv_values
-from pymongo import MongoClient
+from dotenv import load_dotenv
+from sqlite3 import connect
+import json
 
 if path.exists("log.txt"):
     with open("log.txt", "r+") as f:
@@ -24,9 +25,12 @@ basicConfig(
     level=INFO,
 )
 
-load_dotenv("config.env", override=True)
-
+CONFIG_DIR = '/usr/src/app/config'
+DATABASE_URL = '/usr/src/app/config/data.db'
+if not path.exists(CONFIG_DIR):
+    makedirs(CONFIG_DIR)
 try:
+    load_dotenv('config.env', override=True)
     if bool(environ.get("_____REMOVE_THIS_LINE_____")):
         log_error("The README.md file there to be read! Exiting now!")
         exit(1)
@@ -37,31 +41,20 @@ BOT_TOKEN = environ.get("BOT_TOKEN", "")
 if len(BOT_TOKEN) == 0:
     log_error("BOT_TOKEN variable is missing! Exiting now")
     exit(1)
-
 bot_id = BOT_TOKEN.split(":", 1)[0]
 
-DATABASE_URL = environ.get("DATABASE_URL", "")
-if len(DATABASE_URL) == 0:
-    DATABASE_URL = None
-
-if DATABASE_URL is not None:
-    try:
-        conn = MongoClient(DATABASE_URL)
-        db = conn.mltb
-        old_config = db.settings.deployConfig.find_one({"_id": bot_id})
-        config_dict = db.settings.config.find_one({"_id": bot_id})
-        if old_config is not None:
-            del old_config["_id"]
-        if (
-            old_config is not None
-            and old_config == dict(dotenv_values("config.env"))
-            or old_config is None
-        ) and config_dict is not None:
-            environ["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
-            environ["UPSTREAM_BRANCH"] = config_dict["UPSTREAM_BRANCH"]
-        conn.close()
-    except Exception as e:
-        log_error(f"Database ERROR: {e}")
+conn = connect(DATABASE_URL)
+cur = conn.cursor()
+cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='config'")
+if cur.fetchone():
+    cur.execute("SELECT * FROM config WHERE _id = ?", (bot_id,))
+    row = cur.fetchone()
+    config_dict = json.loads(row[1]) if row else None
+    if config_dict is not None:
+        environ["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
+        environ["UPSTREAM_BRANCH"] = config_dict["UPSTREAM_BRANCH"]
+cur.close()
+conn.close()
 
 UPSTREAM_REPO = environ.get("UPSTREAM_REPO", "")
 if len(UPSTREAM_REPO) == 0:
