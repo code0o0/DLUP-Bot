@@ -55,7 +55,6 @@ from bot.helper.telegram_helper.message_utils import (
 START = 0
 handler_dict = {}
 default_values = {
-    "AUTO_DELETE_MESSAGE_DURATION": 30,
     "DOWNLOAD_DIR": "/usr/src/app/downloads/",
     "LEECH_SPLIT_SIZE": MAX_SPLIT_SIZE,
     "RSS_DELAY": 600,
@@ -213,9 +212,6 @@ async def edit_variable(_, message, pre_message, key):
         value = False
         if key == "INCOMPLETE_TASK_NOTIFIER" and DATABASE_URL:
             await DbManger().trunc_table("tasks")
-    elif key == "RSS_DELAY":
-        value = int(value)
-        addJob(value)
     elif key == "DOWNLOAD_DIR":
         if not value.endswith("/"):
             value += "/"
@@ -290,6 +286,8 @@ async def edit_variable(_, message, pre_message, key):
         await rclone_serve_booter()
     elif key in ["JD_EMAIL", "JD_PASS"]:
         jdownloader.initiate()
+    elif key == "RSS_DELAY":
+        addJob()
 
 
 async def edit_aria(_, message, pre_message, key):
@@ -680,11 +678,6 @@ async def load_config():
             Intervals["status"][key] = setInterval(
                 STATUS_UPDATE_INTERVAL, update_status_message, key
             )
-    AUTO_DELETE_MESSAGE_DURATION = environ.get("AUTO_DELETE_MESSAGE_DURATION", "")
-    if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
-        AUTO_DELETE_MESSAGE_DURATION = 30
-    else:
-        AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
     STATUS_LIMIT = environ.get("STATUS_LIMIT", "")
     STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
     QUEUE_ALL = environ.get("QUEUE_ALL", "")
@@ -861,7 +854,6 @@ async def load_config():
     config_dict.update(
         {
             'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
-            'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
             'STATUS_LIMIT': STATUS_LIMIT,
             'QUEUE_ALL': QUEUE_ALL,
             'QUEUE_DOWNLOAD': QUEUE_DOWNLOAD,
@@ -911,6 +903,7 @@ async def load_config():
     if DATABASE_URL:
         await DbManger().update_config(config_dict)
     await gather(initiate_search_tools(), start_from_queued(), rclone_serve_booter())
+    addJob()
 
 
 bot.add_handler(
