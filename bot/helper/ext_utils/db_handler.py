@@ -88,14 +88,14 @@ class DbManager:
             values = {'id': bot_id, 'config_dict': _config_dict}
             await self.__db.execute(query=query, values=values)
     
-    async def update_aria2(self, dict_):
+    async def update_aria2(self, key, value):
         _aria2_options = json.dumps(aria2_options)
         async with self.__db.transaction():
             query = 'UPDATE settings SET aria2_options = :aria2_options  WHERE _id = :id'
             values = {'id': bot_id, 'aria2_options': _aria2_options}
             await self.__db.execute(query=query, values=values)
     
-    async def update_qbittorrent(self, dict_):
+    async def update_qbittorrent(self, key, value):
         _qbit_options = json.dumps(qbit_options)
         async with self.__db.transaction():
             query = 'UPDATE settings SET qbit_options = :qbit_options  WHERE _id = :id'
