@@ -1,3 +1,4 @@
+from dotenv import load_dotenv, dotenv_values
 from logging import (
     FileHandler,
     StreamHandler,
@@ -6,11 +7,11 @@ from logging import (
     error as log_error,
     info as log_info,
 )
+import json
 from os import path, environ, remove, makedirs
 from subprocess import run as srun
-from dotenv import load_dotenv
 from sqlite3 import connect
-import json
+
 
 if path.exists("log.txt"):
     with open("log.txt", "r+") as f:

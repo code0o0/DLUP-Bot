@@ -1,7 +1,8 @@
-from aiofiles.os import path as aiopath, makedirs
 from aiofiles import open as aiopen
+from aiofiles.os import path as aiopath, makedirs
 from databases import Database
 import json
+
 from bot import (
     DATABASE_URL,
     user_data,
@@ -15,7 +16,7 @@ from bot import (
 )
 
 
-class DbManger:
+class DbManager:
     def __init__(self):
         self.__db = Database(f'sqlite+aiosqlite:///{DATABASE_URL}')
     
@@ -215,4 +216,4 @@ class DbManger:
             await self.__db.execute(query=f'DELETE FROM {name}')
 
 if DATABASE_URL:
-    bot_loop.run_until_complete(DbManger().db_load())
+    bot_loop.run_until_complete(DbManager().db_load())
