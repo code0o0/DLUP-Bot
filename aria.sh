@@ -2,10 +2,10 @@ tracker_list=$(curl -Ns https://ngosang.github.io/trackerslist/trackers_all_http
 aria2c --max-concurrent-downloads=20 --max-upload-limit=100K --max-overall-upload-limit=1M \
        --split=10 --max-connection-per-server=10 --min-split-size=10M --disk-cache=64M \
        --enable-rpc=true --rpc-max-request-size=1024M --file-allocation=falloc --enable-mmap=false \
-       --http-accept-gzip=true --max-file-not-found=0 --max-tries=20   --reuse-uri=true \
+       --http-accept-gzip=true --max-file-not-found=0 --max-tries=20 --reuse-uri=true \
        --allow-overwrite=true --auto-file-renaming=true --check-certificate=false --optimize-concurrent-downloads=true \
-       --check-integrity=true --continue=true --daemon=true  --force-save=true \
-       --content-disposition-default-utf8=true  --quiet=true --summary-interval=0 \
+       --check-integrity=true --continue=true --daemon=true --force-save=true \
+       --content-disposition-default-utf8=true --quiet=true --summary-interval=0 \
        --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
        --listen-port=51400 --dht-listen-port=51400 --peer-id-prefix=-qB4520 --peer-agent=qBittorrent/4.5.2\
        --seed-ratio=0 --seed-time=0 --bt-max-peers=128 --follow-torrent=mem \
