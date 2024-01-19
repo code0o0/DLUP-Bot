@@ -69,9 +69,9 @@ async def get_buttons(key=None, edit_type=None):
     buttons = ButtonMaker()
     if key is None:
         buttons.ibutton("Config Variables", "botset var", position="header")
-        buttons.ibutton("Private Files", "botset private", position="header")
         buttons.ibutton("Qbit Settings", "botset qbit", position="header")
         buttons.ibutton("Aria2c Settings", "botset aria", position="header")
+        buttons.ibutton("Private Files", "botset private", position="header")
         buttons.ibutton("JDownloader Sync", "botset syncjd", position="header")
         buttons.ibutton("Close", "botset close")
         msg = "Bot Settings:"
@@ -113,7 +113,14 @@ async def get_buttons(key=None, edit_type=None):
         msg = f"<b>Config Variables | Page: {int(START / 10)}</b>\n\n"
         for k in var_list[START: 10 + START]:
             buttons.ibutton(k, f"botset botvar {k}\n", position="header")
-            msg += f"<b>{k}:</b> {config_dict[k]}\n"
+            value = config_dict[k]
+            if not value:
+                value = "Not Set"
+            elif k == "SEARCH_PLUGINS":
+                value = "[......]"
+            elif k == "USER_SESSION_STRING":
+                value = value[:10] + "..." + value[-10:]
+            msg += f"<b>{k}:</b> {value}\n"
         for x in range(0, len(var_list), 10):
             buttons.ibutton(f"{int(x / 10)}", f"botset start var {x}")
         buttons.ibutton("Back", "botset back", position="footer")
@@ -129,7 +136,10 @@ Timeout: 60 sec"""
         msg = f"<b>Aria2c Options | Page: {int(START / 10)}</b>\n\n"
         for k in list(aria2_options.keys())[START: 10 + START]:
             buttons.ibutton(k, f"botset ariavar {k}", position="header")
-            msg += f"<b>{k}:</b> {aria2_options[k]}\n"
+            value = aria2_options[k]
+            if k == "bt-tracker":
+                value = "[......]"
+            msg += f"<b>{k}:</b> {value}\n"
         for x in range(0, len(aria2_options), 10):
             buttons.ibutton(f"{int(x / 10)}", f"botset start aria {x}")
         buttons.ibutton("Add new key", "botset ariavar newkey", position="footer")
@@ -144,7 +154,7 @@ Timeout: 60 sec"""
             buttons.ibutton(f"{int(x / 10)}", f"botset start qbit {x}")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
-    button = buttons.build_menu(8, 2 ,1)
+    button = buttons.build_menu(8, 2 ,2)
     return msg, button
 
 async def update_buttons(message, key=None, edit_type=None):

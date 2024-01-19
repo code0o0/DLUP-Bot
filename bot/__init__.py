@@ -414,7 +414,7 @@ aria2c_global = ["bt-max-open-files", "download-result", "keep-unfinished-downlo
 
 if not qbit_options:
     qbit_all_options = dict(qb_client.app_preferences())
-    qbit_options = {key: value for key, value in qbit_all_options.items() if key in qbit_edit_opts}
+    qbit_options = {key: qbit_all_options[key] for key in qbit_edit_opts}
 else:
     qb_opt = {**qbit_options}
     for k, v in qb_opt.items():
@@ -424,7 +424,7 @@ else:
 
 if not aria2_options:
     aria2_all_options = aria2.client.get_global_option()
-    aria2_options = {key: value for key, value in aria2_all_options.items() if key in aria2c_edit_opts}
+    aria2_options = {key: aria2_all_options[key] for key in aria2c_edit_opts}
 else:
     a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
     aria2.set_global_options(a2c_glo)
