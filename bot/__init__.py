@@ -48,9 +48,14 @@ LOGGER = getLogger(__name__)
 
 LOCAL_DIR = '/usr/src/app/storage'
 CONFIG_DIR = '/usr/src/app/config'
-DATABASE_URL = '/usr/src/app/config/data.db'
+DATABASE_URL = f'{CONFIG_DIR}/data.db'
 DOWNLOAD_DIR = '/usr/src/app/downloads'
+
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
+if not ospath.exists(f'{CONFIG_DIR}/dht.dat'):
+    run(["touch", f"{CONFIG_DIR}/dht.dat"])
+if not ospath.exists(f'{CONFIG_DIR}/dht6.dat'):
+    run(["touch", f"{CONFIG_DIR}/dht6.dat"])
 
 try:
     load_dotenv('config.env', override=True)
@@ -98,10 +103,15 @@ cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='config'
 if cur.fetchone():
     cur.execute("SELECT * FROM config WHERE _id = ?", (bot_id,))
     row = cur.fetchone()
-    config_dict = json.loads(row[1]) if row else {}
-    for key, value in config_dict.items():
-        environ[key] = str(value)
-    pf_dict = json.loads(row[2]) if row else {}
+    current_config = dict(dotenv_values("config.env"))
+    deploy_config = json.loads(row[1]) if row else None
+    if deploy_config != current_config:
+        deploy_config = current_config
+    else:
+        config_dict = json.loads(row[2])
+        for key, value in config_dict.items():
+            environ[key] = str(value)
+    pf_dict = json.loads(row[3]) if row else {}
     for key, value in pf_dict.items():
         with open(key, "wb+") as f:
             f.write(value)
@@ -109,8 +119,10 @@ if cur.fetchone():
             run(["rm", "-rf", "/JDownloader/cfg"])
             run(["7z", "x", "cfg.zip", "-o/JDownloader"])
             remove("cfg.zip")
-    aria2_options = json.loads(row[3]) if row else {}
-    qbit_options = json.loads(row[4]) if row else {}
+    aria2_options = json.loads(row[4]) if row else {}
+    qbit_options = json.loads(row[5]) if row else {}
+else:
+    deploy_config = dict(dotenv_values("config.env"))
 cur.close()
 conn.close()
 
@@ -171,7 +183,7 @@ if len(UPSTREAM_BRANCH) == 0:
 
 #DOWNLOAD
 BASE_URL_PORT = environ.get("BASE_URL_PORT", "")
-BASE_URL_PORT = 80 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
+BASE_URL_PORT = 20001 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
 BASE_URL = environ.get("BASE_URL", "").rstrip("/")
 if len(BASE_URL) == 0:
     log_warning("BASE_URL not provided!")
@@ -222,7 +234,7 @@ RCLONE_SERVE_URL = environ.get("RCLONE_SERVE_URL", "").rstrip("/")
 if len(RCLONE_SERVE_URL) == 0:
     RCLONE_SERVE_URL = ""
 RCLONE_SERVE_PORT = environ.get("RCLONE_SERVE_PORT", "")
-RCLONE_SERVE_PORT = 8080 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
+RCLONE_SERVE_PORT = 20002 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
 RCLONE_SERVE_USER = environ.get("RCLONE_SERVE_USER", "")
 if len(RCLONE_SERVE_USER) == 0:
     RCLONE_SERVE_USER = ""
@@ -361,8 +373,6 @@ if BASE_URL:
     )
 run(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
 
-if not ospath.exists(f'{CONFIG_DIR}/dht.dat'):
-    run(["touch", f"{CONFIG_DIR}/dht.dat"])
 if not ospath.exists(".netrc"):
     run(["touch", ".netrc"])
 run(
@@ -389,41 +399,35 @@ def get_client():
     )
 qb_client = get_client()
 
-qbit_global = ['dl_limit', 'up_limit', 'max_connec', 'max_connec_per_torrent', 'disk_cache','disk_cache_ttl',
-             'preallocate_all', 'dht', 'pex', 'lsd', 'encryption', 'anonymous_mode', 'proxy_type',
-             'proxy_peer_connections', 'proxy_torrents_only', 'proxy_ip', 'proxy_port', 'proxy_auth_enabled',
-             'proxy_username', 'proxy_password']
-qbit_user = ['upload_limit', 'download_limit', 'ratio_limit', 'seeding_time_limit', 'is_skip_checking',
-             'is_first_last_piece_priority']
+qbit_edit_opts = ['dl_limit', 'up_limit', 'max_connec', 'max_connec_per_torrent', 'disk_cache', 'disk_cache_ttl',
+                  'preallocate_all', 'max_seeding_time_enabled', 'max_seeding_time', 'max_ratio_enabled', 'max_ratio',
+                  'dht', 'pex', 'lsd', 'encryption', 'anonymous_mode', 'proxy_type', 'proxy_peer_connections', 
+                  'proxy_torrents_only', 'proxy_ip', 'proxy_port', 'proxy_auth_enabled', 'proxy_username',
+                  'proxy_password']
+aria2c_edit_opts = ['max-overall-download-limit', 'max-overall-upload-limit', 'max-download-limit', 'max-upload-limit',
+                    'split', 'min-split-size', 'max-connection-per-server', 'disk-cache', 'file-allocation', 'user-agent',
+                    'seed-ratio', 'seed-time', 'bt-max-peers', 'enable-dht', 'enable-dht6', 'bt-enable-lpd',
+                    'enable-peer-exchange', 'bt-tracker']
+aria2c_global = ["bt-max-open-files", "download-result", "keep-unfinished-download-result", "log", "log-level",
+                 "max-concurrent-downloads", "max-download-result", "max-overall-download-limit", "save-session",
+                 "max-overall-upload-limit", "optimize-concurrent-downloads", "save-cookies", "server-stat-of"]
+
 if not qbit_options:
     qbit_all_options = dict(qb_client.app_preferences())
-    qbit_options = {key: value for key, value in qbit_all_options.items() if key in qbit_global}
+    qbit_options = {key: value for key, value in qbit_all_options.items() if key in qbit_edit_opts}
 else:
     qb_opt = {**qbit_options}
     for k, v in qb_opt.items():
         if v in ["", "*"]:
             del qb_opt[k]
     qb_client.app_set_preferences(qb_opt)
-qbit_user_options = {
-    'upload_limit': None,
-    'download_limit': None,
-    'ratio_limit': None,
-    'seeding_time_limit': None,
-    'is_skip_checking': False,
-    'is_first_last_piece_priority': False
-}
 
-aria2c_global = ['max-overall-download-limit', 'max-overall-upload-limit', 'bt-max-peers', 'disk-cache',
-                 'min-split-size', 'file-allocation','bt-max-open-files', 'enable-dht', 'bt-enable-lpd',
-                 'enable-peer-exchange','bt-tracker']
-aria2c_user = ['max-download-limit', 'max-upload-limit', 'split', 'max-connection-per-server', 'user-agent',
-                'seed-ratio', 'seed-time']
-aria2_all_options = aria2.client.get_global_option()
-aria2_user_options = {key: value for key, value in aria2_all_options.items() if key in aria2c_user}
 if not aria2_options:
-    aria2_options = {key: value for key, value in aria2_all_options.items() if key in aria2c_global}
+    aria2_all_options = aria2.client.get_global_option()
+    aria2_options = {key: value for key, value in aria2_all_options.items() if key in aria2c_edit_opts}
 else:
-    aria2.set_global_options(aria2_options)
+    a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
+    aria2.set_global_options(a2c_glo)
 
 log_info("Creating client from BOT_TOKEN")
 bot = tgClient(

@@ -68,118 +68,27 @@ default_values = {
 async def get_buttons(key=None, edit_type=None):
     buttons = ButtonMaker()
     if key is None:
-        buttons.ibutton("Config Settings", "botset var")
-        buttons.ibutton("Qbit Settings", "botset qbit")
-        buttons.ibutton("Aria2c Settings", "botset aria")
-        buttons.ibutton("Private Files", "botset private")
-        # buttons.ibutton("JDownloader Sync", "botset syncjd")
+        buttons.ibutton("Config Variables", "botset var", position="header")
+        buttons.ibutton("Private Files", "botset private", position="header")
+        buttons.ibutton("Qbit Settings", "botset qbit", position="header")
+        buttons.ibutton("Aria2c Settings", "botset aria", position="header")
+        buttons.ibutton("JDownloader Sync", "botset syncjd", position="header")
         buttons.ibutton("Close", "botset close")
         msg = "Bot Settings:"
-    elif key == "var":
-        for k in ["BotSettings", "DownloadSettings", "UploadSettings", "GdriveTools", "LeechSettings", "Additional"]:
-            buttons.ibutton(k, f"botset botvar {k}")
-        buttons.ibutton("Default", "botset resetvar")
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
-        msg = f"Config Config"
-    elif key == "private":
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
-        msg = """Send private file: config.env, token.pickle, rclone.conf, accounts.zip, list_drives.txt, cookies.txt, terabox.txt, .netrc or any other private file!
-To delete private file send only the file name as text message.
-Note: Changing .netrc will not take effect for aria2c until restart.
-Timeout: 60 sec"""
-    elif key == "aria":
-        msg = f"Aria2c Options | Page: {int(START/8)}"
-        for k in list(aria2_options.keys())[START : 8 + START]:
-            buttons.ibutton(k, f"botset ariavar {k}")
-            msg += f"\n<b>{k}</b>: <code>{aria2_options[k]}</code>"
-        buttons.ibutton("Add new key", "botset ariavar newkey")
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
-        for x in range(0, len(aria2_options), 8):
-            buttons.ibutton(f"{int(x/8)}", f"botset start aria {x}", position="footer")
-    elif key == "qbit":
-        msg = f"Qbittorrent Options | Page: {int(START/10)}"
-        qb_list = ['dl_limit', 'up_limit', 'max_connec', 'max_connec_per_torrent', 'disk_cache','disk_cache_ttl',
-                   'preallocate_all', 'dht', 'pex', 'lsd', 'encryption', 'anonymous_mode', 'proxy_type',
-                   'proxy_peer_connections', 'proxy_torrents_only', 'proxy_link']
-        for k in qb_list[START : 10 + START]:
-            buttons.ibutton(k, f"botset qbitvar {k}")
-            if k == "proxy_link":
-                if qbit_options["proxy_auth_enabled"]:
-                    proxy_link = f'{qbit_options["proxy_username"]}:{qbit_options["proxy_password"]}@\
-                        {qbit_options["proxy_ip"]}:{qbit_options["proxy_port"]}'
-                else:
-                    proxy_link = f'{qbit_options["proxy_ip"]}:{qbit_options["proxy_port"]}'
-                msg += f"\n<b>{k}</b>: <code>{proxy_link}</code>"
-            else:
-                msg += f"\n<b>{k}</b>: <code>{qbit_options[k]}</code>"
-        buttons.ibutton("Back", "botset back")
-        buttons.ibutton("Close", "botset close")
-        for x in range(0, qb_list, 10):
-            buttons.ibutton(f"{int(x/10)}", f"botset start qbit {x}", position="footer")
-    
-    
-
-
-    
-    
-    elif key == 'botvar':
-        if edit_type == 'BotSettings':
-            msg = "<b>Bot Settings</b>\n"
-            for k in ["STATUS_UPDATE_INTERVAL", "AUTO_DELETE_MESSAGE_DURATION", "STATUS_LIMIT", "QUEUE_ALL", 
-                      "QUEUE_DOWNLOAD", "QUEUE_UPLOAD", "USER_SESSION_STRING", "CMD_SUFFIX", "UPSTREAM_REPO", 
-                      "UPSTREAM_BRANCH"]:
-                msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
-                buttons.ibutton(k, f"botset botvar BotSettings {k}")
-        elif edit_type == 'DownloadSettings':
-            msg = "<b>Download Settings</b>\n"
-            for k in ["BASE_URL", "BASE_URL_PORT", "WEB_PINCODE", "INCOMPLETE_TASK_NOTIFIER", "YT_DLP_OPTIONS",
-                      "TORRENT_TIMEOUT"]:
-                msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
-                buttons.ibutton(k, f"botset botvar DownloadSettings {k}")
-        elif edit_type == 'UploadSettings':
-            msg = "<b>Upload Settings</b>\n"
-            for k in ["DEFAULT_UPLOAD", "EXTENSION_FILTER", "USE_SERVICE_ACCOUNTS"]:
-                msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
-                buttons.ibutton(k, f"botset botvar UploadSettings {k}")
-        elif edit_type == 'GdriveTools':
-            msg = "<b>Gdrive Tools</b>\n"
-            for k in ["GDRIVE_ID", "STOP_DUPLICATE", "IS_TEAM_DRIVE", "INDEX_URL"]:
-                msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
-                buttons.ibutton(k, f"botset botvar GdriveTools {k}")
-        elif edit_type == 'LeechSettings':
-            msg = "<b>Leech Settings</b>\n"
-            for k in ["MAX_SPLIT_SIZE", "LEECH_SPLIT_SIZE", "AS_DOCUMENT", "EQUAL_SPLITS", "MEDIA_GROUP",
-                      "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX", "LEECH_DUMP_CHAT"]:
-                msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
-                buttons.ibutton(k, f"botset botvar LeechSettings {k}")
-        elif edit_type == 'Additional':
-            msg = "<b>Additional</b>\n"
-            for k in ["JD_EMAIL", "JD_PASS", "JD_SYNC", "SEARCH_PLUGINS", "SEARCH_API_LINK", "RCLONE_PATH", 
-                      "RCLONE_FLAGS", "RCLONE_SERVE_URL", "RCLONE_SERVE_PORT", "RCLONE_SERVE_USER", "RCLONE_SERVE_PASS"]:
-                if k != "JD_SYNC":
-                    msg += f"<b>{k}</b>: <code>{config_dict[k]}</code>\n"
-                buttons.ibutton(k, f"botset botvar Additional {k}")
-        buttons.ibutton("Back", "botset back var")
-        buttons.ibutton("Close", "botset close")
-
-
-
     elif edit_type is not None:
         if edit_type == "botvar":
             msg = ""
+            buttons.ibutton("Default", f"botset resetvar {key}", position="header")
             buttons.ibutton("Back", "botset var")
-            if key not in ["TELEGRAM_HASH", "TELEGRAM_API", "OWNER_ID", "BOT_TOKEN"]:
-                buttons.ibutton("Default", f"botset resetvar {key}")
             buttons.ibutton("Close", "botset close")
+            if key in ["CMD_SUFFIX", "OWNER_ID", "USER_SESSION_STRING"]:
+                msg += "Restart required for this edit to take effect!\n\n"
             msg += f"Send a valid value for {key}. Current value is '{config_dict[key]}'. Timeout: 60 sec"
         elif edit_type == "ariavar":
-            buttons.ibutton("Back", "botset aria")
             if key != "newkey":
-                buttons.ibutton("Default", f"botset resetaria {key}")
-                buttons.ibutton("Empty String", f"botset emptyaria {key}")
+                buttons.ibutton("Default", f"botset resetaria {key}", position="header")
+                buttons.ibutton("Empty String", f"botset emptyaria {key}", position="header")
+            buttons.ibutton("Back", "botset aria")
             buttons.ibutton("Close", "botset close")
             msg = (
                 "Send a key with value. Example: https-proxy-user:value"
@@ -187,21 +96,60 @@ Timeout: 60 sec"""
                 else f"Send a valid value for {key}. Current value is '{aria2_options[key]}'. Timeout: 60 sec"
             )
         elif edit_type == "qbitvar":
+            buttons.ibutton("Empty String", f"botset emptyqbit {key}", position="header")
             buttons.ibutton("Back", "botset qbit")
-            buttons.ibutton("Empty String", f"botset emptyqbit {key}")
             buttons.ibutton("Close", "botset close")
             msg = f"Send a valid value for {key}. Current value is '{qbit_options[key]}'. Timeout: 60 sec"
-
-
-
-    button = buttons.build_menu(1) if key is None else buttons.build_menu(2)
+    elif key == "var":
+        var_list = ["STATUS_UPDATE_INTERVAL", "STATUS_LIMIT", "QUEUE_ALL", "QUEUE_DOWNLOAD", "QUEUE_UPLOAD",
+                    "USER_SESSION_STRING", "CMD_SUFFIX", "UPSTREAM_REPO", "UPSTREAM_BRANCH", "BASE_URL_PORT",
+                    "BASE_URL", "WEB_PINCODE", "INCOMPLETE_TASK_NOTIFIER", "YT_DLP_OPTIONS", "TORRENT_TIMEOUT",
+                    "DEFAULT_UPLOAD", "EXTENSION_FILTER", "USE_SERVICE_ACCOUNTS", "GDRIVE_ID", "STOP_DUPLICATE",
+                    "IS_TEAM_DRIVE", "INDEX_URL", "RCLONE_PATH", "RCLONE_FLAGS", "RCLONE_SERVE_URL",
+                    "RCLONE_SERVE_PORT", "RCLONE_SERVE_USER", "RCLONE_SERVE_PASS", "LEECH_SPLIT_SIZE", "AS_DOCUMENT", 
+                    "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX", "LEECH_DUMP_CHAT",
+                    "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", 
+                    "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
+        msg = f"<b>Config Variables | Page: {int(START / 10)}</b>\n\n"
+        for k in var_list[START: 10 + START]:
+            buttons.ibutton(k, f"botset botvar {k}\n", position="header")
+            msg += f"<b>{k}:</b> {config_dict[k]}\n"
+        for x in range(0, len(var_list), 10):
+            buttons.ibutton(f"{int(x / 10)}", f"botset start var {x}")
+        buttons.ibutton("Back", "botset back", position="footer")
+        buttons.ibutton("Close", "botset close", position="footer")
+    elif key == "private":
+        buttons.ibutton("Back", "botset back", position="footer")
+        buttons.ibutton("Close", "botset close", position="footer")
+        msg = """Send private file: config.env, token.pickle, rclone.conf, accounts.zip, list_drives.txt, cookies.txt, terabox.txt, .netrc or any other private file!
+To delete private file send only the file name as text message.
+Note: Changing .netrc will not take effect for aria2c until restart.
+Timeout: 60 sec"""
+    elif key == "aria":
+        msg = f"<b>Aria2c Options | Page: {int(START / 10)}</b>\n\n"
+        for k in list(aria2_options.keys())[START: 10 + START]:
+            buttons.ibutton(k, f"botset ariavar {k}", position="header")
+            msg += f"<b>{k}:</b> {aria2_options[k]}\n"
+        for x in range(0, len(aria2_options), 10):
+            buttons.ibutton(f"{int(x / 10)}", f"botset start aria {x}")
+        buttons.ibutton("Add new key", "botset ariavar newkey", position="footer")
+        buttons.ibutton("Back", "botset back", position="footer")
+        buttons.ibutton("Close", "botset close", position="footer")
+    elif key == "qbit":
+        msg = f"<b>Qbittorrent Options | Page: {int(START / 10)}</b>\n\n"
+        for k in list(qbit_options.keys())[START: 10 + START]:
+            buttons.ibutton(k, f"botset qbitvar {k}", position="header")
+            msg += f"<b>{k}:</b> {qbit_options[k]}\n"
+        for x in range(0, len(qbit_options), 10):
+            buttons.ibutton(f"{int(x / 10)}", f"botset start qbit {x}")
+        buttons.ibutton("Back", "botset back", position="footer")
+        buttons.ibutton("Close", "botset close", position="footer")
+    button = buttons.build_menu(8, 2 ,1)
     return msg, button
-
 
 async def update_buttons(message, key=None, edit_type=None):
     msg, button = await get_buttons(key, edit_type)
     await editMessage(message, msg, button)
-
 
 async def edit_variable(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
@@ -212,9 +160,6 @@ async def edit_variable(_, message, pre_message, key):
         value = False
         if key == "INCOMPLETE_TASK_NOTIFIER" and DATABASE_URL:
             await DbManager().trunc_table("tasks")
-    elif key == "DOWNLOAD_DIR":
-        if not value.endswith("/"):
-            value += "/"
     elif key in ["LEECH_DUMP_CHAT", "RSS_CHAT"]:
         if value.isdigit() or value.startswith("-"):
             value = int(value)
@@ -239,7 +184,6 @@ async def edit_variable(_, message, pre_message, key):
                     )
                 except Exception as e:
                     LOGGER.error(e)
-        aria2_options["bt-stop-timeout"] = f"{value}"
     elif key == "LEECH_SPLIT_SIZE":
         value = min(int(value), MAX_SPLIT_SIZE)
     elif key == "BASE_URL_PORT":
@@ -289,7 +233,6 @@ async def edit_variable(_, message, pre_message, key):
     elif key == "RSS_DELAY":
         addJob()
 
-
 async def edit_aria(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
@@ -317,7 +260,6 @@ async def edit_aria(_, message, pre_message, key):
     if DATABASE_URL:
         await DbManager().update_aria2(key, value)
 
-
 async def edit_qbit(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
@@ -336,7 +278,6 @@ async def edit_qbit(_, message, pre_message, key):
     if DATABASE_URL:
         await DbManager().update_qbittorrent(key, value)
 
-
 async def sync_jdownloader():
     if DATABASE_URL and jdownloader.device is not None:
         await sync_to_async(jdownloader.device.system.exit_jd)
@@ -348,7 +289,6 @@ async def sync_jdownloader():
         ).wait()
         await DbManager().update_private_file("cfg.zip")
         await sync_to_async(jdownloader.connectToDevice)
-
 
 async def update_private_file(_, message, pre_message):
     handler_dict[message.chat.id] = False
@@ -433,7 +373,6 @@ async def event_handler(client, query, pfunc, rfunc, document=False):
     chat_id = query.message.chat.id
     handler_dict[chat_id] = True
     start_time = time()
-
     async def event_filter(_, __, event):
         user = event.from_user or event.sender_chat
         return bool(
@@ -441,7 +380,6 @@ async def event_handler(client, query, pfunc, rfunc, document=False):
             and event.chat.id == chat_id
             and (event.text or event.document and document)
         )
-
     handler = client.add_handler(
         MessageHandler(pfunc, filters=create(event_filter)), group=-1
     )
@@ -451,7 +389,6 @@ async def event_handler(client, query, pfunc, rfunc, document=False):
             handler_dict[chat_id] = False
             await rfunc()
     client.remove_handler(*handler)
-
 
 @new_thread
 async def edit_bot_settings(client, query):
@@ -511,19 +448,16 @@ async def edit_bot_settings(client, query):
                         )
                     except Exception as e:
                         LOGGER.error(e)
-            aria2_options["bt-stop-timeout"] = "0"
-            if DATABASE_URL:
-                await DbManager().update_aria2("bt-stop-timeout", "0")
         elif data[2] == "BASE_URL":
             await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
         elif data[2] == "BASE_URL_PORT":
-            value = 80
+            value = 20001
             if config_dict["BASE_URL"]:
                 await (
                     await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")
                 ).wait()
                 await create_subprocess_shell(
-                    "gunicorn web.wserver:app --bind 0.0.0.0:80 --worker-class gevent"
+                    f"gunicorn web.wserver:app --bind 0.0.0.0:{value} --worker-class gevent"
                 )
         elif data[2] == "GDRIVE_ID":
             if DRIVES_NAMES and DRIVES_NAMES[0] == "Main":
@@ -606,7 +540,7 @@ async def edit_bot_settings(client, query):
         pfunc = partial(edit_variable, pre_message=message, key=data[2])
         rfunc = partial(update_buttons, message, "var")
         await event_handler(client, query, pfunc, rfunc)
-    elif data[1] == "ariavar" and data[2] == "newkey":
+    elif data[1] == "ariavar":
         await query.answer()
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_aria, pre_message=message, key=data[2])
@@ -645,29 +579,13 @@ async def edit_bot_settings(client, query):
         await deleteMessage(message.reply_to_message)
         await deleteMessage(message)
 
-
 async def bot_settings(_, message):
     handler_dict[message.chat.id] = False
     msg, button = await get_buttons()
     globals()["START"] = 0
     await sendMessage(message, msg, button)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 async def load_config():
-    #BOT
     STATUS_UPDATE_INTERVAL = environ.get("STATUS_UPDATE_INTERVAL", "")
     if len(STATUS_UPDATE_INTERVAL) == 0:
         STATUS_UPDATE_INTERVAL = 15
@@ -697,7 +615,7 @@ async def load_config():
         UPSTREAM_BRANCH = "master"
     #DOWNLOAD
     BASE_URL_PORT = environ.get("BASE_URL_PORT", "")
-    BASE_URL_PORT = 80 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
+    BASE_URL_PORT = 20001 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
     await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
     BASE_URL = environ.get("BASE_URL", "").rstrip("/")
     if len(BASE_URL) == 0:
@@ -778,7 +696,7 @@ async def load_config():
     if len(RCLONE_SERVE_URL) == 0:
         RCLONE_SERVE_URL = ""
     RCLONE_SERVE_PORT = environ.get("RCLONE_SERVE_PORT", "")
-    RCLONE_SERVE_PORT = 8080 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
+    RCLONE_SERVE_PORT = 20002 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
     RCLONE_SERVE_USER = environ.get("RCLONE_SERVE_USER", "")
     if len(RCLONE_SERVE_USER) == 0:
         RCLONE_SERVE_USER = ""
@@ -882,7 +800,6 @@ async def load_config():
             'RCLONE_SERVE_PORT': RCLONE_SERVE_PORT,
             'RCLONE_SERVE_USER': RCLONE_SERVE_USER,
             'RCLONE_SERVE_PASS': RCLONE_SERVE_PASS,
-            'MAX_SPLIT_SIZE': MAX_SPLIT_SIZE,
             'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
             'AS_DOCUMENT': AS_DOCUMENT,
             'EQUAL_SPLITS': EQUAL_SPLITS,

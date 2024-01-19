@@ -91,8 +91,8 @@ async def deleteMessage(message):
         LOGGER.error(str(e))
 
 
-async def auto_delete_message(cmd_message=None, bot_message=None):
-    await sleep(60)
+async def auto_delete_message(cmd_message=None, bot_message=None, time_delay=60):
+    await sleep(time_delay)
     if cmd_message is not None:
         await deleteMessage(cmd_message)
     if bot_message is not None:

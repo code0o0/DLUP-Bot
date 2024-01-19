@@ -7,18 +7,18 @@ from logging import (
     error as log_error,
     info as log_info,
 )
-import json
 from os import path, environ, remove, makedirs
-from subprocess import run as srun
 from sqlite3 import connect
-
+from subprocess import run as srun
+import json
 
 if path.exists("log.txt"):
     with open("log.txt", "r+") as f:
         f.truncate(0)
-
 if path.exists("rlog.txt"):
     remove("rlog.txt")
+if not path.exists('/usr/src/app/config'):
+    makedirs('/usr/src/app/config')
 
 basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -26,32 +26,33 @@ basicConfig(
     level=INFO,
 )
 
-CONFIG_DIR = '/usr/src/app/config'
-DATABASE_URL = '/usr/src/app/config/data.db'
-if not path.exists(CONFIG_DIR):
-    makedirs(CONFIG_DIR)
 try:
-    load_dotenv('config.env', override=True)
+    load_dotenv("config.env", override=True)
     if bool(environ.get("_____REMOVE_THIS_LINE_____")):
         log_error("The README.md file there to be read! Exiting now!")
         exit(1)
+    BOT_TOKEN = environ.get("BOT_TOKEN", "")
+    if len(BOT_TOKEN) == 0:
+        log_error("BOT_TOKEN variable is missing! Exiting now")
+        exit(1)
 except:
     pass
-
-BOT_TOKEN = environ.get("BOT_TOKEN", "")
-if len(BOT_TOKEN) == 0:
-    log_error("BOT_TOKEN variable is missing! Exiting now")
-    exit(1)
 bot_id = BOT_TOKEN.split(":", 1)[0]
 
+DATABASE_URL = '/usr/src/app/config/data.db'
 conn = connect(DATABASE_URL)
 cur = conn.cursor()
-cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='config'")
+cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'")
 if cur.fetchone():
-    cur.execute("SELECT * FROM config WHERE _id = ?", (bot_id,))
+    cur.execute("SELECT * FROM settings WHERE _id = ?", (bot_id,))
     row = cur.fetchone()
-    config_dict = json.loads(row[1]) if row else None
-    if config_dict is not None:
+    old_config = json.loads(row[1]) if row else None
+    config_dict = json.loads(row[2]) if row else None
+    if (
+            old_config is not None
+            and old_config == dict(dotenv_values("config.env"))
+            or old_config is None
+        ) and config_dict is not None:
         environ["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
         environ["UPSTREAM_BRANCH"] = config_dict["UPSTREAM_BRANCH"]
 cur.close()
