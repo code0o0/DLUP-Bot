@@ -54,8 +54,7 @@ async def get_buttons(from_user, key=None, text=None):
         msg = text
         buttons.ibutton('🔙Back', f'authset {user_id} back', position='footer')
         buttons.ibutton('🔚Close', f'authset {user_id} close', position='footer')  
-    buttons.build_menu(2)
-    return msg, buttons.markup()
+    return msg, buttons.build_menu(2)
 
 
 async def update_buttons(query, key=None, text=None):

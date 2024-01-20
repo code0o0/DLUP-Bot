@@ -21,7 +21,7 @@ class _BotCommands:
         self.SearchCommand = f"search{CMD_SUFFIX}"
         self.StatusCommand = f"status{CMD_SUFFIX}"
         self.UsersCommand = f"users{CMD_SUFFIX}"
-        self.AuthorizeCommand = f"authorize{CMD_SUFFIX}"
+        self.AuthorizeCommand = f"auth{CMD_SUFFIX}"
         self.PingCommand = f"ping{CMD_SUFFIX}"
         self.RestartCommand = f"restart{CMD_SUFFIX}"
         self.StatsCommand = f"stats{CMD_SUFFIX}"
