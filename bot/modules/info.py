@@ -51,10 +51,10 @@ async def info(client, message):
     msg += f'<b>User: </b>@{escape(username)}\n'
     msg += f'<b>UserID: </b><code>{queried_id}</code>\n'
     chat = origin_message.forward_from_chat or origin_message.chat
-    if chat.type in ['group', 'supergroup']:
+    if chat.type in ['GROUP', 'SUPERGROUP']:
         group_id = chat.id
         msg += f'<b>GroupID: </b><code>{group_id}</code>\n'
-    elif chat.type == 'channel':
+    elif chat.type == 'CHANNEL':
         channel_id = chat.id
         msg += f'<b>ChannelID: </b><code>{channel_id}</code>\n'
     for media in [origin_message.photo, origin_message.video, origin_message.audio,
