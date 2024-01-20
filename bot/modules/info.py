@@ -33,28 +33,27 @@ async def info(client, message):
             username = user.username or user.mention
             userid = user.id
             dc_id = user.dc_id
+            msg += "<b>User Information</b>\n"
             msg += f'<b>User: </b>@{escape(username)}\n'
             msg += f'<b>User-ID: </b><code>{userid}</code>\n'
-            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n\n'
         except Exception as e:
             msg += f'<b>User not found!</b>\n'
         try:
             chat = await bot.get_chat(queried_id)
             chat_title = chat.title
+            chat_id = chat.id
+            chat_name = chat.username or "Unknown"
+            dc_id = chat.dc_id
+            distance = chat.distance
+            msg += "<b>Chat Information</b>\n"
             msg += f'<b>Chat-Title: </b>{escape(chat_title)}\n'
-            if hasattr(chat, 'id'):
-                chat_id = chat.id
-                chat_name = chat.username or "Unknown"
-                dc_id = chat.dc_id
-                distance = chat.distance
-                msg += f'<b>Chat-ID: </b><code>{chat_id}</code>\n'
-                msg += f'<b>Chat-Name: </b>@{escape(chat_name)}\n'
-                msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
-                msg += f'<b>Distance: </b><code>{distance}</code>\n'
-            else:
-                msg += f'<b>If you want to know more about this chat, please add this chat!</b>\n'
+            msg += f'<b>Chat-ID: </b><code>{chat_id}</code>\n'
+            msg += f'<b>Chat-Name: </b>@{escape(chat_name)}\n'
+            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+            msg += f'<b>Distance: </b><code>{distance}</code>\n'
         except Exception as e:
-            msg += f'<b>Chat not found!</b>\n'
+            msg += f'<b>If you want to know the chat information, please join the chat first!</b>\n'
     elif all([is_sudo, message.reply_to_message]):
         origin_message = message.reply_to_message
         if from_user := origin_message.forward_from:
@@ -87,7 +86,8 @@ async def info(client, message):
                 msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
                 break
         if not msg:
-            msg += f'<b>Message not found!</b>\n'
+            msg += f'<b>Unable to obtain valid information, it may be due to the user setting privacy protection \
+                or invalid reply messages!</b>\n'
     else:
         from_user = message.from_user or message.sender_chat
         queried_id = from_user.id
