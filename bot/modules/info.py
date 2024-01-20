@@ -86,8 +86,7 @@ async def info(client, message):
                 msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
                 break
         if not msg:
-            msg += f'<b>Unable to obtain valid information, it may be due to the user setting privacy protection \
-                or invalid reply messages!</b>\n'
+            msg += '<b>Unable to obtain valid information, it may be due to the user setting privacy protection or invalid reply messages!</b>\n'
     else:
         from_user = message.from_user or message.sender_chat
         queried_id = from_user.id
