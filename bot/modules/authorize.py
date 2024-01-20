@@ -3,7 +3,7 @@ import json
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex, create
 from time import time
-from bot import user_data, bot, OWNER_ID
+from bot import user_data, bot, OWNER_ID, LOGGER
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -49,9 +49,10 @@ async def get_buttons(from_user, key=None, text=None):
             for user in user_data.keys():
                 user = await bot.get_users(user)
                 username = user.username if user.username else user.first_name
+                LOGGER.info(f"UserName {username}")
                 if user_data[user].get('is_sudo'):
                     msg += f"<code>{username}</code>-<code>{user}</code>-<b>Admin</b>\n"
-                elif (not user_data[user].get('is_sudo')) and (user_data[user].get('is_auth')):
+                else:
                     msg += f"<code>{username}</code>-<code>{user}</code>-<b>Auther</b>\n"
     elif text:
         msg = text
