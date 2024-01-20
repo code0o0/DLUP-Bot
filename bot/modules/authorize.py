@@ -25,7 +25,7 @@ async def get_buttons(from_user, key=None, text=None):
             buttons.ibutton('🤷Remove admin', f'authset {user_id} sudodl')
             buttons.ibutton('👷Add auther', f'authset {user_id} authadd')
             buttons.ibutton('💁Remove auther', f'authset {user_id} authdl')
-            buttons.ibutton('List Users 👁️‍🗨️', f'authset {user_id} list', position='footer')
+            buttons.ibutton('👁️‍🗨️ List Users', f'authset {user_id} list')
         elif user_id in user_data and user_data[user_id].get('is_sudo'):
             msg = 'You are <b>Admin</b> 👮‍♂️'
             buttons.ibutton('👷Add auth', f'authset {user_id} authadd')
@@ -45,7 +45,8 @@ async def get_buttons(from_user, key=None, text=None):
         elif key == 'list':
             msg = ''
             for user in user_data:
-                username = await bot.get_users(user).username
+                user = await bot.get_users(user)
+                username = user.username if user.username else user.first_name
                 if user_data[user].get('is_sudo'):
                     msg += f"<code>{username}</code>-<code>{user}</code>-<b>Admin</b>\n"
                 elif (not user_data[user].get('is_sudo')) and (user_data[user].get('is_auth')):
@@ -66,9 +67,9 @@ async def event_handler(client, query, pfunc, rfunc):
     user_id = query.from_user.id
     handler_dict[user_id] = True
     start_time = time()
-    async def event_filter(filter, __, event):
+    async def event_filter(_, __, event):
         user = event.from_user.id or event.sender_chat
-        return bool(user == user_id and filter.text)
+        return bool(user == user_id and event.text)
     handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=-1)
     while handler_dict[user_id]:
         await sleep(0.5)
