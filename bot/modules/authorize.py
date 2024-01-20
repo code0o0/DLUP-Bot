@@ -43,14 +43,17 @@ async def get_buttons(from_user, key=None, text=None):
         elif key == 'authdl':
             msg = 'Send UserID or UserName to unauthorize'
         elif key == 'list':
-            msg = '<b>Authorized Users</b> 👁️‍🗨️\n'
-            for user in user_data:
-                user = await bot.get_users(user)
-                username = user.username if user.username else user.first_name
-                if user_data[user].get('is_sudo'):
-                    msg += f"<code>{username}</code>-<code>{user}</code>-<b>Admin</b>\n"
-                elif (not user_data[user].get('is_sudo')) and (user_data[user].get('is_auth')):
-                    msg += f"<code>{username}</code>-<code>{user}</code>-<b>Auther</b>\n"
+            msg = '<b>Authorized Users:</b> 👁️‍🗨️\n'
+            if len(user_data) == 0:
+                msg += 'No users are authorized'
+            else:
+                for user in user_data:
+                    user = await bot.get_users(user)
+                    username = user.username if user.username else user.first_name
+                    if user_data[user].get('is_sudo'):
+                        msg += f"<code>{username}</code>-<code>{user}</code>-<b>Admin</b>\n"
+                    elif (not user_data[user].get('is_sudo')) and (user_data[user].get('is_auth')):
+                        msg += f"<code>{username}</code>-<code>{user}</code>-<b>Auther</b>\n"
     elif text:
         msg = text
         buttons.ibutton('🔙Back', f'authset {user_id} back', position='footer')
