@@ -42,21 +42,24 @@ async def info(client, message):
         await auto_delete_message(message, reply_message, delay=30)
         return
     if is_sudo:
-        message = message.reply_to_message or message
-    from_user = message.forward_from or message.from_user or message.sender_chat
+        origin_message = message.reply_to_message or message
+    else:
+        origin_message = message
+    from_user = origin_message.forward_from or origin_message.from_user or origin_message.sender_chat
     queried_id = from_user.id
     username = from_user.username or from_user.mention
     msg += f'<b>User: </b>@{escape(username)}\n'
     msg += f'<b>UserID: </b><code>{queried_id}</code>\n'
-    chat = message.forward_from_chat or message.chat
+    chat = origin_message.forward_from_chat or origin_message.chat
     if chat.type in ['group', 'supergroup']:
         group_id = chat.id
         msg += f'<b>GroupID: </b><code>{group_id}</code>\n'
     elif chat.type == 'channel':
         channel_id = chat.id
         msg += f'<b>ChannelID: </b><code>{channel_id}</code>\n'
-    for media in [message.photo, message.video, message.audio, message.voice, message.sticker,
-                  message.animation, message.video_note, message.document]:
+    for media in [origin_message.photo, origin_message.video, origin_message.audio,
+                  origin_message.voice, origin_message.sticker, origin_message.animation,
+                  origin_message.video_note, origin_message.document]:
         if media and isinstance(media, tuple):
             file_id = media[0].file_id
             msg += f'<b>FileID: </b><code>{file_id}</code>\n'
