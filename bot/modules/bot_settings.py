@@ -137,8 +137,6 @@ Timeout: 60 sec"""
         for k in list(aria2_options.keys())[START: 10 + START]:
             buttons.ibutton(k, f"botset ariavar {k}", position="header")
             value = aria2_options[k]
-            if k == "bt-tracker":
-                value = "[......]"
             msg += f"<b>{k}:</b> {value}\n"
         for x in range(0, len(aria2_options), 10):
             buttons.ibutton(f"{int(x / 10)}", f"botset start aria {x}")

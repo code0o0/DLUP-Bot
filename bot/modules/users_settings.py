@@ -100,9 +100,8 @@ async def get_user_settings(from_user):
     else:
         leech_method = "bot"
 
-    buttons.ibutton("Leech", f"userset {user_id} leech")
-
-    buttons.ibutton("Rclone", f"userset {user_id} rclone")
+    buttons.ibutton("Leech", f"userset {user_id} leech", position="header")
+    buttons.ibutton("Rclone", f"userset {user_id} rclone", position="header")
     rccmsg = "Exists" if await aiopath.exists(rclone_conf) else "Not Exists"
     if user_dict.get("rclone_path", False):
         rccpath = user_dict["rclone_path"]
@@ -111,7 +110,7 @@ async def get_user_settings(from_user):
     else:
         rccpath = "None"
 
-    buttons.ibutton("Gdrive Tools", f"userset {user_id} gdrive")
+    buttons.ibutton("Gdrive Tools", f"userset {user_id} gdrive", position="header")
     tokenmsg = "Exists" if await aiopath.exists(token_pickle) else "Not Exists"
     if user_dict.get("gdrive_id", False):
         gdrive_id = user_dict["gdrive_id"]
@@ -134,9 +133,9 @@ async def get_user_settings(from_user):
     )
     du = "Gdrive API" if default_upload == "gd" else "Rclone"
     dub = "Gdrive API" if default_upload != "gd" else "Rclone"
-    buttons.ibutton(f"Upload using {dub}", f"userset {user_id} {default_upload}")
+    buttons.ibutton(f"Upload using {dub}", f"userset {user_id} {default_upload}", position="header")
 
-    buttons.ibutton("Excluded Extensions", f"userset {user_id} ex_ex")
+    buttons.ibutton("Excluded Extensions", f"userset {user_id} ex_ex", position="header")
     if user_dict.get("excluded_extensions", False):
         ex_ex = user_dict["excluded_extensions"]
     elif "excluded_extensions" not in user_dict and GLOBAL_EXTENSION_FILTER:
@@ -144,7 +143,7 @@ async def get_user_settings(from_user):
     else:
         ex_ex = "None"
 
-    buttons.ibutton("YT-DLP Options", f"userset {user_id} yto")
+    buttons.ibutton("YT-DLP Options", f"userset {user_id} yto", position="header")
     if user_dict.get("yt_opt", False):
         ytopt = user_dict["yt_opt"]
     elif "yt_opt" not in user_dict and (YTO := config_dict["YT_DLP_OPTIONS"]):
@@ -153,7 +152,7 @@ async def get_user_settings(from_user):
         ytopt = "None"
     if user_dict:
         buttons.ibutton("Reset All", f"userset {user_id} reset")
-    buttons.ibutton("Close", f"userset {user_id} close")
+    buttons.ibutton("Close", f"userset {user_id} close", position="footer")
 
     text = f"""<u>Settings for {name}</u>
 Leech Type is <b>{ltype}</b>
@@ -174,7 +173,7 @@ Default Upload is <b>{du}</b>
 Excluded Extensions is <code>{ex_ex}</code>
 YT-DLP Options is <b><code>{escape(ytopt)}</code></b>"""
 
-    return text, buttons.build_menu(1)
+    return text, buttons.build_menu(8, 2, 2)
 
 
 async def update_user_settings(query):
@@ -341,21 +340,21 @@ async def edit_user_settings(client, query):
         await query.answer()
         thumbpath = f"Thumbnails/{user_id}.jpg"
         buttons = ButtonMaker()
-        buttons.ibutton("Thumbnail", f"userset {user_id} sthumb")
+        buttons.ibutton("Thumbnail", f"userset {user_id} sthumb", position="header")
         thumbmsg = "Exists" if await aiopath.exists(thumbpath) else "Not Exists"
-        buttons.ibutton("Leech Split Size", f"userset {user_id} lss")
+        buttons.ibutton("Leech Split Size", f"userset {user_id} lss", position="header")
         if user_dict.get("split_size", False):
             split_size = user_dict["split_size"]
         else:
             split_size = config_dict["LEECH_SPLIT_SIZE"]
-        buttons.ibutton("Leech Destination", f"userset {user_id} ldest")
+        buttons.ibutton("Leech Destination", f"userset {user_id} ldest", position="header")
         if user_dict.get("leech_dest", False):
             leech_dest = user_dict["leech_dest"]
         elif "leech_dest" not in user_dict and (LD := config_dict["LEECH_DUMP_CHAT"]):
             leech_dest = LD
         else:
             leech_dest = "None"
-        buttons.ibutton("Leech Prefix", f"userset {user_id} leech_prefix")
+        buttons.ibutton("Leech Prefix", f"userset {user_id} leech_prefix", position="header")
         if user_dict.get("lprefix", False):
             lprefix = user_dict["lprefix"]
         elif "lprefix" not in user_dict and (
@@ -370,22 +369,22 @@ async def edit_user_settings(client, query):
                 and config_dict["AS_DOCUMENT"]
         ):
             ltype = "DOCUMENT"
-            buttons.ibutton("Send As Media", f"userset {user_id} as_doc false")
+            buttons.ibutton("Send As Media", f"userset {user_id} as_doc false", position="header")
         else:
             ltype = "MEDIA"
-            buttons.ibutton("Send As Document", f"userset {user_id} as_doc true")
+            buttons.ibutton("Send As Document", f"userset {user_id} as_doc true", position="header")
         if (
                 user_dict.get("equal_splits", False)
                 or "equal_splits" not in user_dict
                 and config_dict["EQUAL_SPLITS"]
         ):
             buttons.ibutton(
-                "Disable Equal Splits", f"userset {user_id} equal_splits false"
+                "Disable Equal Splits", f"userset {user_id} equal_splits false", position="header"
             )
             equal_splits = "Enabled"
         else:
             buttons.ibutton(
-                "Enable Equal Splits", f"userset {user_id} equal_splits true"
+                "Enable Equal Splits", f"userset {user_id} equal_splits true", position="header"
             )
             equal_splits = "Disabled"
         if (
@@ -394,11 +393,11 @@ async def edit_user_settings(client, query):
                 and config_dict["MEDIA_GROUP"]
         ):
             buttons.ibutton(
-                "Disable Media Group", f"userset {user_id} media_group false"
+                "Disable Media Group", f"userset {user_id} media_group false", position="header"
             )
             media_group = "Enabled"
         else:
-            buttons.ibutton("Enable Media Group", f"userset {user_id} media_group true")
+            buttons.ibutton("Enable Media Group", f"userset {user_id} media_group true", position="header")
             media_group = "Disabled"
         if (
                 IS_PREMIUM_USER
@@ -407,13 +406,13 @@ async def edit_user_settings(client, query):
                 and config_dict["USER_TRANSMISSION"]
         ):
             buttons.ibutton(
-                "Leech by Bot", f"userset {user_id} user_transmission false"
+                "Leech by Bot", f"userset {user_id} user_transmission false", position="header"
             )
             leech_method = "user"
         elif IS_PREMIUM_USER:
             leech_method = "bot"
             buttons.ibutton(
-                "Leech by User", f"userset {user_id} user_transmission true"
+                "Leech by User", f"userset {user_id} user_transmission true", position="header"
             )
         else:
             leech_method = "bot"
@@ -429,12 +428,12 @@ Leech Prefix is <code>{escape(lprefix)}</code>
 Leech Destination is <code>{leech_dest}</code>
 Leech by <b>{leech_method}</b> session
 """
-        await editMessage(message, text, buttons.build_menu(2))
+        await editMessage(message, text, buttons.build_menu(8, 2, 2))
     elif data[2] == "rclone":
         await query.answer()
         buttons = ButtonMaker()
-        buttons.ibutton("Rclone Config", f"userset {user_id} rcc")
-        buttons.ibutton("Default Rclone Path", f"userset {user_id} rcp")
+        buttons.ibutton("Rclone Config", f"userset {user_id} rcc", position="header")
+        buttons.ibutton("Default Rclone Path", f"userset {user_id} rcp", position="header")
         buttons.ibutton("Back", f"userset {user_id} back")
         buttons.ibutton("Close", f"userset {user_id} close")
         rccmsg = "Exists" if await aiopath.exists(rclone_conf) else "Not Exists"
@@ -447,25 +446,25 @@ Leech by <b>{leech_method}</b> session
         text = f"""<u>Rclone Settings for {name}</u>
 Rclone Config <b>{rccmsg}</b>
 Rclone Path is <code>{rccpath}</code>"""
-        await editMessage(message, text, buttons.build_menu(1))
+        await editMessage(message, text, buttons.build_menu(8, 2, 2))
     elif data[2] == "gdrive":
         await query.answer()
         buttons = ButtonMaker()
-        buttons.ibutton("token.pickle", f"userset {user_id} token")
-        buttons.ibutton("Default Gdrive ID", f"userset {user_id} gdid")
-        buttons.ibutton("Index URL", f"userset {user_id} index")
+        buttons.ibutton("token.pickle", f"userset {user_id} token", position="header")
+        buttons.ibutton("Default Gdrive ID", f"userset {user_id} gdid", position="header")
+        buttons.ibutton("Index URL", f"userset {user_id} index", position="header")
         if (
                 user_dict.get("stop_duplicate", False)
                 or "stop_duplicate" not in user_dict
                 and config_dict["STOP_DUPLICATE"]
         ):
             buttons.ibutton(
-                "Disable Stop Duplicate", f"userset {user_id} stop_duplicate false"
+                "Disable Stop Duplicate", f"userset {user_id} stop_duplicate false", position="header"
             )
             sd_msg = "Enabled"
         else:
             buttons.ibutton(
-                "Enable Stop Duplicate", f"userset {user_id} stop_duplicate true"
+                "Enable Stop Duplicate", f"userset {user_id} stop_duplicate true", position="header"
             )
             sd_msg = "Disabled"
         buttons.ibutton("Back", f"userset {user_id} back")
@@ -483,7 +482,7 @@ Gdrive Token <b>{tokenmsg}</b>
 Gdrive ID is <code>{gdrive_id}</code>
 Index URL is <code>{index}</code>
 Stop Duplicate is <b>{sd_msg}</b>"""
-        await editMessage(message, text, buttons.build_menu(1))
+        await editMessage(message, text, buttons.build_menu(8, 2, 2))
     elif data[2] == "vthumb":
         await query.answer()
         await sendFile(message, thumb_path, name)
@@ -492,14 +491,14 @@ Stop Duplicate is <b>{sd_msg}</b>"""
         await query.answer()
         buttons = ButtonMaker()
         if await aiopath.exists(thumb_path):
-            buttons.ibutton("View Thumbnail", f"userset {user_id} vthumb")
-            buttons.ibutton("Delete Thumbnail", f"userset {user_id} thumb")
+            buttons.ibutton("View Thumbnail", f"userset {user_id} vthumb", position="header")
+            buttons.ibutton("Delete Thumbnail", f"userset {user_id} thumb", position="header")
         buttons.ibutton("Back", f"userset {user_id} leech")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
             message,
             "Send a photo to save it as custom thumbnail. Timeout: 60 sec",
-            buttons.build_menu(1),
+            buttons.build_menu(8, 2, 2),
         )
         pfunc = partial(set_thumb, pre_event=query)
         await event_handler(client, query, pfunc, True)
@@ -508,7 +507,7 @@ Stop Duplicate is <b>{sd_msg}</b>"""
         buttons = ButtonMaker()
         if user_dict.get("yt_opt", False) or config_dict["YT_DLP_OPTIONS"]:
             buttons.ibutton(
-                "Remove YT-DLP Options", f"userset {user_id} yt_opt", "header"
+                "Remove YT-DLP Options", f"userset {user_id} yt_opt", position="header"
             )
         buttons.ibutton("Back", f"userset {user_id} back")
         buttons.ibutton("Close", f"userset {user_id} close")
@@ -518,20 +517,20 @@ Format: key:value|key:value|key:value.
 Example: format:bv*+mergeall[vcodec=none]|nocheckcertificate:True
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official/177'>script</a> to convert cli arguments to api options.
         """
-        await editMessage(message, rmsg, buttons.build_menu(1))
+        await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
         pfunc = partial(set_option, pre_event=query, option="yt_opt")
         await event_handler(client, query, pfunc)
     elif data[2] == "lss":
         await query.answer()
         buttons = ButtonMaker()
         if user_dict.get("split_size", False):
-            buttons.ibutton("Reset Split Size", f"userset {user_id} split_size")
+            buttons.ibutton("Reset Split Size", f"userset {user_id} split_size", position="header")
         buttons.ibutton("Back", f"userset {user_id} leech")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
             message,
             f"Send Leech split size in bytes. IS_PREMIUM_USER: {IS_PREMIUM_USER}. Timeout: 60 sec",
-            buttons.build_menu(1),
+            buttons.build_menu(8, 2, 2),
         )
         pfunc = partial(set_option, pre_event=query, option="split_size")
         await event_handler(client, query, pfunc)
@@ -539,11 +538,11 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await query.answer()
         buttons = ButtonMaker()
         if await aiopath.exists(rclone_conf):
-            buttons.ibutton("Delete rclone.conf", f"userset {user_id} rclone_config")
+            buttons.ibutton("Delete rclone.conf", f"userset {user_id} rclone_config", position="header")
         buttons.ibutton("Back", f"userset {user_id} rclone")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
-            message, "Send rclone.conf. Timeout: 60 sec", buttons.build_menu(1)
+            message, "Send rclone.conf. Timeout: 60 sec", buttons.build_menu(8, 2, 2)
         )
         pfunc = partial(add_rclone, pre_event=query)
         await event_handler(client, query, pfunc, document=True)
@@ -551,22 +550,22 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await query.answer()
         buttons = ButtonMaker()
         if user_dict.get("rclone_path", False):
-            buttons.ibutton("Reset Rclone Path", f"userset {user_id} rclone_path")
+            buttons.ibutton("Reset Rclone Path", f"userset {user_id} rclone_path", position="header")
         buttons.ibutton("Back", f"userset {user_id} rclone")
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = "Send Rclone Path. Timeout: 60 sec"
-        await editMessage(message, rmsg, buttons.build_menu(1))
+        await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
         pfunc = partial(set_option, pre_event=query, option="rclone_path")
         await event_handler(client, query, pfunc)
     elif data[2] == "token":
         await query.answer()
         buttons = ButtonMaker()
         if await aiopath.exists(token_pickle):
-            buttons.ibutton("Delete token.pickle", f"userset {user_id} token_pickle")
+            buttons.ibutton("Delete token.pickle", f"userset {user_id} token_pickle", position="header")
         buttons.ibutton("Back", f"userset {user_id} gdrive")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
-            message, "Send token.pickle. Timeout: 60 sec", buttons.build_menu(1)
+            message, "Send token.pickle. Timeout: 60 sec", buttons.build_menu(8, 2, 2)
         )
         pfunc = partial(add_token_pickle, pre_event=query)
         await event_handler(client, query, pfunc, document=True)
@@ -574,22 +573,22 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await query.answer()
         buttons = ButtonMaker()
         if user_dict.get("gdrive_id", False):
-            buttons.ibutton("Reset Gdrive ID", f"userset {user_id} gdrive_id")
+            buttons.ibutton("Reset Gdrive ID", f"userset {user_id} gdrive_id", position="header")
         buttons.ibutton("Back", f"userset {user_id} gdrive")
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = "Send Gdrive ID. Timeout: 60 sec"
-        await editMessage(message, rmsg, buttons.build_menu(1))
+        await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
         pfunc = partial(set_option, pre_event=query, option="gdrive_id")
         await event_handler(client, query, pfunc)
     elif data[2] == "index":
         await query.answer()
         buttons = ButtonMaker()
         if user_dict.get("index_url", False):
-            buttons.ibutton("Remove Index URL", f"userset {user_id} index_url")
+            buttons.ibutton("Remove Index URL", f"userset {user_id} index_url", position="header")
         buttons.ibutton("Back", f"userset {user_id} gdrive")
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = "Send Index URL. Timeout: 60 sec"
-        await editMessage(message, rmsg, buttons.build_menu(1))
+        await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
         pfunc = partial(set_option, pre_event=query, option="index_url")
         await event_handler(client, query, pfunc)
     elif data[2] == "leech_prefix":
@@ -600,13 +599,13 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
                 or "lprefix" not in user_dict
                 and config_dict["LEECH_FILENAME_PREFIX"]
         ):
-            buttons.ibutton("Remove Leech Prefix", f"userset {user_id} lprefix")
+            buttons.ibutton("Remove Leech Prefix", f"userset {user_id} lprefix", position="header")
         buttons.ibutton("Back", f"userset {user_id} leech")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
             message,
             "Send Leech Filename Prefix. You can add HTML tags. Timeout: 60 sec",
-            buttons.build_menu(1),
+            buttons.build_menu(8, 2, 2),
         )
         pfunc = partial(set_option, pre_event=query, option="lprefix")
         await event_handler(client, query, pfunc)
@@ -618,13 +617,13 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
                 or "leech_dest" not in user_dict
                 and config_dict["LEECH_DUMP_CHAT"]
         ):
-            buttons.ibutton("Reset Leech Destination", f"userset {user_id} leech_dest")
+            buttons.ibutton("Reset Leech Destination", f"userset {user_id} leech_dest", position="header")
         buttons.ibutton("Back", f"userset {user_id} leech")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
             message,
             "Send leech destination ID/USERNAME. Timeout: 60 sec",
-            buttons.build_menu(1),
+            buttons.build_menu(8, 2, 2),
         )
         pfunc = partial(set_option, pre_event=query, option="leech_dest")
         await event_handler(client, query, pfunc)
@@ -637,14 +636,14 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
                 and GLOBAL_EXTENSION_FILTER
         ):
             buttons.ibutton(
-                "Remove Excluded Extensions", f"userset {user_id} excluded_extensions"
+                "Remove Excluded Extensions", f"userset {user_id} excluded_extensions", position="header"
             )
         buttons.ibutton("Back", f"userset {user_id} back")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
             message,
             "Send exluded extenions seperated by space without dot at beginning. Timeout: 60 sec",
-            buttons.build_menu(1),
+            buttons.build_menu(8, 2, 2),
         )
         pfunc = partial(set_option, pre_event=query, option="excluded_extensions")
         await event_handler(client, query, pfunc)
@@ -688,7 +687,6 @@ async def send_users_settings(_, message):
                     f"{k}: <code>{v}</code>\n" for k, v in d.items() if f"{v}"
             ):
                 msg += kmsg + vmsg
-
         msg_ecd = msg.encode()
         if len(msg_ecd) > 4000:
             with BytesIO(msg_ecd) as ofile:

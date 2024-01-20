@@ -407,7 +407,7 @@ qbit_edit_opts = ['dl_limit', 'up_limit', 'max_connec', 'max_connec_per_torrent'
 aria2c_edit_opts = ['max-overall-download-limit', 'max-overall-upload-limit', 'max-download-limit', 'max-upload-limit',
                     'split', 'min-split-size', 'max-connection-per-server', 'disk-cache', 'file-allocation', 'user-agent',
                     'seed-ratio', 'seed-time', 'bt-max-peers', 'enable-dht', 'enable-dht6', 'bt-enable-lpd',
-                    'enable-peer-exchange', 'bt-tracker']
+                    'enable-peer-exchange']
 aria2c_global = ["bt-max-open-files", "download-result", "keep-unfinished-download-result", "log", "log-level",
                  "max-concurrent-downloads", "max-download-result", "max-overall-download-limit", "save-session",
                  "max-overall-upload-limit", "optimize-concurrent-downloads", "save-cookies", "server-stat-of"]

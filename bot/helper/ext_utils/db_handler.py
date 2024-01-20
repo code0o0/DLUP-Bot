@@ -167,16 +167,17 @@ class DbManager:
         async with self.__db.transaction():
             if not doc_bin:
                 await self.__db.execute(query="DELETE FROM files WHERE _id = :id", values={'id': path})
-                return
-            row = await self.__db.fetch_one(query='SELECT * FROM files WHERE _id = :id', values={'id': user_id})
-            if not row:
-                query = 'INSERT INTO files (_id, pf_bin, user_id) VALUES (:id, :pf_bin, :user_id)'
-                values = {'id': path, 'pf_bin': doc_bin, 'user_id': user_id}
-                await self.__db.execute(query=query, values=values)
             else:
-                query = 'UPDATE files SET pf_bin = :pf_bin  WHERE _id = :id'
-                values = {'id': path, 'pf_bin': doc_bin}
-                await self.__db.execute(query=query, values=values)
+                row = await self.__db.fetch_one(query='SELECT * FROM files WHERE _id = :id', values={'id': user_id})
+                if not row:
+                    query = 'INSERT INTO files (_id, pf_bin, user_id) VALUES (:id, :pf_bin, :user_id)'
+                    values = {'id': path, 'pf_bin': doc_bin, 'user_id': user_id}
+                    await self.__db.execute(query=query, values=values)
+                else:
+                    query = 'UPDATE files SET pf_bin = :pf_bin  WHERE _id = :id'
+                    values = {'id': path, 'pf_bin': doc_bin}
+                    await self.__db.execute(query=query, values=values)
+        await self.update_user_data(user_id)
     
     async def rss_update_all(self):
         async with self.__db.transaction():
