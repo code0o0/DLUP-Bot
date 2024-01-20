@@ -28,17 +28,18 @@ async def info(client, message):
         else:
             text = text.strip('https://t.me/')
             queried_id = text if text.startswith('@') else f'@{text}'
+        msg += "<b>User Information</b>\n"
         try:
             user = await bot.get_users(queried_id)
             username = user.username or user.mention
             userid = user.id
             dc_id = user.dc_id
-            msg += "<b>User Information</b>\n"
-            msg += f'<b>User: </b>@{escape(username)}\n'
-            msg += f'<b>User-ID: </b><code>{userid}</code>\n'
-            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n\n'
+            msg += f'<i>User: </i>@{escape(username)}\n'
+            msg += f'<i>User-ID: </i><code>{userid}</code>\n'
+            msg += f'<i>DC-ID: </i><code>{dc_id}</code>\n\n'
         except Exception as e:
-            msg += f'<b>User not found!</b>\n'
+            msg += f'<i>User not found!</i>\n\n'
+        msg += "<b>Chat Information</b>\n"
         try:
             chat = await bot.get_chat(queried_id)
             chat_title = chat.title
@@ -46,14 +47,14 @@ async def info(client, message):
             chat_name = chat.username or "Unknown"
             dc_id = chat.dc_id
             distance = chat.distance
-            msg += "<b>Chat Information</b>\n"
-            msg += f'<b>Chat-Title: </b>{escape(chat_title)}\n'
-            msg += f'<b>Chat-ID: </b><code>{chat_id}</code>\n'
-            msg += f'<b>Chat-Name: </b>@{escape(chat_name)}\n'
-            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
-            msg += f'<b>Distance: </b><code>{distance}</code>\n'
+            msg += f'<i>Chat-Title: </i>{escape(chat_title)}\n'
+            msg += f'<i>Chat-ID: </i><code>{chat_id}</code>\n'
+            msg += f'<i>Chat-Name: </i>@{escape(chat_name)}\n'
+            msg += f'<i>DC-ID: </i><code>{dc_id}</code>\n'
+            msg += f'<i>Distance: </i><code>{distance}</code>\n'
         except Exception as e:
-            msg += f'<b>If you want to know the chat information, please join the chat first!</b>\n'
+            msg += f'<i>Chat not found!</i>\n'
+            msg += f'<b>Note: </b>If you want to query the chat information, please add the bot to the group first!\n'
     elif all([is_sudo, message.reply_to_message]):
         origin_message = message.reply_to_message
         if from_user := origin_message.forward_from:
