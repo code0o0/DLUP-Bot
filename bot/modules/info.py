@@ -2,7 +2,7 @@ from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
 from html import escape
 
-from bot import bot, user_data
+from bot import bot, user_data, OWNER_ID
 from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -15,7 +15,13 @@ async def info(client, message):
     user = message.from_user or message.sender_chat
     user_id = user.id
     text = message.text.split()[1] if len(message.text.split()) > 1 else None
-    if all([text, user_data[user_id].get('is_sudo')]):
+    if user_id in user_data and user_data[user_id].get('is_sudo'):
+        is_sudo = True
+    elif user_id == OWNER_ID:
+        is_sudo = True
+    else:
+        is_sudo = False
+    if all([text, is_sudo]):
         if text.isdigit():
             queried_id = int(text)
         else:
