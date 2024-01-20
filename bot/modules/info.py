@@ -1,5 +1,6 @@
 from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
+from pyrogram.enums import ChatType
 from html import escape
 
 from bot import bot, user_data, OWNER_ID
@@ -30,12 +31,12 @@ async def info(client, message):
             user = await bot.get_users(queried_id)
             username = user.username or user.mention
             userid = user.id
-            dcid = user.dc_id
+            dc_id = user.dc_id
             language_code = user.language_code
             msg += f'<b>User: </b>@{escape(username)}\n'
-            msg += f'<b>User ID: </b><code>{userid}</code>\n'
-            msg += f'<b>DC ID: </b><code>{dcid}</code>\n'
-            msg += f'<b>Language Code: </b><code>{language_code}</code>\n'
+            msg += f'<b>User-ID: </b><code>{userid}</code>\n'
+            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+            msg += f'<b>Language-Code: </b><code>{language_code}</code>\n'
         except Exception as e:
             msg += f'<b>User not found!</b>\n'
         reply_message = await sendMessage(message, msg)
@@ -48,23 +49,28 @@ async def info(client, message):
     from_user = origin_message.forward_from or origin_message.from_user or origin_message.sender_chat
     queried_id = from_user.id
     username = from_user.username or from_user.mention
+    dc_id = from_user.dc_id
+    language_code = from_user.language_code
     msg += f'<b>User: </b>@{escape(username)}\n'
-    msg += f'<b>UserID: </b><code>{queried_id}</code>\n'
+    msg += f'<b>User-ID: </b><code>{queried_id}</code>\n'
+    msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+    msg += f'<b>Language-Code: </b><code>{language_code}</code>\n'
     chat = origin_message.forward_from_chat or origin_message.chat
-    chat_id = chat.id
-    msg += f'<b>ChatID: </b><code>{chat_id}</code>\n'
-    if chat_title := chat.title:
-        msg += f'<b>ChatTitle: </b>{escape(chat_title)}\n'
+    if chat.type in [ChatType.GROUP, ChatType.SUPERGROUP, ChatType.CHANNEL]:
+        chat_title = chat.title
+        chat_id = chat.id
+        msg += f'<b>Chat-Title: </b>{escape(chat_title)}\n'
+        msg += f'<b>Chat-ID: </b><code>{chat_id}</code>\n'
     for media in [origin_message.photo, origin_message.video, origin_message.audio,
                   origin_message.voice, origin_message.sticker, origin_message.animation,
                   origin_message.video_note, origin_message.document]:
         if media and isinstance(media, tuple):
             file_id = media[0].file_id
-            msg += f'<b>FileID: </b><code>{file_id}</code>\n'
+            msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
             break
         elif media:
             file_id = media.file_id
-            msg += f'<b>FileID: </b><code>{file_id}</code>\n'
+            msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
             break
 
     reply_message = await sendMessage(message, msg)
