@@ -12,7 +12,8 @@ from bot.helper.ext_utils.bot_utils import new_task
 @new_task
 async def info(client, message):
     msg = ''
-    user_id = message.from_user.id or message.sender_chat.id
+    user = message.from_user or message.sender_chat
+    user_id = user.id
     text = message.text.split()[1] if len(message.text.split()) > 1 else None
     if user_id in user_data and user_data[user_id].get('is_sudo'):
         is_sudo = True
@@ -41,13 +42,13 @@ async def info(client, message):
         await auto_delete_message(message, reply_message, delay=30)
         return
     if is_sudo:
-        message = message.reply_to_message if message.reply_to_message else message
-    from_user = message.forward_from if message.forward_from else message.from_user
+        message = message.reply_to_message or message
+    from_user = message.forward_from or message.from_user or message.sender_chat
     queried_id = from_user.id
-    username = from_user.username if from_user.username else message.forward_sender_name
+    username = from_user.username or from_user.mention
     text += f'<b>User: </b>@{escape(username)}\n'
     text += f'<b>UserID: </b><code>{queried_id}</code>\n'
-    chat = message.forward_from_chat if message.forward_from_chat else message.chat
+    chat = message.forward_from_chat or message.chat
     if chat.type in ['group', 'supergroup']:
         group_id = chat.id
         text += f'<b>GroupID: </b><code>{group_id}</code>\n'
