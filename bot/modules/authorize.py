@@ -43,7 +43,7 @@ async def get_buttons(from_user, key=None, text=None):
         elif key == 'authdl':
             msg = 'Send UserID or UserName to unauthorize'
         elif key == 'list':
-            msg = ''
+            msg = '<b>Authorized Users</b> 👁️‍🗨️\n'
             for user in user_data:
                 user = await bot.get_users(user)
                 username = user.username if user.username else user.first_name
