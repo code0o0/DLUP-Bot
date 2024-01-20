@@ -17,6 +17,7 @@ handler_dict = {}
 async def get_buttons(from_user, key=None, text=None):
     user_id = from_user.id
     buttons = ButtonMaker()
+    LOGGER.info(f'Authset: {user_id}')
     msg = ''
     if key is None:
         if user_id == OWNER_ID:
@@ -142,6 +143,7 @@ async def set_auth(client, message, pre_event, key):
 @new_thread
 async def auth_callback(client, query):
     user_id = query.from_user.id
+    LOGGER.info(f'callback: {user_id}')
     message = query.message
     data = query.data.split()
     if user_id != int(data[1]) or user_id != OWNER_ID:
