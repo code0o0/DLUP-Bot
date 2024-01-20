@@ -51,6 +51,6 @@ async def info(client, message):
             msg += f'<b>ChannelID: </b><code>{channel_id}</code>\n'
 
     reply_message = await sendMessage(message, msg)
-    await auto_delete_message(message, reply_message, delay=20)
+    await auto_delete_message(message, reply_message, delay=30)
 
 bot.add_handler(MessageHandler(info, filters=command(BotCommands.InfoCommand) & CustomFilters.authorized))
