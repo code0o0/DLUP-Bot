@@ -46,14 +46,13 @@ async def get_buttons(from_user, key=None, text=None):
             msg = '<b>Authorized Users:</b> 👁️‍🗨️\n'
             if len(user_data) == 0:
                 msg += 'No users are authorized'
-            for user in user_data.keys():
-                user = await bot.get_users(user)
+            for _id in user_data.keys():
+                user = await bot.get_users(_id)
                 username = user.username if user.username else user.first_name
-                LOGGER.info(f"UserName {username}")
-                if user_data[user].get('is_sudo'):
-                    msg += f"<code>{username}</code>-<code>{user}</code>-<b>Admin</b>\n"
+                if user_data[_id].get('is_sudo'):
+                    msg += f"<code>{username}</code>-<code>{_id}</code>-<b>Admin</b>\n"
                 else:
-                    msg += f"<code>{username}</code>-<code>{user}</code>-<b>Auther</b>\n"
+                    msg += f"<code>{username}</code>-<code>{_id}</code>-<b>Auther</b>\n"
     elif text:
         msg = text
         buttons.ibutton('🔙Back', f'authset {user_id} back', position='footer')
