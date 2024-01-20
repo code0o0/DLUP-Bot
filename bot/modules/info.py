@@ -12,8 +12,7 @@ from bot.helper.ext_utils.bot_utils import new_task
 @new_task
 async def info(client, message):
     msg = ''
-    user = message.from_user or message.sender_chat
-    user_id = user.id
+    user_id = message.from_user.id or message.sender_chat.id
     text = message.text.split()[1] if len(message.text.split()) > 1 else None
     if user_id in user_data and user_data[user_id].get('is_sudo'):
         is_sudo = True
@@ -38,17 +37,33 @@ async def info(client, message):
             msg += f'<b>Language Code: </b><code>{language_code}</code>\n'
         except Exception as e:
             msg += f'<b>User not found!</b>\n'
-    else:
-        username = user.username or user.mention
-        msg += f'<b>User: </b>@{escape(username)}\n'
-        msg += f'<b>UserID: </b><code>{user_id}</code>\n'
-        chat = message.chat
-        if chat.type in ['group', 'supergroup']:
-            group_id = chat.id
-            msg += f'<b>GroupID: </b><code>{group_id}</code>\n'
-        elif chat.type == 'channel':
-            channel_id = chat.id
-            msg += f'<b>ChannelID: </b><code>{channel_id}</code>\n'
+        reply_message = await sendMessage(message, msg)
+        await auto_delete_message(message, reply_message, delay=30)
+        return
+    if is_sudo:
+        message = message.reply_to_message if message.reply_to_message else message
+    from_user = message.forward_from if message.forward_from else message.from_user
+    queried_id = from_user.id
+    username = from_user.username if from_user.username else message.forward_sender_name
+    text += f'<b>User: </b>@{escape(username)}\n'
+    text += f'<b>UserID: </b><code>{queried_id}</code>\n'
+    chat = message.forward_from_chat if message.forward_from_chat else message.chat
+    if chat.type in ['group', 'supergroup']:
+        group_id = chat.id
+        text += f'<b>GroupID: </b><code>{group_id}</code>\n'
+    elif chat.type == 'channel':
+        channel_id = chat.id
+        text += f'<b>ChannelID: </b><code>{channel_id}</code>\n'
+    for media in [message.photo, message.video, message.audio, message.voice, message.sticker,
+                  message.animation, message.video_note, message.document]:
+        if media and isinstance(media, tuple):
+            file_id = media[0].file_id
+            text += f'<b>FileID: </b><code>{file_id}</code>\n'
+            break
+        elif media:
+            file_id = media.file_id
+            text += f'<b>FileID: </b><code>{file_id}</code>\n'
+            break
 
     reply_message = await sendMessage(message, msg)
     await auto_delete_message(message, reply_message, delay=30)
