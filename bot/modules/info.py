@@ -26,53 +26,89 @@ async def info(client, message):
         if text.isdigit():
             queried_id = int(text)
         else:
+            text = text.strip('https://t.me/')
             queried_id = text if text.startswith('@') else f'@{text}'
         try:
             user = await bot.get_users(queried_id)
             username = user.username or user.mention
             userid = user.id
             dc_id = user.dc_id
-            language_code = user.language_code
             msg += f'<b>User: </b>@{escape(username)}\n'
             msg += f'<b>User-ID: </b><code>{userid}</code>\n'
             msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
-            msg += f'<b>Language-Code: </b><code>{language_code}</code>\n'
         except Exception as e:
             msg += f'<b>User not found!</b>\n'
-        reply_message = await sendMessage(message, msg)
-        await auto_delete_message(message, reply_message, delay=30)
-        return
-    if is_sudo:
-        origin_message = message.reply_to_message or message
+        try:
+            chat = await bot.get_chat(queried_id)
+            chat_title = chat.title
+            msg += f'<b>Chat-Title: </b>{escape(chat_title)}\n'
+            if hasattr(chat, 'id'):
+                chat_id = chat.id
+                chat_name = chat.username or "Unknown"
+                dc_id = chat.dc_id
+                distance = chat.distance
+                msg += f'<b>Chat-ID: </b><code>{chat_id}</code>\n'
+                msg += f'<b>Chat-Name: </b>@{escape(chat_name)}\n'
+                msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+                msg += f'<b>Distance: </b><code>{distance}</code>\n'
+            else:
+                msg += f'<b>If you want to know more about this chat, please add this chat!</b>\n'
+        except Exception as e:
+            msg += f'<b>Chat not found!</b>\n'
+    elif all([is_sudo, message.reply_to_message]):
+        origin_message = message.reply_to_message
+        if from_user := origin_message.forward_from:
+            queried_id = from_user.id
+            username = from_user.username or from_user.mention
+            dc_id = from_user.dc_id
+            msg += f'<b>User: </b>@{escape(username)}\n'
+            msg += f'<b>User-ID: </b><code>{queried_id}</code>\n'
+            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+        if chat := origin_message.forward_from_chat:
+            chat_title = chat.title
+            chat_id = chat.id
+            chat_name = chat.username or "Unknown"
+            dc_id = chat.dc_id
+            distance = chat.distance
+            msg += f'<b>Chat-Title: </b>{escape(chat_title)}\n'
+            msg += f'<b>Chat-ID: </b><code>{chat_id}</code>\n'
+            msg += f'<b>Chat-Name: </b>@{escape(chat_name)}\n'
+            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+            msg += f'<b>Distance: </b><code>{distance}</code>\n'
+        for media in [origin_message.photo, origin_message.video, origin_message.audio,
+                      origin_message.voice, origin_message.sticker, origin_message.animation,
+                      origin_message.video_note, origin_message.document]:
+            if media and isinstance(media, tuple):
+                file_id = media[0].file_id
+                msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
+                break
+            elif media:
+                file_id = media.file_id
+                msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
+                break
+        if not msg:
+            msg += f'<b>Message not found!</b>\n'
     else:
-        origin_message = message
-    from_user = origin_message.forward_from or origin_message.from_user or origin_message.sender_chat
-    queried_id = from_user.id
-    username = from_user.username or from_user.mention
-    dc_id = from_user.dc_id
-    language_code = from_user.language_code
-    msg += f'<b>User: </b>@{escape(username)}\n'
-    msg += f'<b>User-ID: </b><code>{queried_id}</code>\n'
-    msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
-    msg += f'<b>Language-Code: </b><code>{language_code}</code>\n'
-    chat = origin_message.forward_from_chat or origin_message.chat
-    if chat.type in [ChatType.GROUP, ChatType.SUPERGROUP, ChatType.CHANNEL]:
-        chat_title = chat.title
-        chat_id = chat.id
-        msg += f'<b>Chat-Title: </b>{escape(chat_title)}\n'
-        msg += f'<b>Chat-ID: </b><code>{chat_id}</code>\n'
-    for media in [origin_message.photo, origin_message.video, origin_message.audio,
-                  origin_message.voice, origin_message.sticker, origin_message.animation,
-                  origin_message.video_note, origin_message.document]:
-        if media and isinstance(media, tuple):
-            file_id = media[0].file_id
-            msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
-            break
-        elif media:
-            file_id = media.file_id
-            msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
-            break
-
+        from_user = message.from_user or message.sender_chat
+        queried_id = from_user.id
+        username = from_user.username or from_user.mention
+        dc_id = from_user.dc_id
+        msg += f'<b>User: </b>@{escape(username)}\n'
+        msg += f'<b>User-ID: </b><code>{queried_id}</code>\n'
+        msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+        chat = message.chat
+        if chat.type in [ChatType.SUPERGROUP, ChatType.GROUP] and is_sudo:
+            chat_title = chat.title
+            chat_id = chat.id
+            chat_name = chat.username or "Unknown"
+            dc_id = chat.dc_id
+            distance = chat.distance
+            msg += f'<b>GROUP-Title: </b>{escape(chat_title)}\n'
+            msg += f'<b>GROUP-ID: </b><code>{chat_id}</code>\n'
+            msg += f'<b>GROUP-Name: </b>@{escape(chat_name)}\n'
+            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+            msg += f'<b>Distance: </b><code>{distance}</code>\n'
+    
     reply_message = await sendMessage(message, msg)
     await auto_delete_message(message, reply_message, delay=30)
 
