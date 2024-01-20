@@ -46,24 +46,24 @@ async def info(client, message):
     from_user = message.forward_from or message.from_user or message.sender_chat
     queried_id = from_user.id
     username = from_user.username or from_user.mention
-    text += f'<b>User: </b>@{escape(username)}\n'
-    text += f'<b>UserID: </b><code>{queried_id}</code>\n'
+    msg += f'<b>User: </b>@{escape(username)}\n'
+    msg += f'<b>UserID: </b><code>{queried_id}</code>\n'
     chat = message.forward_from_chat or message.chat
     if chat.type in ['group', 'supergroup']:
         group_id = chat.id
-        text += f'<b>GroupID: </b><code>{group_id}</code>\n'
+        msg += f'<b>GroupID: </b><code>{group_id}</code>\n'
     elif chat.type == 'channel':
         channel_id = chat.id
-        text += f'<b>ChannelID: </b><code>{channel_id}</code>\n'
+        msg += f'<b>ChannelID: </b><code>{channel_id}</code>\n'
     for media in [message.photo, message.video, message.audio, message.voice, message.sticker,
                   message.animation, message.video_note, message.document]:
         if media and isinstance(media, tuple):
             file_id = media[0].file_id
-            text += f'<b>FileID: </b><code>{file_id}</code>\n'
+            msg += f'<b>FileID: </b><code>{file_id}</code>\n'
             break
         elif media:
             file_id = media.file_id
-            text += f'<b>FileID: </b><code>{file_id}</code>\n'
+            msg += f'<b>FileID: </b><code>{file_id}</code>\n'
             break
 
     reply_message = await sendMessage(message, msg)
