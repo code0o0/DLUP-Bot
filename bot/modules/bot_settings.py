@@ -111,7 +111,7 @@ async def get_buttons(key=None, edit_type=None):
                     "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", 
                     "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
         msg = ""
-        for index, k in enumerate(var_list[14*START : 14 + 14*START]):
+        for index, k in enumerate(var_list[18*START : 18 + 18*START]):
             value = config_dict[k]
             if not value:
                 value = "None"
@@ -119,9 +119,9 @@ async def get_buttons(key=None, edit_type=None):
                 value = "[...]"
             elif k == "USER_SESSION_STRING":
                 value = value[:5] + "..." + value[-5:]
-            msg += f'<pre>{index+1}. {k} = {value}</pre>\n'
+            msg += f'<b>{index+1}.</b> <code>{k} = {value}</code>\n' if index >=9 else f'<b>{index+1}.</b>   <code>{k} = {value}</code>\n'
             buttons.ibutton(index+1, f"botset botvar {k}", position="header")
-        pages = (len(var_list) - 1) // 14 + 1
+        pages = (len(var_list) - 1) // 18 + 1
         if START == 0:
             buttons.ibutton("Next Page", "botset start var next")
         elif START == pages - 1:
@@ -129,7 +129,7 @@ async def get_buttons(key=None, edit_type=None):
         else:
             buttons.ibutton("Prev Page", "botset start var prev")
             buttons.ibutton("Next Page", "botset start var next")
-        msg += "🔔Click on the button below to select an option"
+        msg += "<pre>🔔Click on the button below to select an option.</pre>"
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "private":
@@ -141,28 +141,31 @@ Note: Changing .netrc will not take effect for aria2c until restart.
 Timeout: 60 sec"""
     elif key == "aria":
         msg = ""
-        for index, k in enumerate(aria2_options.keys()):
-            msg += f'<b>{index+1}.</b> <code>{k}</code> = {aria2_options[k]}\n'
+        for index, k in enumerate(aria2_options.keys()[18*START : 18 + 18*START]):
+            msg += f'<b>{index+1}.</b> <code>{k} = {aria2_options[k]}<code>\n' if index >=9 else f'<b>{index+1}.</b>   <code>{k} = {aria2_options[k]}<code>\n'
             buttons.ibutton(index+1, f"botset ariavar {k}", position="header")
-        msg += "<pre>Click the button corresponding to the option to edit the aria2 option.</pre>"
+        if START == 0:
+            buttons.ibutton("Next Page", "botset start aria next")
+        elif START == 1:
+            buttons.ibutton("Prev Page", "botset start aria prev")
+        msg += "<pre>🔔Click on the button below to select an option.</pre>"
         buttons.ibutton("Add new key", "botset ariavar newkey")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "qbit":
         msg = ""
-        for index, k in enumerate(qbit_options.keys()[21*START : 21 + 21*START]):
-            msg += f'<b>{index+1}.</b> <code>{k}<code> = {qbit_options[k]}\n'
+        for index, k in enumerate(qbit_options.keys()[18*START : 18 + 18*START]):
+            msg += f'<b>{index+1}.</b> <code>{k} = {qbit_options[k]}<code>\n' if index >=9 else f'<b>{index+1}.</b>   <code>{k} = {qbit_options[k]}<code>\n'
             buttons.ibutton(index+1, f"botset qbitvar {k}", position="header")
-        pages = (len(qbit_options) - 1) // 21 + 1
         if START == 0:
             buttons.ibutton("Next Page", "botset start qbit next")
         elif START == 1:
             buttons.ibutton("Prev Page", "botset start qbit prev")
-        msg += "<pre>Click the button corresponding to the option to edit the qBittorrent option.</pre>"
+        msg += "<pre>🔔Click on the button below to select an option.</pre>"
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
 
-    button = buttons.build_menu(2, 7, 2)
+    button = buttons.build_menu(2, 6, 2)
     return msg, button
 
 
