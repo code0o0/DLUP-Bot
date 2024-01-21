@@ -129,7 +129,7 @@ async def get_buttons(key=None, edit_type=None):
         else:
             buttons.ibutton("Prev Page", "botset start var prev")
             buttons.ibutton("Next Page", "botset start var next")
-        msg += "<pre>🔔Click on the button below to select an option.</pre>"
+        msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "private":
@@ -144,11 +144,12 @@ Timeout: 60 sec"""
         for index, k in enumerate(list(aria2_options.keys())[18*START : 18 + 18*START]):
             msg += f'<b>{index+1}.</b> <code>{k} = {aria2_options[k]}<code>\n' if index >=9 else f'<b>{index+1}.</b>   <code>{k} = {aria2_options[k]}<code>\n'
             buttons.ibutton(index+1, f"botset ariavar {k}", position="header")
-        if START == 0:
+        pages = (len(var_list) - 1) // 18 + 1
+        if pages > 1 and START == 0:
             buttons.ibutton("Next Page", "botset start aria next")
-        elif START == 1:
+        elif pages > 1 and START == 1:
             buttons.ibutton("Prev Page", "botset start aria prev")
-        msg += "<pre>🔔Click on the button below to select an option.</pre>"
+        msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
         buttons.ibutton("Add new key", "botset ariavar newkey")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
@@ -161,7 +162,7 @@ Timeout: 60 sec"""
             buttons.ibutton("Next Page", "botset start qbit next")
         elif START == 1:
             buttons.ibutton("Prev Page", "botset start qbit prev")
-        msg += "<pre>🔔Click on the button below to select an option.</pre>"
+        msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
 
