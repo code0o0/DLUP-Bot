@@ -119,7 +119,7 @@ async def get_buttons(key=None, edit_type=None):
                 value = "[...]"
             elif k == "USER_SESSION_STRING":
                 value = value[:5] + "..." + value[-5:]
-            msg += f'<b>{index+1}.</b> {k} = <i>{value}</i>\n'
+            msg += f'<b>{index+1}.</b> <code>{k}<code> = {value}\n' if index >=9 else f'<b> {index+1}.</b> <code>{k}</code> = {value}\n'
             buttons.ibutton(index+1, f"botset botvar {k}", position="header")
         pages = (len(var_list) - 1) // 21 + 1
         if START == 0:
@@ -142,7 +142,7 @@ Timeout: 60 sec"""
     elif key == "aria":
         msg = ""
         for index, k in enumerate(aria2_options.keys()):
-            msg += f'<b>{index+1}.</b> {k} = <i>{aria2_options[k]}</i>\n'
+            msg += f'<b>{index+1}.</b> <code>{k}</code> = {aria2_options[k]}\n'
             buttons.ibutton(index+1, f"botset ariavar {k}", position="header")
         msg += "<pre>Click the button corresponding to the option to edit the aria2 option.</pre>"
         buttons.ibutton("Add new key", "botset ariavar newkey")
@@ -151,7 +151,7 @@ Timeout: 60 sec"""
     elif key == "qbit":
         msg = ""
         for index, k in enumerate(qbit_options.keys()[21*START : 21 + 21*START]):
-            msg += f'<b>{index+1}.</b> {k} is <i>{qbit_options[k]}</i>\n'
+            msg += f'<b>{index+1}.</b> <code>{k}<code> = {qbit_options[k]}\n'
             buttons.ibutton(index+1, f"botset qbitvar {k}", position="header")
         pages = (len(qbit_options) - 1) // 21 + 1
         if START == 0:
