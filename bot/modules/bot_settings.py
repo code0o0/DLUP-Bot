@@ -111,7 +111,7 @@ async def get_buttons(key=None, edit_type=None):
                     "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", 
                     "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
         msg = f"<b>Config Variables | Page: {int(START / 10)}</b>\n\n"
-        for k in var_list[START: 10 + START]:
+        for k in var_list[START : 10 + START]:
             buttons.ibutton(k, f"botset botvar {k}\n", position="header")
             value = config_dict[k]
             if not value:
@@ -134,7 +134,7 @@ Note: Changing .netrc will not take effect for aria2c until restart.
 Timeout: 60 sec"""
     elif key == "aria":
         msg = f"<b>Aria2c Options | Page: {int(START / 10)}</b>\n\n"
-        for k in list(aria2_options.keys())[START: 10 + START]:
+        for k in list(aria2_options.keys())[START : 10 + START]:
             buttons.ibutton(k, f"botset ariavar {k}", position="header")
             value = aria2_options[k]
             msg += f"<b>{k}:</b> {value}\n"
@@ -145,7 +145,7 @@ Timeout: 60 sec"""
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "qbit":
         msg = f"<b>Qbittorrent Options | Page: {int(START / 10)}</b>\n\n"
-        for k in list(qbit_options.keys())[START: 10 + START]:
+        for k in list(qbit_options.keys())[START : 10 + START]:
             buttons.ibutton(k, f"botset qbitvar {k}", position="header")
             msg += f"<b>{k}:</b> {qbit_options[k]}\n"
         for x in range(0, len(qbit_options), 10):
@@ -291,7 +291,7 @@ async def sync_jdownloader():
         await sync_to_async(jdownloader.device.system.exit_jd)
         if await aiopath.exists("cfg.zip"):
             await remove("cfg.zip")
-        await sleep(2)
+        await sleep(5)
         await (
             await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
         ).wait()
@@ -432,9 +432,9 @@ async def edit_bot_settings(client, query):
         if data[2] in default_values:
             value = default_values[data[2]]
             if (
-                    data[2] == "STATUS_UPDATE_INTERVAL"
-                    and len(task_dict) != 0
-                    and (st := Intervals["status"])
+                data[2] == "STATUS_UPDATE_INTERVAL"
+                and len(task_dict) != 0
+                and (st := Intervals["status"])
             ):
                 for key, intvl in list(st.items()):
                     intvl.cancel()
