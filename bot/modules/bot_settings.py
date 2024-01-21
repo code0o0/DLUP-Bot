@@ -119,7 +119,7 @@ async def get_buttons(key=None, edit_type=None):
                 value = "[...]"
             elif k == "USER_SESSION_STRING":
                 value = value[:5] + "..." + value[-5:]
-            msg += f'<pre>{index+1}. {k} = {value}</pre\n'
+            msg += f'<pre>{index+1}. {k} = {value}</pre>\n'
             buttons.ibutton(index+1, f"botset botvar {k}", position="header")
         pages = (len(var_list) - 1) // 14 + 1
         if START == 0:
