@@ -116,10 +116,10 @@ async def get_buttons(key=None, edit_type=None):
             if not value:
                 value = "None"
             elif k == "SEARCH_PLUGINS":
-                value = "[...]"
+                value = "[…]"
             elif k == "USER_SESSION_STRING":
-                value = value[:3] + "..." + value[-3:]
-            msg += f'<b>{index+1}.</b> <code>{k} = {value}</code>\n' if index >=9 else f'<b>{index+1}.</b>   <code>{k} = {value}</code>\n'
+                value = value[:3] + "…" + value[-3:]
+            msg += f'<b>{index+1}.</b> {k} is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   {k} is <b>{value}</b>\n'
             buttons.ibutton(index+1, f"botset botvar {k}", position="header")
         pages = (len(var_list) - 1) // 18 + 1
         if START == 0:
@@ -142,7 +142,10 @@ Timeout: 60 sec"""
     elif key == "aria":
         msg = ""
         for index, k in enumerate(list(aria2_options.keys())[18*START : 18 + 18*START]):
-            msg += f'<b>{index+1}.</b> <code>{k} = {aria2_options[k]}<code>\n' if index >=9 else f'<b>{index+1}.</b>   <code>{k} = {aria2_options[k]}<code>\n'
+            value = aria2_options[k]
+            if not value:
+                value = "None"
+            msg += f'<b>{index+1}.</b> {k} is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   {k} is <b>{value}</b>\n'
             buttons.ibutton(index+1, f"botset ariavar {k}", position="header")
         pages = (len(aria2_options) - 1) // 18 + 1
         if pages > 1 and START == 0:
@@ -156,7 +159,10 @@ Timeout: 60 sec"""
     elif key == "qbit":
         msg = ""
         for index, k in enumerate(list(qbit_options.keys())[18*START : 18 + 18*START]):
-            msg += f'<b>{index+1}.</b> <code>{k} = {qbit_options[k]}<code>\n' if index >=9 else f'<b>{index+1}.</b>   <code>{k} = {qbit_options[k]}<code>\n'
+            value = qbit_options[k]
+            if not value:
+                value = "None"
+            msg += f'<b>{index+1}.</b> {k} is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   {k} is <b>{value}</b>\n'
             buttons.ibutton(index+1, f"botset qbitvar {k}", position="header")
         if START == 0:
             buttons.ibutton("Next Page", "botset start qbit next")
