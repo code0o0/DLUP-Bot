@@ -110,7 +110,7 @@ async def get_buttons(key=None, edit_type=None):
                     "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX", "LEECH_DUMP_CHAT",
                     "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", 
                     "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
-        msg = f"Click the button corresponding to the option to edit the variable.\n"
+        msg = f"<pre>Click the button corresponding to the option to edit the variable.</pre>\n"
         for index, k in enumerate(var_list[21*START : 21 + 21*START]):
             value = config_dict[k]
             if not value:
@@ -119,7 +119,7 @@ async def get_buttons(key=None, edit_type=None):
                 value = "[...]"
             elif k == "USER_SESSION_STRING":
                 value = value[:5] + "..." + value[-5:]
-            msg += f'<pre>{index+1}. <b>{k}</b> is <i>{value}</i></pre>\n'
+            msg += f'{index+1}. {k} = <i>{value}</i>\n'
             buttons.ibutton(index+1, f"botset botvar {k}", position="header")
         pages = (len(var_list) - 1) // 21 + 1
         if START == 0:
