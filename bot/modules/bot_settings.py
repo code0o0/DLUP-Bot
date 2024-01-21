@@ -110,15 +110,15 @@ async def get_buttons(key=None, edit_type=None):
                     "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX", "LEECH_DUMP_CHAT",
                     "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", 
                     "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
-        msg = f"Click the button to edit the variable.\n\n"
+        msg = f"Click the button corresponding to the option to edit the variable.\n"
         for index, k in enumerate(var_list[21*START : 21 + 21*START]):
             value = config_dict[k]
             if not value:
-                value = "Not Set"
+                value = "None"
             elif k == "SEARCH_PLUGINS":
-                value = "[......]"
+                value = "[...]"
             elif k == "USER_SESSION_STRING":
-                value = value[:10] + "..." + value[-10:]
+                value = value[:5] + "..." + value[-5:]
             msg += f'{index+1}. <b>{k}:</b><code>{value}</code>\n'
             buttons.ibutton(index+1, f"botset botvar {k}", position="header")
         pages = (len(var_list) - 1) // 21 + 1
@@ -139,7 +139,7 @@ To delete private file send only the file name as text message.
 Note: Changing .netrc will not take effect for aria2c until restart.
 Timeout: 60 sec"""
     elif key == "aria":
-        msg = f"Click the button to edit the aria2 options.\n\n"
+        msg = f"Click the button corresponding to the option to edit the aria2 option.\n"
         for index, k in enumerate(aria2_options.keys()):
             msg += f'{index+1}. <b>{k}:</b><code>{aria2_options[k]}</code>\n'
             buttons.ibutton(index+1, f"botset ariavar {k}", position="header")
@@ -147,7 +147,7 @@ Timeout: 60 sec"""
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "qbit":
-        msg = f"<b>Click the button to edit the qBittorrent options.</b>\n\n"
+        msg = f"Click the button corresponding to the option to edit the qBittorrent option.\n"
         for index, k in enumerate(qbit_options.keys()[21*START : 21 + 21*START]):
             msg += f'{index+1}. <b>{k}:</b><code>{qbit_options[k]}</code>\n'
             buttons.ibutton(index+1, f"botset qbitvar {k}", position="header")
