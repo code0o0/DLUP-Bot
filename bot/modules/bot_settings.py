@@ -119,7 +119,7 @@ async def get_buttons(key=None, edit_type=None):
                 value = "[…]"
             elif k == "USER_SESSION_STRING":
                 value = value[:3] + "…" + value[-3:]
-            msg += f'<b>{index+1}.</b> {k} is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   {k} is <b>{value}</b>\n'
+            msg += f'<b>{index+1}.</b> <u>{k}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{k}</u> is <b>{value}</b>\n'
             buttons.ibutton(index+1, f"botset botvar {k}", position="header")
         pages = (len(var_list) - 1) // 18 + 1
         if START == 0:
@@ -145,7 +145,7 @@ Timeout: 60 sec"""
             value = aria2_options[k]
             if not value:
                 value = "None"
-            msg += f'<b>{index+1}.</b> {k} is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   {k} is <b>{value}</b>\n'
+            msg += f'<b>{index+1}.</b> <u>{k}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{k}</u> is <b>{value}</b>\n'
             buttons.ibutton(index+1, f"botset ariavar {k}", position="header")
         pages = (len(aria2_options) - 1) // 18 + 1
         if pages > 1 and START == 0:
@@ -162,7 +162,7 @@ Timeout: 60 sec"""
             value = qbit_options[k]
             if not value:
                 value = "None"
-            msg += f'<b>{index+1}.</b> {k} is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   {k} is <b>{value}</b>\n'
+            msg += f'<b>{index+1}.</b> <u>{k}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{k}</u> is <b>{value}</b>\n'
             buttons.ibutton(index+1, f"botset qbitvar {k}", position="header")
         if START == 0:
             buttons.ibutton("Next Page", "botset start qbit next")
