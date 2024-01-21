@@ -141,7 +141,7 @@ Note: Changing .netrc will not take effect for aria2c until restart.
 Timeout: 60 sec"""
     elif key == "aria":
         msg = ""
-        for index, k in enumerate(aria2_options.keys()[18*START : 18 + 18*START]):
+        for index, k in enumerate(list(aria2_options.keys())[18*START : 18 + 18*START]):
             msg += f'<b>{index+1}.</b> <code>{k} = {aria2_options[k]}<code>\n' if index >=9 else f'<b>{index+1}.</b>   <code>{k} = {aria2_options[k]}<code>\n'
             buttons.ibutton(index+1, f"botset ariavar {k}", position="header")
         if START == 0:
@@ -154,7 +154,7 @@ Timeout: 60 sec"""
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "qbit":
         msg = ""
-        for index, k in enumerate(qbit_options.keys()[18*START : 18 + 18*START]):
+        for index, k in enumerate(list(qbit_options.keys())[18*START : 18 + 18*START]):
             msg += f'<b>{index+1}.</b> <code>{k} = {qbit_options[k]}<code>\n' if index >=9 else f'<b>{index+1}.</b>   <code>{k} = {qbit_options[k]}<code>\n'
             buttons.ibutton(index+1, f"botset qbitvar {k}", position="header")
         if START == 0:
