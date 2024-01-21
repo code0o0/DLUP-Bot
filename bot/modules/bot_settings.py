@@ -68,37 +68,37 @@ default_values = {
 async def get_buttons(key=None, edit_type=None):
     buttons = ButtonMaker()
     if key is None:
-        buttons.ibutton("Config Variables", "botset var", position="header")
-        buttons.ibutton("Qbit Settings", "botset qbit", position="header")
-        buttons.ibutton("Aria2c Settings", "botset aria", position="header")
-        buttons.ibutton("Private Files", "botset private", position="header")
-        buttons.ibutton("JDownloader Sync", "botset syncjd", position="header")
-        buttons.ibutton("Close", "botset close")
+        buttons.ibutton("Config Variables", "botset var")
+        buttons.ibutton("Qbit Settings", "botset qbit")
+        buttons.ibutton("Aria2c Settings", "botset aria")
+        buttons.ibutton("Private Files", "botset private")
+        buttons.ibutton("JDownloader Sync", "botset syncjd")
+        buttons.ibutton("Close", "botset close", position="footer")
         msg = "Bot Settings:"
     elif edit_type is not None:
         if edit_type == "botvar":
             msg = ""
-            buttons.ibutton("Default", f"botset resetvar {key}", position="header")
-            buttons.ibutton("Back", "botset var")
-            buttons.ibutton("Close", "botset close")
+            buttons.ibutton("Default", f"botset resetvar {key}")
+            buttons.ibutton("Back", "botset var", position="footer")
+            buttons.ibutton("Close", "botset close", position="footer")
             if key in ["CMD_SUFFIX", "OWNER_ID", "USER_SESSION_STRING"]:
                 msg += "Restart required for this edit to take effect!\n\n"
             msg += f"Send a valid value for {key}. Current value is '{config_dict[key]}'. Timeout: 60 sec"
         elif edit_type == "ariavar":
             if key != "newkey":
-                buttons.ibutton("Default", f"botset resetaria {key}", position="header")
-                buttons.ibutton("Empty String", f"botset emptyaria {key}", position="header")
-            buttons.ibutton("Back", "botset aria")
-            buttons.ibutton("Close", "botset close")
+                buttons.ibutton("Default", f"botset resetaria {key}")
+                buttons.ibutton("Empty String", f"botset emptyaria {key}")
+            buttons.ibutton("Back", "botset aria", position="footer")
+            buttons.ibutton("Close", "botset close", position="footer")
             msg = (
                 "Send a key with value. Example: https-proxy-user:value"
                 if key == "newkey"
                 else f"Send a valid value for {key}. Current value is '{aria2_options[key]}'. Timeout: 60 sec"
             )
         elif edit_type == "qbitvar":
-            buttons.ibutton("Empty String", f"botset emptyqbit {key}", position="header")
-            buttons.ibutton("Back", "botset qbit")
-            buttons.ibutton("Close", "botset close")
+            buttons.ibutton("Empty String", f"botset emptyqbit {key}")
+            buttons.ibutton("Back", "botset qbit", position="footer")
+            buttons.ibutton("Close", "botset close", position="footer")
             msg = f"Send a valid value for {key}. Current value is '{qbit_options[key]}'. Timeout: 60 sec"
     elif key == "var":
         var_list = ["STATUS_UPDATE_INTERVAL", "STATUS_LIMIT", "QUEUE_ALL", "QUEUE_DOWNLOAD", "QUEUE_UPLOAD",
@@ -110,9 +110,8 @@ async def get_buttons(key=None, edit_type=None):
                     "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX", "LEECH_DUMP_CHAT",
                     "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", 
                     "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
-        msg = f"<b>Config Variables | Page: {int(START / 10)}</b>\n\n"
-        for k in var_list[START : 10 + START]:
-            buttons.ibutton(k, f"botset botvar {k}\n", position="header")
+        msg = f"<b>Config Variables</b>\n"
+        for index, k in enumerate(var_list[30*START : 30 + 30*START]):
             value = config_dict[k]
             if not value:
                 value = "Not Set"
@@ -120,9 +119,12 @@ async def get_buttons(key=None, edit_type=None):
                 value = "[......]"
             elif k == "USER_SESSION_STRING":
                 value = value[:10] + "..." + value[-10:]
-            msg += f"<b>{k}:</b> {value}\n"
-        for x in range(0, len(var_list), 10):
-            buttons.ibutton(f"{int(x / 10)}", f"botset start var {x}")
+            msg += f'{index+1}. {k} : {value}\n'
+            buttons.ibutton(index+1, f"botset botvar {k}", position="header")
+        if START == 0:
+            buttons.ibutton("Next Page", "botset start var next")
+        elif START == 1:
+            buttons.ibutton("Prev Page", "botset start var prev")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "private":
@@ -133,27 +135,24 @@ To delete private file send only the file name as text message.
 Note: Changing .netrc will not take effect for aria2c until restart.
 Timeout: 60 sec"""
     elif key == "aria":
-        msg = f"<b>Aria2c Options | Page: {int(START / 10)}</b>\n\n"
-        for k in list(aria2_options.keys())[START : 10 + START]:
-            buttons.ibutton(k, f"botset ariavar {k}", position="header")
-            value = aria2_options[k]
-            msg += f"<b>{k}:</b> {value}\n"
-        for x in range(0, len(aria2_options), 10):
-            buttons.ibutton(f"{int(x / 10)}", f"botset start aria {x}")
-        buttons.ibutton("Add new key", "botset ariavar newkey", position="footer")
+        msg = f"<b>Aria2c Options</b>\n"
+        for index, k in enumerate(aria2_options.keys()):
+            msg += f'{index+1}. {k} : {aria2_options[k]}\n'
+            buttons.ibutton(index+1, f"botset ariavar {k}", position="header")
+        buttons.ibutton("Add new key", "botset ariavar newkey")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "qbit":
-        msg = f"<b>Qbittorrent Options | Page: {int(START / 10)}</b>\n\n"
-        for k in list(qbit_options.keys())[START : 10 + START]:
-            buttons.ibutton(k, f"botset qbitvar {k}", position="header")
-            msg += f"<b>{k}:</b> {qbit_options[k]}\n"
-        for x in range(0, len(qbit_options), 10):
-            buttons.ibutton(f"{int(x / 10)}", f"botset start qbit {x}")
+        msg = f"<b>Qbittorrent Options</b>\n"
+        for index, k in enumerate(qbit_options.keys()):
+            msg += f'{index+1}. {k} : {qbit_options[k]}\n'
+            buttons.ibutton(index+1, f"botset qbitvar {k}", position="header")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
-    button = buttons.build_menu(8, 2 ,2)
+
+    button = buttons.build_menu(2, 8 ,2)
     return msg, button
+
 
 async def update_buttons(message, key=None, edit_type=None):
     msg, button = await get_buttons(key, edit_type)
@@ -562,9 +561,11 @@ async def edit_bot_settings(client, query):
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == "start":
         await query.answer()
-        if START != int(data[3]):
-            globals()["START"] = int(data[3])
-            await update_buttons(message, data[2])
+        if data[3] == "next":
+            globals()["START"] += 1
+        elif data[3] == "prev":
+            globals()["START"] -= 1
+        await update_buttons(message, data[2])
     elif data[1] == "push":
         await query.answer()
         filename = data[2].rsplit(".zip", 1)[0]
