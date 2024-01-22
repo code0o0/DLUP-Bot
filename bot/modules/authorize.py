@@ -9,7 +9,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.bot_utils import new_thread, update_user_ldata
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, deleteMessage
 from asyncio import sleep, Lock
 
 handler_dict = {}
@@ -150,8 +150,8 @@ async def auth_callback(client, query):
     if data[2] == 'close':
         handler_dict[user_id] = False
         await query.answer()
-        await message.reply_to_message.delete()
-        await message.delete()
+        await deleteMessage(message.reply_to_message)
+        await deleteMessage(message)
     elif data[2] == 'back':
         handler_dict[user_id] = False
         key = data[3] if len(data) == 4 else None
