@@ -438,9 +438,7 @@ bot = tgClient(
     workers=1000,
     parse_mode=enums.ParseMode.HTML,
     max_concurrent_transmissions=10,
-)
-quiz = patch(client=bot, clear=False, timeout=60, stop_cmd='/cancel')
-bot.start()
+).start()
 bot_loop = bot.loop
 
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
