@@ -15,7 +15,6 @@ from logging import (
 )
 import json
 from os import remove, path as ospath, environ, getcwd
-from pyromod import Client as tgClient
 from pyrogram import enums
 from qbittorrentapi import Client as qbClient
 from socket import setdefaulttimeout
@@ -24,11 +23,12 @@ from subprocess import Popen, run
 from time import time
 from tzlocal import get_localzone
 from uvloop import install
-
+install()
+from pyromod import Client as tgClient
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
 
-install()
+
 setdefaulttimeout(600)
 
 getLogger("qbittorrentapi").setLevel(INFO)
