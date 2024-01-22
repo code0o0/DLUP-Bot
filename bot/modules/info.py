@@ -30,24 +30,24 @@ async def info(client, message):
             text = text.strip('https://t.me/')
             queried_id = text if text.startswith('@') else f'@{text}'
         try:
-            msg += "<b>User Information</b>\n"
             queried_user = await tgclient.get_users(queried_id)
             username = queried_user.username or queried_user.first_name or "Unknown"
             userid = queried_user.id
             dc_id = queried_user.dc_id
+            msg += "<b>User Information</b>\n"
             msg += f'<pre>User: @{escape(username)}</pre>\n'
             msg += f'<pre>User-ID: <code>{userid}</code></pre>\n'
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n\n'
         except Exception as e:
             pass
         try:
-            msg += "<b>Chat Information</b>\n"
             queried_chat = await tgclient.get_chat(queried_id)
             chat_title = queried_chat.title
             chat_id = queried_chat.id
             chat_name = queried_chat.username or "Unknown"
             dc_id = queried_chat.dc_id
             distance = queried_chat.distance
+            msg += "<b>Chat Information</b>\n"
             msg += f'<pre>Chat-Title: {escape(chat_title)}</pre>\n'
             msg += f'<pre>Chat-ID: <code>{chat_id}</code></pre>\n'
             msg += f'<pre>Chat-Name: @{escape(chat_name)}</pre>\n'
@@ -96,6 +96,7 @@ async def info(client, message):
         queried_id = from_user.id
         username = from_user.username or from_user.mention
         dc_id = from_user.dc_id
+        msg += "<b>User Information</b>\n"
         msg += f'<pre>User: @{escape(username)}</pre>\n'
         msg += f'<pre>User-ID: <code>{queried_id}</code></pre>\n'
         msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n\n'

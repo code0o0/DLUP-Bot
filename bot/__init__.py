@@ -15,8 +15,8 @@ from logging import (
 )
 import json
 from os import remove, path as ospath, environ, getcwd
-from pyrocon import patch
-from pyrogram import Client as tgClient, enums
+from pyromod import Client as tgClient
+from pyrogram import enums
 from qbittorrentapi import Client as qbClient
 from socket import setdefaulttimeout
 from sqlite3 import connect
