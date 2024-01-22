@@ -3,7 +3,7 @@ from pyrogram.filters import command
 from pyrogram.enums import ChatType
 from html import escape
 
-from bot import bot, user_data, OWNER_ID
+from bot import bot, user, user_data, OWNER_ID
 from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -13,12 +13,13 @@ from bot.helper.ext_utils.bot_utils import new_task
 @new_task
 async def info(client, message):
     msg = ''
-    user = message.from_user or message.sender_chat
-    user_id = user.id
+    operator_user = message.from_user or message.sender_chat
+    operator_id = operator_user.id
     text = message.text.split()[1] if len(message.text.split()) > 1 else None
-    if user_id in user_data and user_data[user_id].get('is_sudo'):
+    tgclient = user or bot
+    if operator_id in user_data and user_data[operator_id].get('is_sudo'):
         is_sudo = True
-    elif user_id == OWNER_ID:
+    elif operator_id == OWNER_ID:
         is_sudo = True
     else:
         is_sudo = False
@@ -28,32 +29,34 @@ async def info(client, message):
         else:
             text = text.strip('https://t.me/')
             queried_id = text if text.startswith('@') else f'@{text}'
-        msg += "<b>User Information</b>\n"
         try:
-            user = await bot.get_users(queried_id)
-            username = user.username or user.mention
-            userid = user.id
-            dc_id = user.dc_id
-            msg += f'<i>User: </i>@{escape(username)}\n'
-            msg += f'<i>User-ID: </i><code>{userid}</code>\n'
-            msg += f'<i>DC-ID: </i><code>{dc_id}</code>\n\n'
+            msg += "<b>User Information</b>\n"
+            queried_user = await tgclient.get_users(queried_id)
+            username = queried_user.username or queried_user.first_name or "Unknown"
+            userid = queried_user.id
+            dc_id = queried_user.dc_id
+            msg += f'<pre>User: @{escape(username)}</pre>\n'
+            msg += f'<pre>User-ID: <code>{userid}</code></pre>\n'
+            msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n\n'
         except Exception as e:
-            msg += f'<i>User not found!</i>\n\n'
-        msg += "<b>Chat Information</b>\n"
+            pass
         try:
-            chat = await bot.get_chat(queried_id)
-            chat_title = chat.title
-            chat_id = chat.id
-            chat_name = chat.username or "Unknown"
-            dc_id = chat.dc_id
-            distance = chat.distance
-            msg += f'<i>Chat-Title: </i>{escape(chat_title)}\n'
-            msg += f'<i>Chat-ID: </i><code>{chat_id}</code>\n'
-            msg += f'<i>Chat-Name: </i>@{escape(chat_name)}\n'
-            msg += f'<i>DC-ID: </i><code>{dc_id}</code>\n'
-            msg += f'<i>Distance: </i><code>{distance}</code>\n'
+            msg += "<b>Chat Information</b>\n"
+            queried_chat = await tgclient.get_chat(queried_id)
+            chat_title = queried_chat.title
+            chat_id = queried_chat.id
+            chat_name = queried_chat.username or "Unknown"
+            dc_id = queried_chat.dc_id
+            distance = queried_chat.distance
+            msg += f'<pre>Chat-Title: {escape(chat_title)}</pre>\n'
+            msg += f'<pre>Chat-ID: <code>{chat_id}</code></pre>\n'
+            msg += f'<pre>Chat-Name: @{escape(chat_name)}</pre>\n'
+            msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
+            msg += f'<pre>Distance: {distance}</pre>\n'
         except Exception as e:
-            msg += f'<i>Chat not found!</i>\n'
+            pass
+        if not msg:
+            msg += f'<b>User or chat not found!</b>\n'
             msg += f'<b>Note: </b>If you want to query the chat information, please add the bot to the group first!\n'
     elif all([is_sudo, message.reply_to_message]):
         origin_message = message.reply_to_message
@@ -61,20 +64,20 @@ async def info(client, message):
             queried_id = from_user.id
             username = from_user.username or from_user.mention
             dc_id = from_user.dc_id
-            msg += f'<b>User: </b>@{escape(username)}\n'
-            msg += f'<b>User-ID: </b><code>{queried_id}</code>\n'
-            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+            msg += f'<pre>User: @{escape(username)}</pre>\n'
+            msg += f'<pre>User-ID: <code>{queried_id}</code></pre>\n'
+            msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n\n'
         if chat := origin_message.forward_from_chat:
             chat_title = chat.title
             chat_id = chat.id
             chat_name = chat.username or "Unknown"
             dc_id = chat.dc_id
             distance = chat.distance
-            msg += f'<b>Chat-Title: </b>{escape(chat_title)}\n'
-            msg += f'<b>Chat-ID: </b><code>{chat_id}</code>\n'
-            msg += f'<b>Chat-Name: </b>@{escape(chat_name)}\n'
-            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
-            msg += f'<b>Distance: </b><code>{distance}</code>\n'
+            msg += f'<pre>Chat-Title: {escape(chat_title)}</pre>\n'
+            msg += f'<pre>Chat-ID: <code>{chat_id}</code></pre>\n'
+            msg += f'<pre>Chat-Name: @{escape(chat_name)}</pre>\n'
+            msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
+            msg += f'<pre>Distance: {distance}</pre>\n'
         for media in [origin_message.photo, origin_message.video, origin_message.audio,
                       origin_message.voice, origin_message.sticker, origin_message.animation,
                       origin_message.video_note, origin_message.document]:
@@ -93,21 +96,21 @@ async def info(client, message):
         queried_id = from_user.id
         username = from_user.username or from_user.mention
         dc_id = from_user.dc_id
-        msg += f'<b>User: </b>@{escape(username)}\n'
-        msg += f'<b>User-ID: </b><code>{queried_id}</code>\n'
-        msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
+        msg += f'<pre>User: @{escape(username)}</pre>\n'
+        msg += f'<pre>User-ID: <code>{queried_id}</code></pre>\n'
+        msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n\n'
         chat = message.chat
         if chat.type in [ChatType.SUPERGROUP, ChatType.GROUP] and is_sudo:
-            chat_title = chat.title
-            chat_id = chat.id
-            chat_name = chat.username or "Unknown"
+            group_title = chat.title
+            group_id = chat.id
+            group_name = chat.username or "Unknown"
             dc_id = chat.dc_id
             distance = chat.distance
-            msg += f'<b>GROUP-Title: </b>{escape(chat_title)}\n'
-            msg += f'<b>GROUP-ID: </b><code>{chat_id}</code>\n'
-            msg += f'<b>GROUP-Name: </b>@{escape(chat_name)}\n'
-            msg += f'<b>DC-ID: </b><code>{dc_id}</code>\n'
-            msg += f'<b>Distance: </b><code>{distance}</code>\n'
+            msg += f'<pre>Group-Title: {escape(group_title)}</pre>\n'
+            msg += f'<pre>Group-ID: <code>{group_id}</code></pre>\n'
+            msg += f'<pre>Group-Name: @{escape(group_name)}</pre>\n'
+            msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
+            msg += f'<pre>Distance: {distance}</pre>\n'
     
     reply_message = await sendMessage(message, msg)
     await auto_delete_message(message, reply_message, delay=30)
