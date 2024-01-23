@@ -1,4 +1,4 @@
-from asyncio import gather, TimeoutError
+from asyncio import TimeoutError
 import json
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -137,7 +137,7 @@ async def set_auth(client, query, key):
         msg = 'UserID or UserName not found, please resend UserID or UserName!'
         reply_message = await response_message.reply(msg)
         await set_auth(client, query, key)
-        await gather(deleteMessage(response_message), deleteMessage(reply_message))
+        await auto_delete_message(response_message, reply_message, 0)
 
 @new_thread
 async def auth_callback(client, query):
