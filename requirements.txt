@@ -6,6 +6,7 @@ apscheduler
 aria2p
 asyncio
 cloudscraper
+convopyro
 databases[aiosqlite]
 dnspython
 feedparser

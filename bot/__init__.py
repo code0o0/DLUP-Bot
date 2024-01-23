@@ -1,6 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aria2p import API as ariaAPI, Client as ariaClient
 from asyncio import Lock
+from convopyro import Conversation
 from dotenv import load_dotenv, dotenv_values
 from logging import (
     getLogger,
@@ -15,6 +16,7 @@ from logging import (
 )
 import json
 from os import remove, path as ospath, environ, getcwd
+from pyrogram import Client as tgClient, enums
 from qbittorrentapi import Client as qbClient
 from socket import setdefaulttimeout
 from sqlite3 import connect
@@ -23,8 +25,8 @@ from time import time
 from tzlocal import get_localzone
 from uvloop import install
 install()
-from pyromod import Client as tgClient
-from pyrogram import enums
+# from pyromod import Client as tgClient
+# from pyrogram import enums
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
 
@@ -430,7 +432,7 @@ else:
     aria2.set_global_options(a2c_glo)
 
 log_info("Creating client from BOT_TOKEN")
-bot = tgClient(
+app = tgClient(
     "bot",
     TELEGRAM_API,
     TELEGRAM_HASH,
@@ -438,7 +440,9 @@ bot = tgClient(
     workers=1000,
     parse_mode=enums.ParseMode.HTML,
     max_concurrent_transmissions=10,
-).start()
+)
+Conversation(app)
+bot = app.start()
 bot_loop = bot.loop
 
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
