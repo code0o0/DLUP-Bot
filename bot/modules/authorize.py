@@ -69,8 +69,8 @@ async def update_buttons(query, key=None, text=None):
 
 
 async def set_auth(client, query, key):
+    LOGGER.info(f"Setting auth for {query.from_user.id}")
     user_id = query.from_user.id
-    LOGGER.info(f"Setting auth for {user_id}")
     try:
         response_message = await client.listen.Message(filters.text, id = filters.user(user_id), timeout = 20)
     except asyncio.TimeoutError:
