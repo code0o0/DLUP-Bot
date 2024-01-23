@@ -16,7 +16,7 @@ async def info(client, message):
     operator_user = message.from_user or message.sender_chat
     operator_id = operator_user.id
     text = message.text.split()[1] if len(message.text.split()) > 1 else None
-    tgclient = user or bot
+    tgclient = user if user else bot
     if operator_id in user_data and user_data[operator_id].get('is_sudo'):
         is_sudo = True
     elif operator_id == OWNER_ID:

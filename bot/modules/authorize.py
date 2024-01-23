@@ -14,7 +14,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, d
 async def get_buttons(from_user, key=None, text=None):
     user_id = from_user.id
     buttons = ButtonMaker()
-    tgclient = user or bot
+    tgclient = user if user else bot
     msg = ''
     if key is None:
         if user_id == OWNER_ID:
@@ -57,10 +57,7 @@ async def get_buttons(from_user, key=None, text=None):
                 except Exception as e:
                     LOGGER.error(e)
                     queried_chat = await tgclient.get_chat(_id)
-                    username = queried_chat.username if queried_chat.username else queried_chat.title
-
-
-                    
+                    username = queried_chat.username if queried_chat.username else queried_chat.title                    
                 if user_data[_id].get('is_sudo'):
                     msg += f"<code>{username}</code>-<code>{_id}</code>-<b>Admin</b>\n"
                 elif user_data[_id].get('is_auth'):
@@ -80,7 +77,7 @@ async def update_buttons(query, key=None, text=None):
 
 async def set_auth(client, query, key):
     user_id = query.from_user.id
-    tgclient = user or bot
+    tgclient = user if user else bot
     try:
         response_message = await client.listen.Message(filters.regex(r'^[^/]'), id = filters.user(user_id), timeout = 20)
     except TimeoutError:
