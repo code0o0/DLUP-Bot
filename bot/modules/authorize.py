@@ -157,11 +157,10 @@ async def auth_callback(client, query):
         await query.answer()
         await update_buttons(query, key)
     elif data[2] in ['sudoadd', 'sudodl', 'authadd', 'authdl']:
+        key = data[2]
         await query.answer()
-        await update_buttons(query, data[2])
-        LOGGER.info("Test0")
-        await set_auth(client, query, key)
-        LOGGER.info("Test1")
+        await update_buttons(query, key)
+        await set_auth(client, message, key)
     elif data[2] == 'list':
         await query.answer()
         await update_buttons(query, data[2])
