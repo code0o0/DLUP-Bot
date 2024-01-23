@@ -72,9 +72,8 @@ async def set_auth(client, query, key):
         response_message = await client.listen.Message(filters.text, id = filters.user(user_id), timeout = 20)
     except asyncio.TimeoutError:
         LOGGER.info(f"Timeout for {user_id}")
-        msg = 'Time out, please click the button to choose whether to return or close'
-        reply_message = await query.message.reply(msg)
-        await auto_delete_message(reply_message, delay=10)
+        msg = 'Time out, please click the button to choose whether to return or close!'
+        await update_buttons(query, 'authset', text=msg)
         return
     if response_message:
         value = response_message.text
@@ -136,8 +135,8 @@ async def set_auth(client, query, key):
     else:
         msg = 'UserID or UserName not found, please resend UserID or UserName!'
         reply_message = await response_message.reply(msg)
-        await auto_delete_message(response_message, reply_message, delay=10)
         await set_auth(client, query, key)
+        await auto_delete_message(response_message, reply_message, delay=5)
 
 @new_thread
 async def auth_callback(client, query):
