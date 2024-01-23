@@ -1,4 +1,4 @@
-import asyncio
+from asyncio import gather, TimeoutError
 import json
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -71,7 +71,7 @@ async def set_auth(client, query, key):
     tgclient = user or bot
     try:
         response_message = await client.listen.Message(filters.text, id = filters.user(user_id), timeout = 20)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         LOGGER.info(f"Timeout for {user_id}")
         msg = 'Time out, please click the button to choose whether to return or close!'
         await update_buttons(query, 'authset', text=msg)
@@ -137,8 +137,7 @@ async def set_auth(client, query, key):
         msg = 'UserID or UserName not found, please resend UserID or UserName!'
         reply_message = await response_message.reply(msg)
         await set_auth(client, query, key)
-        await deleteMessage(response_message)
-        await deleteMessage(reply_message)
+        await gather(deleteMessage(response_message), deleteMessage(reply_message))
 
 @new_thread
 async def auth_callback(client, query):
