@@ -2,7 +2,7 @@ import asyncio
 import json
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import user_data, bot, OWNER_ID, LOGGER
+from bot import user_data, bot, user, OWNER_ID, LOGGER
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -14,6 +14,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, d
 async def get_buttons(from_user, key=None, text=None):
     user_id = from_user.id
     buttons = ButtonMaker()
+    tgclient = user or bot
     msg = ''
     if key is None:
         if user_id == OWNER_ID:
@@ -48,8 +49,8 @@ async def get_buttons(from_user, key=None, text=None):
             if len(user_data) == 0:
                 msg += 'No users are authorized'
             for _id in user_data.keys():
-                user = await bot.get_users(_id)
-                username = user.username if user.username else user.first_name
+                queried_user = await tgclient.get_users(_id)
+                username = queried_user.username if queried_user.username else queried_user.first_name
                 if user_data[_id].get('is_sudo'):
                     msg += f"<code>{username}</code>-<code>{_id}</code>-<b>Admin</b>\n"
                 else:
@@ -65,9 +66,10 @@ async def update_buttons(query, key=None, text=None):
     msg, button = await get_buttons(query.from_user, key, text)
     await editMessage(query.message, msg, button)
 
-
+@new_thread
 async def set_auth(client, query, key):
     user_id = query.from_user.id
+    tgclient = user or bot
     try:
         response_message = await client.listen.Message(filters.text, id = filters.user(user_id), timeout = 20)
     except asyncio.TimeoutError:
@@ -85,13 +87,13 @@ async def set_auth(client, query, key):
         value = value.split('t.me/')[-1]
         queried_id = value if value.startswith('@') else f'@{value}'
     try:
-        user = await bot.get_users(queried_id)
-        value = user.id
+        queried_user = await tgclient.get_users(queried_id)
+        value = queried_user.id
     except:
         value = ''
     if value == '':
         try:
-            chat = await bot.get_chat(queried_id)
+            chat = await tgclient.get_chat(queried_id)
             value = chat.id
         except:
             value = ''
