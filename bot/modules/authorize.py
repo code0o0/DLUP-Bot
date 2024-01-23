@@ -53,9 +53,13 @@ async def get_buttons(from_user, key=None, text=None):
                 try:
                     queried_user = await tgclient.get_users(_id)
                     username = queried_user.username if queried_user.username else queried_user.first_name
-                except Exception:
+                except Exception as e:
+                    LOGGER.error(e)
                     queried_chat = await tgclient.get_chat(_id)
                     username = queried_chat.username if queried_chat.username else queried_chat.title
+
+
+                    
                 if user_data[_id].get('is_sudo'):
                     msg += f"<code>{username}</code>-<code>{_id}</code>-<b>Admin</b>\n"
                 elif user_data[_id].get('is_auth'):
