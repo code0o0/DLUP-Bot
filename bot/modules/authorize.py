@@ -1,5 +1,4 @@
 import asyncio
-from functools import partial
 import json
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -10,7 +9,6 @@ from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.bot_utils import new_thread, update_user_ldata
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, deleteMessage, auto_delete_message
-from asyncio import sleep, Lock
 
 
 async def get_buttons(from_user, key=None, text=None):
@@ -161,8 +159,9 @@ async def auth_callback(client, query):
     elif data[2] in ['sudoadd', 'sudodl', 'authadd', 'authdl']:
         await query.answer()
         await update_buttons(query, data[2])
+        LOGGER.info("Test0")
         await set_auth(client, query, key)
-        LOGGER.info("Test")
+        LOGGER.info("Test1")
     elif data[2] == 'list':
         await query.answer()
         await update_buttons(query, data[2])
