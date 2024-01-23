@@ -23,8 +23,8 @@ from time import time
 from tzlocal import get_localzone
 from uvloop import install
 install()
-from pyromod import Client as tgClient
-from pyrogram import enums
+# from pyromod import Client as tgClient
+from pyrogram import enums, Client as tgClient
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
 
