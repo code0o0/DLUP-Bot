@@ -52,6 +52,7 @@ async def get_buttons(from_user, key=None, text=None):
                 LOGGER.info(_id)
                 try:
                     queried_user = await tgclient.get_users(_id)
+                    LOGGER.info(f'{_id} - {queried_user}')
                     username = queried_user.username if queried_user.username else queried_user.first_name
                 except Exception as e:
                     LOGGER.error(e)

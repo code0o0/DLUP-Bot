@@ -34,12 +34,13 @@ async def info(client, message):
             username = queried_user.username or queried_user.first_name or "Unknown"
             userid = queried_user.id
             dc_id = queried_user.dc_id
+        except Exception as e:
+            pass
+        else:
             msg += "<b>User Information</b>\n"
             msg += f'<pre>User: @{escape(username)}</pre>\n'
             msg += f'<pre>User-ID: <code>{userid}</code></pre>\n'
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n\n'
-        except Exception as e:
-            pass
         try:
             queried_chat = await tgclient.get_chat(queried_id)
             chat_title = queried_chat.title
@@ -47,14 +48,16 @@ async def info(client, message):
             chat_name = queried_chat.username or "Unknown"
             dc_id = queried_chat.dc_id
             distance = queried_chat.distance
+        except Exception as e:
+            pass
+        else:
             msg += "<b>Chat Information</b>\n"
             msg += f'<pre>Chat-Title: {escape(chat_title)}</pre>\n'
             msg += f'<pre>Chat-ID: <code>{chat_id}</code></pre>\n'
             msg += f'<pre>Chat-Name: @{escape(chat_name)}</pre>\n'
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
             msg += f'<pre>Distance: {distance}</pre>\n'
-        except Exception as e:
-            pass
+
         if not msg:
             msg += f'<b>User or chat not found!</b>\n'
             msg += f'<b>Note: </b>If you want to query the chat information, please add the bot to the group first!\n'
