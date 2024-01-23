@@ -66,7 +66,6 @@ async def update_buttons(query, key=None, text=None):
     msg, button = await get_buttons(query.from_user, key, text)
     await editMessage(query.message, msg, button)
 
-@new_thread
 async def set_auth(client, query, key):
     user_id = query.from_user.id
     tgclient = user or bot
@@ -138,7 +137,8 @@ async def set_auth(client, query, key):
         msg = 'UserID or UserName not found, please resend UserID or UserName!'
         reply_message = await response_message.reply(msg)
         await set_auth(client, query, key)
-        await auto_delete_message(response_message, reply_message, delay=5)
+        await deleteMessage(response_message)
+        await deleteMessage(reply_message)
 
 @new_thread
 async def auth_callback(client, query):
