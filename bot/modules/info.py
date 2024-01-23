@@ -3,7 +3,7 @@ from pyrogram.filters import command
 from pyrogram.enums import ChatType
 from html import escape
 
-from bot import bot, user, user_data, OWNER_ID, LOGGER
+from bot import bot, user, user_data, OWNER_ID
 from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -16,7 +16,7 @@ async def info(client, message):
     operator_user = message.from_user or message.sender_chat
     operator_id = operator_user.id
     text = message.text.split()[1] if len(message.text.split()) > 1 else None
-    tgclient = user if user else bot
+    tgclient = user or bot
     if operator_id in user_data and user_data[operator_id].get('is_sudo'):
         is_sudo = True
     elif operator_id == OWNER_ID:
@@ -30,38 +30,22 @@ async def info(client, message):
             text = text.split('t.me/')[-1]
             queried_id = text if text.startswith('@') else f'@{text}'
         try:
-            queried_user = await tgclient.get_users(queried_id)
-            username = queried_user.username or queried_user.first_name or "Unknown"
-            userid = queried_user.id
-            dc_id = queried_user.dc_id
-        except Exception as e:
-            pass
-        else:
-            msg += "<b>User Information</b>\n"
-            msg += f'<pre>User: @{escape(username)}</pre>\n'
-            msg += f'<pre>User-ID: <code>{userid}</code></pre>\n'
-            msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n\n'
-        try:
             queried_chat = await tgclient.get_chat(queried_id)
-            LOGGER.info(f'{queried_id} - {queried_chat}')
-            chat_title = queried_chat.title
             chat_id = queried_chat.id
-            chat_name = queried_chat.username or "Unknown"
+            chat_name = queried_chat.username or f"{queried_chat.first_name} {queried_chat.last_name}" or "Unknown"
+            chat_type = queried_chat.type
             dc_id = queried_chat.dc_id
-            distance = queried_chat.distance
-        except Exception as e:
+        except Exception:
             pass
         else:
             msg += "<b>Chat Information</b>\n"
-            msg += f'<pre>Chat-Title: {escape(chat_title)}</pre>\n'
-            msg += f'<pre>Chat-ID: <code>{chat_id}</code></pre>\n'
-            msg += f'<pre>Chat-Name: @{escape(chat_name)}</pre>\n'
+            msg += f'<pre>ID: <code>{chat_id}</code></pre>\n'
+            msg += f'<pre>Name: @{escape(chat_name)}</pre>\n'
+            msg += f'<pre>Type: {chat_type}</pre>\n'
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
-            msg += f'<pre>Distance: {distance}</pre>\n'
-
         if not msg:
-            msg += f'<b>User or chat not found!</b>\n'
-            msg += f'<b>Note: </b>If you want to query the chat information, please add the bot to the group first!\n'
+            msg += f'<b>Chat not found!</b>\n'
+            msg += f'<b>Note: </b>If you want to query the group information, please add the bot to the group first!\n'
     elif all([is_sudo, message.reply_to_message]):
         origin_message = message.reply_to_message
         if from_user := origin_message.forward_from:

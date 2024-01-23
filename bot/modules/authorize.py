@@ -14,7 +14,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, d
 async def get_buttons(from_user, key=None, text=None):
     user_id = from_user.id
     buttons = ButtonMaker()
-    tgclient = user if user else bot
+    tgclient = user or bot
     msg = ''
     if key is None:
         if user_id == OWNER_ID:
@@ -49,15 +49,11 @@ async def get_buttons(from_user, key=None, text=None):
             if len(user_data) == 0:
                 msg += 'No users are authorized'
             for _id in user_data.keys():
-                LOGGER.info(_id)
                 try:
-                    queried_user = await tgclient.get_users(_id)
-                    LOGGER.info(f'{_id} - {queried_user}')
-                    username = queried_user.username if queried_user.username else queried_user.first_name
-                except Exception as e:
-                    LOGGER.error(e)
                     queried_chat = await tgclient.get_chat(_id)
-                    username = queried_chat.username if queried_chat.username else queried_chat.title                    
+                    username = queried_chat.username if queried_chat.username else queried_chat.first_name
+                except Exception:
+                    username = _id                   
                 if user_data[_id].get('is_sudo'):
                     msg += f"<code>{username}</code>-<code>{_id}</code>-<b>Admin</b>\n"
                 elif user_data[_id].get('is_auth'):
@@ -77,7 +73,7 @@ async def update_buttons(query, key=None, text=None):
 
 async def set_auth(client, query, key):
     user_id = query.from_user.id
-    tgclient = user if user else bot
+    tgclient = user or bot
     try:
         response_message = await client.listen.Message(filters.regex(r'^[^/]'), id = filters.user(user_id), timeout = 20)
     except TimeoutError:
@@ -95,16 +91,10 @@ async def set_auth(client, query, key):
         value = value.split('t.me/')[-1]
         queried_id = value if value.startswith('@') else f'@{value}'
     try:
-        queried_user = await tgclient.get_users(queried_id)
-        value = queried_user.id
+        chat = await tgclient.get_chat(queried_id)
+        value = chat.id
     except:
         value = ''
-    if value == '':
-        try:
-            chat = await tgclient.get_chat(queried_id)
-            value = chat.id
-        except:
-            value = ''
     if isinstance(value, int):
         if value == OWNER_ID:
             msg = '⚠ OWNER ID can\'t be changed'
