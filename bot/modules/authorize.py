@@ -135,8 +135,8 @@ async def set_auth(client, query, key):
             await deleteMessage(response_message)
     else:
         msg = 'UserID or UserName not found, please resend UserID or UserName!'
-        reply_message = await query.message.reply(msg)
-        await auto_delete_message(reply_message, delay=10)
+        reply_message = await response_message.reply(msg)
+        await auto_delete_message(response_message, reply_message, delay=10)
         await set_auth(client, query, key)
 
 @new_thread
