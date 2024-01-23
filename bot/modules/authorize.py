@@ -34,17 +34,17 @@ async def get_buttons(from_user, key=None, text=None):
         buttons.ibutton('🔙Back', f'authset {user_id} back', position='footer')
         buttons.ibutton('🔚Close', f'authset {user_id} close', position='footer')
         if key == 'sudoadd':
-            msg = 'Send UserID or UserName to promote as Adminstator'
-            msg += 'Time out in 20 seconds'
+            msg = 'Send UserID or UserName to promote as Adminstator.\n'
+            msg += 'Time out: 20 seconds'
         elif key == 'sudodl':
-            msg = 'Send UserID or UserName to remove from Adminstator'
-            msg += 'Time out in 20 seconds'
+            msg = 'Send UserID or UserName to remove from Adminstator.\n'
+            msg += 'Time out: 20 seconds'
         elif key == 'authadd':
-            msg = 'Send UserID or UserName to authorize'
-            msg += 'Time out in 20 seconds'
+            msg = 'Send UserID or UserName to authorize.\n'
+            msg += 'Time out: 20 seconds'
         elif key == 'authdl':
-            msg = 'Send UserID or UserName to unauthorize'
-            msg += 'Time out in 20 seconds'
+            msg = 'Send UserID or UserName to unauthorize\n'
+            msg += 'Time out: 20 seconds'
         elif key == 'list':
             msg = '<b>Authorized Users:</b> 👁️‍🗨️\n'
             if len(user_data) == 0:
@@ -70,6 +70,7 @@ async def update_buttons(query, key=None, text=None):
 
 async def set_auth(client, query, key):
     user_id = query.from_user.id
+    LOGGER.info(f"Setting auth for {user_id}")
     try:
         response_message = await client.listen.Message(filters.text, id = filters.user(user_id), timeout = 20)
     except asyncio.TimeoutError:
