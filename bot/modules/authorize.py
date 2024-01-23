@@ -67,11 +67,11 @@ async def update_buttons(query, key=None, text=None):
 
 
 async def set_auth(client, query, key):
-    LOGGER.info(f"Setting auth for {query.from_user.id}")
     user_id = query.from_user.id
     try:
         response_message = await client.listen.Message(filters.text, id = filters.user(user_id), timeout = 20)
     except asyncio.TimeoutError:
+        LOGGER.info(f"Timeout for {user_id}")
         msg = 'Time out, please click the button to choose whether to return or close'
         reply_message = await query.message.reply(msg)
         await auto_delete_message(reply_message, delay=10)
@@ -160,7 +160,7 @@ async def auth_callback(client, query):
         key = data[2]
         await query.answer()
         await update_buttons(query, key)
-        await set_auth(client, message, key)
+        await set_auth(client, query, key)
     elif data[2] == 'list':
         await query.answer()
         await update_buttons(query, data[2])
