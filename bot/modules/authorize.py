@@ -49,16 +49,19 @@ async def get_buttons(from_user, key=None, text=None):
             if len(user_data) == 0:
                 msg += 'No users are authorized'
             for _id in user_data.keys():
+                LOGGER.info(_id)
                 try:
                     queried_user = await tgclient.get_users(_id)
                     username = queried_user.username if queried_user.username else queried_user.first_name
-                except Exception as e:
+                except Exception:
                     queried_chat = await tgclient.get_chat(_id)
                     username = queried_chat.username if queried_chat.username else queried_chat.title
                 if user_data[_id].get('is_sudo'):
                     msg += f"<code>{username}</code>-<code>{_id}</code>-<b>Admin</b>\n"
-                else:
+                elif user_data[_id].get('is_auth'):
                     msg += f"<code>{username}</code>-<code>{_id}</code>-<b>Auther</b>\n"
+                else:
+                    msg += f"<code>{username}</code>-<code>{_id}</code>-<b>Group User</b>\n"
     elif text:
         msg = text
         buttons.ibutton('🔙Back', f'authset {user_id} back', position='footer')
@@ -154,7 +157,7 @@ async def auth_callback(client, query):
     await client.listen.Cancel(filters.user(user_id))
     if data[2] == 'close':
         await query.answer()
-        await auto_delete_message(message, query.message, 0)
+        await auto_delete_message(message, message.reply_to_message, 0)
     elif data[2] == 'back':
         key = data[3] if len(data) == 4 else None
         await query.answer()
