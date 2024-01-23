@@ -70,7 +70,7 @@ async def set_auth(client, query, key):
     user_id = query.from_user.id
     tgclient = user or bot
     try:
-        response_message = await client.listen.Message(filters.text, id = filters.user(user_id), timeout = 20)
+        response_message = await client.listen.Message(filters.regex(r'^[^/]'), id = filters.user(user_id), timeout = 20)
     except TimeoutError:
         LOGGER.info(f"Timeout for {user_id}")
         msg = 'Time out, please click the button to choose whether to return or close!'
