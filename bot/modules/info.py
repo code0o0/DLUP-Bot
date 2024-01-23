@@ -114,6 +114,6 @@ async def info(client, message):
             msg += f'<pre>Distance: {distance}</pre>\n'
     
     reply_message = await sendMessage(message, msg)
-    await auto_delete_message(message, reply_message, delay=30)
+    await auto_delete_message(message, reply_message, delay=20)
 
 bot.add_handler(MessageHandler(info, filters=command(BotCommands.InfoCommand) & CustomFilters.authorized))

@@ -37,7 +37,7 @@ from .helper.mirror_utils.rclone_utils.serve import rclone_serve_booter
 from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.button_build import ButtonMaker
 from .helper.telegram_helper.filters import CustomFilters
-from .helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile
+from .helper.telegram_helper.message_utils import auto_delete_message, sendMessage, editMessage, sendFile
 from .modules import (
     authorize,
     cancel_task,
@@ -226,9 +226,10 @@ async def restart_notification():
 
     if await aiopath.isfile(".restartmsg"):
         try:
-            await bot.edit_message_text(
+            message = await bot.edit_message_text(
                 chat_id=chat_id, message_id=msg_id, text="Restarted Successfully!"
             )
+            await auto_delete_message(message, message.reply_to_message, delay=20)
         except:
             pass
         await remove(".restartmsg")
