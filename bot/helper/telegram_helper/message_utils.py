@@ -88,7 +88,7 @@ async def deleteMessage(message):
     try:
         await message.delete()
     except Exception as e:
-        LOGGER.error(str(e))
+        LOGGER.warning(str(e))
 
 
 async def auto_delete_message(cmd_message=None, bot_message=None, delay=20):

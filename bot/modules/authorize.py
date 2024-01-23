@@ -49,8 +49,12 @@ async def get_buttons(from_user, key=None, text=None):
             if len(user_data) == 0:
                 msg += 'No users are authorized'
             for _id in user_data.keys():
-                queried_user = await tgclient.get_users(_id)
-                username = queried_user.username if queried_user.username else queried_user.first_name
+                try:
+                    queried_user = await tgclient.get_users(_id)
+                    username = queried_user.username if queried_user.username else queried_user.first_name
+                except Exception as e:
+                    queried_chat = await tgclient.get_chat(_id)
+                    username = queried_chat.username if queried_chat.username else queried_chat.title
                 if user_data[_id].get('is_sudo'):
                     msg += f"<code>{username}</code>-<code>{_id}</code>-<b>Admin</b>\n"
                 else:
@@ -150,8 +154,7 @@ async def auth_callback(client, query):
     await client.listen.Cancel(filters.user(user_id))
     if data[2] == 'close':
         await query.answer()
-        await deleteMessage(message.reply_to_message)
-        await deleteMessage(message)
+        await auto_delete_message(message, query.message, 0)
     elif data[2] == 'back':
         key = data[3] if len(data) == 4 else None
         await query.answer()
