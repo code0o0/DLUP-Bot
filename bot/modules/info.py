@@ -3,7 +3,7 @@ from pyrogram.filters import command
 from pyrogram.enums import ChatType
 from html import escape
 
-from bot import bot, user, user_data, OWNER_ID
+from bot import bot, user, user_data, OWNER_ID, LOGGER
 from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -43,6 +43,7 @@ async def info(client, message):
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n\n'
         try:
             queried_chat = await tgclient.get_chat(queried_id)
+            LOGGER.info(f'{queried_id} - {queried_chat}')
             chat_title = queried_chat.title
             chat_id = queried_chat.id
             chat_name = queried_chat.username or "Unknown"
