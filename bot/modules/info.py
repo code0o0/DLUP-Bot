@@ -27,7 +27,7 @@ async def info(client, message):
         if text.isdigit():
             queried_id = int(text)
         else:
-            text = text.strip('https://t.me/')
+            text = text.split('t.me/')[-1]
             queried_id = text if text.startswith('@') else f'@{text}'
         try:
             queried_user = await tgclient.get_users(queried_id)

@@ -1,18 +1,17 @@
+import asyncio
 from functools import partial
 import json
+from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from pyrogram.filters import command, regex, create
-from time import time
 from bot import user_data, bot, OWNER_ID, LOGGER
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.bot_utils import new_thread, update_user_ldata
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, deleteMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, deleteMessage, auto_delete_message
 from asyncio import sleep, Lock
 
-handler_dict = {}
 
 async def get_buttons(from_user, key=None, text=None):
     user_id = from_user.id
@@ -36,12 +35,16 @@ async def get_buttons(from_user, key=None, text=None):
         buttons.ibutton('🔚Close', f'authset {user_id} close', position='footer')
         if key == 'sudoadd':
             msg = 'Send UserID or UserName to promote as Adminstator'
+            msg += 'Time out in 20 seconds'
         elif key == 'sudodl':
             msg = 'Send UserID or UserName to remove from Adminstator'
+            msg += 'Time out in 20 seconds'
         elif key == 'authadd':
             msg = 'Send UserID or UserName to authorize'
+            msg += 'Time out in 20 seconds'
         elif key == 'authdl':
             msg = 'Send UserID or UserName to unauthorize'
+            msg += 'Time out in 20 seconds'
         elif key == 'list':
             msg = '<b>Authorized Users:</b> 👁️‍🗨️\n'
             if len(user_data) == 0:
@@ -65,35 +68,35 @@ async def update_buttons(query, key=None, text=None):
     await editMessage(query.message, msg, button)
 
 
-async def event_handler(client, query, pfunc, rfunc):
+async def set_auth(client, query, key):
     user_id = query.from_user.id
-    handler_dict[user_id] = True
-    start_time = time()
-    async def event_filter(_, __, event):
-        user = event.from_user.id or event.sender_chat
-        return bool(user == user_id and event.text)
-    handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=-1)
-    while handler_dict[user_id]:
-        await sleep(0.5)
-        if time() - start_time > 60:
-            handler_dict[user_id] = False
-            await rfunc()
-    client.remove_handler(*handler)
-
-
-async def set_auth(client, message, pre_event, key):
-    user_id = pre_event.from_user.id
-    value = message.text
-    handler_dict[user_id] = False
+    try:
+        response_message = await client.listen.Message(filters.text, id = filters.user(user_id), timeout = 20)
+    except asyncio.TimeoutError:
+        msg = 'Time out, please click the button to choose whether to return or close'
+        reply_message = await query.message.reply(msg)
+        await auto_delete_message(reply_message, delay=10)
+        return
+    if response_message:
+        value = response_message.text
+    else:
+        return
     if value.isdigit():
         queried_id = json.loads(value)
     else:
+        value = value.split('t.me/')[-1]
         queried_id = value if value.startswith('@') else f'@{value}'
     try:
         user = await bot.get_users(queried_id)
         value = user.id
     except:
         value = ''
+    if value == '':
+        try:
+            chat = await bot.get_chat(queried_id)
+            value = chat.id
+        except:
+            value = ''
     if isinstance(value, int):
         if value == OWNER_ID:
             msg = '⚠ OWNER ID can\'t be changed'
@@ -129,15 +132,13 @@ async def set_auth(client, message, pre_event, key):
                 await DbManager().update_user_data(value)
                 msg = 'User {} is unauthorized'.format(value)
         if key in ['sudoadd', 'sudodl', 'authadd', 'authdl']:
-            await update_buttons(pre_event, 'authset', text=msg)
-            await message.delete()
+            await update_buttons(query, 'authset', text=msg)
+            await deleteMessage(response_message)
     else:
-        msg = 'UserID or UserName not found, please try again'
-        await update_buttons(pre_event, 'authset', text=msg)
-        pfunc = partial(set_auth, pre_event=pre_event, key=key)
-        rfunc = partial(update_buttons, pre_event)
-        await event_handler(client, pre_event, pfunc, rfunc)
-        await message.delete()
+        msg = 'UserID or UserName not found, please resend UserID or UserName!'
+        reply_message = await query.message.reply(msg)
+        await auto_delete_message(reply_message, delay=10)
+        await set_auth(client, query, key)
 
 @new_thread
 async def auth_callback(client, query):
@@ -147,25 +148,20 @@ async def auth_callback(client, query):
     if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer('You are not allowed to do this', show_alert=True)
         return
+    await client.listen.Cancel(filters.user(user_id))
     if data[2] == 'close':
-        handler_dict[user_id] = False
         await query.answer()
         await deleteMessage(message.reply_to_message)
         await deleteMessage(message)
     elif data[2] == 'back':
-        handler_dict[user_id] = False
         key = data[3] if len(data) == 4 else None
         await query.answer()
         await update_buttons(query, key)
     elif data[2] in ['sudoadd', 'sudodl', 'authadd', 'authdl']:
-        handler_dict[user_id] = False
         await query.answer()
         await update_buttons(query, data[2])
-        pfunc = partial(set_auth, pre_event=query, key=data[2])
-        rfunc = partial(update_buttons, query)
-        await event_handler(client, query, pfunc, rfunc)
+        await set_auth(client, query, key)
     elif data[2] == 'list':
-        handler_dict[user_id] = False
         await query.answer()
         await update_buttons(query, data[2])
 
@@ -174,5 +170,5 @@ async def authorize(client, message):
     await sendMessage(message, msg, button)
 
 
-bot.add_handler(MessageHandler(authorize, filters=command(BotCommands.AuthorizeCommand) & CustomFilters.sudo))
-bot.add_handler(CallbackQueryHandler(auth_callback, filters=regex("^authset") & CustomFilters.sudo))
+bot.add_handler(MessageHandler(authorize, filters=filters.command(BotCommands.AuthorizeCommand) & CustomFilters.sudo))
+bot.add_handler(CallbackQueryHandler(auth_callback, filters=filters.regex("^authset") & CustomFilters.sudo))
