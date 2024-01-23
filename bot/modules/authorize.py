@@ -162,6 +162,7 @@ async def auth_callback(client, query):
         await query.answer()
         await update_buttons(query, data[2])
         await set_auth(client, query, key)
+        LOGGER.info("Test")
     elif data[2] == 'list':
         await query.answer()
         await update_buttons(query, data[2])
