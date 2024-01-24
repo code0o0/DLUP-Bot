@@ -73,9 +73,12 @@ async def update_buttons(query, key=None, text=None):
 
 async def set_auth(client, query, key):
     user_id = query.from_user.id
+    chat_id = query.message.chat.id
+    query_id = query.id
     tgclient = user or bot
     try:
-        response_message = await client.listen.Message(filters.regex(r'^[^/]'), id = filters.user(user_id), timeout = 20)
+        response_message = await client.listen.Message(filters=filters.regex(r'^[^/]') & filters.user(user_id) &
+                                                       filters.chat(chat_id), id = query_id, timeout = 20)
     except TimeoutError:
         LOGGER.info(f"Timeout for {user_id}")
         msg = 'Time out, please click the button to choose whether to return or close!'
@@ -143,10 +146,11 @@ async def auth_callback(client, query):
     user_id = query.from_user.id
     message = query.message
     data = query.data.split()
+    query_id = query.id
     if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer('You are not allowed to do this', show_alert=True)
         return
-    await client.listen.Cancel(filters.user(user_id))
+    await client.listen.Cancel(query_id)
     if data[2] == 'close':
         await query.answer()
         await auto_delete_message(message, message.reply_to_message, 0)
