@@ -1,5 +1,5 @@
 from aiofiles.os import path as aiopath, remove, makedirs
-from asyncio import sleep, create_subprocess_exec
+from asyncio import sleep, create_subprocess_exec, gather
 from asyncio.subprocess import PIPE
 from os import walk, path as ospath
 from secrets import token_urlsafe
@@ -510,17 +510,19 @@ class TaskConfig:
             self.newDir = ""
             return dl_path
 
-    async def proceedCompress(self, dl_path, gid):
+    async def proceedCompress(self, dl_path, gid, o_files, ft_delete):
         pswd = self.compress if isinstance(self.compress, str) else ""
-        if self.seed and self.isLeech and not self.newDir:
+        if self.seed and not self.newDir:
             self.newDir = f"{self.dir}10000"
             up_path = f"{self.newDir}/{self.name}.zip"
+            delete = False
         else:
             up_path = f"{dl_path}.zip"
+            delete = True
         async with task_dict_lock:
             task_dict[self.mid] = ZipStatus(self, gid)
+        size = await get_path_size(dl_path)
         if self.equalSplits:
-            size = await get_path_size(dl_path)
             parts = -(-size // self.splitSize)
             split_size = (size // parts) + (size % parts)
         else:
@@ -534,9 +536,16 @@ class TaskConfig:
             up_path,
             dl_path,
         ]
-        for ext in GLOBAL_EXTENSION_FILTER:
-            ex_ext = f"-xr!*.{ext}"
-            cmd.append(ex_ext)
+        if await aiopath.isdir(dl_path):
+            for ext in GLOBAL_EXTENSION_FILTER:
+                cmd.append(f"-xr!*.{ext}")
+            if o_files:
+                for f in o_files:
+                    if self.newDir and self.newDir in f:
+                        fte = f.replace(f"{self.newDir}/", "")
+                    else:
+                        fte = f.replace(f"{self.dir}/", "")
+                    cmd.append(f"-xr!{fte}")
         if self.isLeech and int(size) > self.splitSize:
             if not pswd:
                 del cmd[4]
@@ -555,10 +564,20 @@ class TaskConfig:
             return
         code = self.suproc.returncode
         if code == 0:
-            if not self.seed:
+            if not self.seed or delete:
                 await clean_target(dl_path)
+            for f in ft_delete:
+                if await aiopath.exists(f):
+                    try:
+                        await remove(f)
+                    except:
+                        pass
+            ft_delete.clear()
             return up_path
         elif code != -9:
+            await clean_target(self.newDir)
+            if not delete:
+                self.newDir = ""
             stderr = stderr.decode().strip()
             LOGGER.error(f"{stderr}. Unable to zip this path: {dl_path}")
             return dl_path
@@ -596,7 +615,7 @@ class TaskConfig:
                         m_size.append(f_size)
                         o_files.append(file_)
 
-    async def generateSampleVideo(self, dl_path, gid, unwanted_files):
+    async def generateSampleVideo(self, dl_path, gid, unwanted_files, ft_delete):
         data = self.sampleVideo.split(":") if isinstance(self.sampleVideo, str) else ""
         if data:
             sample_duration = int(data[0]) if data[0] else 60
@@ -621,16 +640,22 @@ class TaskConfig:
                     if res:
                         newfolder = ospath.splitext(dl_path)[0]
                         name = dl_path.rsplit("/", 1)[1]
-                        if self.seed:
+                        if self.seed and not self.newDir:
                             self.newDir = f"{self.dir}10000"
                             newfolder = newfolder.replace(self.dir, self.newDir)
-                        await makedirs(newfolder, exist_ok=True)
-                        if self.seed:
-                            await copy2(dl_path, f"{newfolder}/{name}")
+                            await makedirs(newfolder, exist_ok=True)
+                            await gather(
+                                copy2(dl_path, f"{newfolder}/{name}"),
+                                move(res, f"{newfolder}/SAMPLE.{name}"),
+                            )
                         else:
-                            await move(dl_path, f"{newfolder}/{name}")
-                        await move(res, f"{newfolder}/SAMPLE.{name}")
-                        return self.newDir
+                            await makedirs(newfolder, exist_ok=True)
+                            await gather(
+                                move(dl_path, f"{newfolder}/{name}"),
+                                move(res, f"{newfolder}/SAMPLE.{name}"),
+                            )
+                        return newfolder
+                return dl_path
             else:
                 for dirpath, _, files in await sync_to_async(
                     walk, dl_path, topdown=False
@@ -643,14 +668,16 @@ class TaskConfig:
                             if not checked:
                                 checked = True
                                 LOGGER.info(f"Creating Sample videos: {self.name}")
+                            if self.cancelled:
+                                return False
                             res = await createSampleVideo(
                                 self, f_path, sample_duration, part_duration
                             )
-                            if not res:
-                                return res
+                            if res:
+                                ft_delete.append(res)
                 return dl_path
 
-    async def convertMedia(self, dl_path, gid, o_files, m_size):
+    async def convertMedia(self, dl_path, gid, o_files, m_size, ft_delete):
         async with task_dict_lock:
             task_dict[self.mid] = MediaConvertStatus(self, gid)
 
@@ -760,6 +787,7 @@ class TaskConfig:
                             o_files.append(f_path)
                             fsize = await aiopath.getsize(f_path)
                             m_size.append(fsize)
+                            ft_delete.append(res)
                         else:
                             try:
                                 await remove(f_path)
