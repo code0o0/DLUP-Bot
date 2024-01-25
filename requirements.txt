@@ -24,7 +24,6 @@ pillow
 psutil
 pycryptodome
 pyrogram
-pyromod
 python-dotenv
 python-magic
 qbittorrent-api
