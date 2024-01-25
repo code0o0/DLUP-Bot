@@ -1,4 +1,4 @@
-FROM sdd02/rmltg:dev
+FROM sdd02/rmltg:beta
 
 WORKDIR /usr/src/app
 RUN chmod 777 /usr/src/app
