@@ -66,6 +66,10 @@ async def info(client, message):
             msg += f'<pre>Chat-Name: @{escape(chat_name)}</pre>\n'
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
             msg += f'<pre>Distance: {distance}</pre>\n'
+        message_id = origin_message.id
+        date = origin_message.date.strftime("%Y-%m-%d %H:%M:%S")
+        msg += f'<b>Message-ID: </b><code>{message_id}</code>\n'
+        msg += f'<b>Date: </b><code>{date}</code>\n'
         media = getattr(origin_message, origin_message.media.value) if origin_message.media else None
         if media and isinstance(media, tuple):
             file_id = media[0].file_id
