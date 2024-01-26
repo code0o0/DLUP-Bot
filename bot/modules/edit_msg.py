@@ -34,7 +34,7 @@ async def edit_msg(client, message):
             if not caption:
                 caption = escape(media_group[0].caption.html, quote=True) 
             for media_message in media_group:
-                media = getattr(origin_message, origin_message.media.value)
+                media = getattr(media_message, media_message.media.value)
                 if media_message.media == MessageMediaType.VIDEO:
                     input_media = InputMediaVideo(media.file_id, thumb=media.thumbs[0].file_id)
                 elif media_message.media == MessageMediaType.DOCUMENT:
