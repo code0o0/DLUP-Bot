@@ -22,10 +22,12 @@ async def edit_msg(client, message):
         await auto_delete_message(message, reply_message, delay=20)
         return
     try:
-        if forward_chat:
+        if forward_chat and not caption.startswith('-i '):
             forward_chat_username = forward_chat.username
             forward_from_message_id = origin_message.forward_from_message_id
-            caption += f'\nSOURCE: <a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">{forward_chat_username}</a>'
+            caption += f'\n<b>SOURCE:</b> <a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">{forward_chat_username}</a>'
+        else:
+            caption = caption.rstrip('-i').strip()
         if origin_message.media_group_id:
             media_group = await client.get_media_group(chat_id, origin_message.id)
             send_medias = []
