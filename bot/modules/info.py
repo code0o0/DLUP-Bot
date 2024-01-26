@@ -69,17 +69,13 @@ async def info(client, message):
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
             msg += f'<pre>Distance: {distance}</pre>\n'
         if message_id := origin_message.forward_from_message_id:
-            msg += f'<b>Message-ID: </b><code>{message_id}</code>\n'
+            msg += f'<pre>Message-ID: </b><code>{message_id}</code></pre>\n'
         else:
-            msg += f'<b>Message-ID: </b><code>{origin_message.message_id}</code>\n'
+            msg += f'<pre>Message-ID: </b><code>{origin_message.id}</code></pre>\n'
         if date := origin_message.forward_date:
-            msg += f'<b>Date: </b><code>{date.strftime("%Y-%m-%d %H:%M:%S")}</code>\n'
+            msg += f'<pre>Date: </b><code>{date.strftime("%Y-%m-%d %H:%M:%S")}</code></pre>\n'
         else:
-            msg += f'<b>Date: </b><code>{origin_message.date.strftime("%Y-%m-%d %H:%M:%S")}</code>\n'
-        message_id = origin_message.id
-        date = origin_message.date.strftime("%Y-%m-%d %H:%M:%S")
-        msg += f'<b>Message-ID: </b><code>{message_id}</code>\n'
-        msg += f'<b>Date: </b><code>{date}</code>\n'
+            msg += f'<pre>Date: </b><code>{origin_message.date.strftime("%Y-%m-%d %H:%M:%S")}</code></pre>\n'
         media = getattr(origin_message, origin_message.media.value) if origin_message.media else None
         if media and isinstance(media, tuple):
             file_id = media[0].file_id
