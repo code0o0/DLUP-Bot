@@ -35,12 +35,15 @@ async def info(client, message):
             chat_name = queried_chat.username or f"{queried_chat.first_name} {queried_chat.last_name}" or "Unknown"
             chat_type = queried_chat.type
             dc_id = queried_chat.dc_id
+            phone_number = queried_chat.phone_number
         except Exception:
             pass
         else:
             msg += "<b>Chat Information</b>\n"
             msg += f'<pre>ID: <code>{chat_id}</code></pre>\n'
             msg += f'<pre>Name: @{escape(chat_name)}</pre>\n'
+            if phone_number:
+                msg += f'<pre>Phone: {phone_number}</pre>\n'
             msg += f'<pre>Type: {chat_type}</pre>\n'
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
         if not msg:
