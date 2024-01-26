@@ -57,6 +57,7 @@ from .modules import (
     bot_settings,
     help,
     info,
+    edit_msg,
     force_start,
 )
 
@@ -171,6 +172,7 @@ NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.PingCommand}: Check how long it takes to Ping the Bot (Only Owner & Sudo).
 /{BotCommands.AuthorizeCommand}: Manage a chat or a user to use the bot.
 /{BotCommands.InfoCommand}: Get info about a user.
+/{BotCommands.EditCommand}: Edit a message (Only Owner & Sudo).
 /{BotCommands.UsersCommand}: show users settings (Only Owner & Sudo).
 /{BotCommands.RestartCommand}: Restart and update the bot (Only Owner & Sudo).
 /{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports (Only Owner & Sudo).

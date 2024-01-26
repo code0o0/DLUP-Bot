@@ -24,6 +24,7 @@ class _BotCommands:
         self.UsersCommand = f"users{CMD_SUFFIX}"
         self.AuthorizeCommand = f"auth{CMD_SUFFIX}"
         self.InfoCommand = f"info{CMD_SUFFIX}"
+        self.EditCommand = f"edit{CMD_SUFFIX}"
         self.PingCommand = f"ping{CMD_SUFFIX}"
         self.RestartCommand = f"restart{CMD_SUFFIX}"
         self.StatsCommand = f"stats{CMD_SUFFIX}"
