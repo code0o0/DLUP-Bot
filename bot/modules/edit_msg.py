@@ -13,7 +13,6 @@ from bot.helper.ext_utils.bot_utils import new_task
 @new_task
 async def edit_msg(client, message):
     chat_id = message.chat.id
-    message_id = message.id
     caption = message.text.split(' ', 1)[1] if len(message.text.split()) > 1 else ''
     origin_message = message.reply_to_message
     forward_chat = origin_message.forward_from_chat
@@ -28,7 +27,7 @@ async def edit_msg(client, message):
             forward_from_message_id = origin_message.forward_from_message_id
             caption += f'\nSOURCE: <a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">{forward_chat_username}</a>'
         if origin_message.media_group_id:
-            media_group = await client.get_media_group(chat_id, message_id)
+            media_group = await client.get_media_group(chat_id, origin_message.id)
             send_medias = []
             for media_message in media_group:
                 media = getattr(origin_message, origin_message.media.value)
