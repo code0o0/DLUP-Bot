@@ -3,7 +3,7 @@ from pyrogram.filters import command
 from pyrogram.enums import ChatType
 from html import escape
 
-from bot import bot, user, user_data, OWNER_ID
+from bot import bot, user, user_data, OWNER_ID, LOGGER
 from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -36,8 +36,8 @@ async def info(client, message):
             phone_number = queried_chat.get('phone_number', '')
             chat_type = queried_chat.type
             dc_id = queried_chat.dc_id
-        except Exception:
-            pass
+        except Exception as e:
+            LOGGER.error(e)
         else:
             msg += "<b>Chat Information</b>\n"
             msg += f'<pre>ID: <code>{chat_id}</code></pre>\n'
