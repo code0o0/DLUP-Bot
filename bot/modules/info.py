@@ -55,6 +55,8 @@ async def info(client, message):
             msg += f'<pre>User: @{escape(username)}</pre>\n'
             msg += f'<pre>User-ID: <code>{queried_id}</code></pre>\n'
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n\n'
+        elif from_user := origin_message.forward_sender_name:
+            msg += f'<pre>User: {escape(from_user)}</pre>\n'
         if chat := origin_message.forward_from_chat:
             chat_title = chat.title
             chat_id = chat.id
@@ -66,6 +68,14 @@ async def info(client, message):
             msg += f'<pre>Chat-Name: @{escape(chat_name)}</pre>\n'
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
             msg += f'<pre>Distance: {distance}</pre>\n'
+        if message_id := origin_message.forward_from_message_id:
+            msg += f'<b>Message-ID: </b><code>{message_id}</code>\n'
+        else:
+            msg += f'<b>Message-ID: </b><code>{origin_message.message_id}</code>\n'
+        if date := origin_message.forward_date:
+            msg += f'<b>Date: </b><code>{date.strftime("%Y-%m-%d %H:%M:%S")}</code>\n'
+        else:
+            msg += f'<b>Date: </b><code>{origin_message.date.strftime("%Y-%m-%d %H:%M:%S")}</code>\n'
         message_id = origin_message.id
         date = origin_message.date.strftime("%Y-%m-%d %H:%M:%S")
         msg += f'<b>Message-ID: </b><code>{message_id}</code>\n'
