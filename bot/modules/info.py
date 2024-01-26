@@ -66,7 +66,7 @@ async def info(client, message):
             msg += f'<pre>Chat-Name: @{escape(chat_name)}</pre>\n'
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
             msg += f'<pre>Distance: {distance}</pre>\n'
-        media = getattr(message, message.media.value) if message.media else None
+        media = getattr(origin_message, origin_message.media.value) if origin_message.media else None
         if media and isinstance(media, tuple):
             file_id = media[0].file_id
             msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
