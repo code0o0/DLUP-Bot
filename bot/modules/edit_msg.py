@@ -13,7 +13,7 @@ from bot.helper.ext_utils.bot_utils import new_task
 @new_task
 async def edit_msg(client, message):
     chat_id = message.chat.id
-    caption = message.text.split('', 1)[1] if len(message.text.split()) > 1 else ''
+    caption = message.text.split(' ', 1)[1] if len(message.text.split()) > 1 else ''
     origin_message = message.reply_to_message
     forward_chat = origin_message.forward_from_chat
     if not origin_message:
@@ -27,8 +27,9 @@ async def edit_msg(client, message):
                 forward_chat_username = forward_chat.username
                 forward_from_message_id = origin_message.forward_from_message_id
                 caption += f'\nSOURCE: <a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">{forward_chat_username}</a>'
-            await origin_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML)
-            await auto_delete_message(message, origin_message, delay=20)
+            await origin_message.edit_caption(caption)
+            # await origin_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML)
+            # await auto_delete_message(message, origin_message, delay=20)
         elif origin_message.text:
             await sendMessage(message, msg)
             await auto_delete_message(message, origin_message, delay=20)
