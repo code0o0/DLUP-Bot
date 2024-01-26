@@ -32,13 +32,13 @@ async def edit_msg(client, message):
             for media_message in media_group:
                 media = getattr(origin_message, origin_message.media.value)
                 if media_message.media == MessageMediaType.VIDEO:
-                    input_media = InputMediaVideo(media.file_id, thumb=media.thumbs[0])
+                    input_media = InputMediaVideo(media.file_id, thumb=media.thumbs[0].file_id)
                 elif media_message.media == MessageMediaType.DOCUMENT:
-                    input_media = InputMediaDocument(media.file_id, thumb=media.thumbs[0])
+                    input_media = InputMediaDocument(media.file_id, thumb=media.thumbs[0].file_id)
                 elif media_message.media == MessageMediaType.AUDIO:
-                    input_media = InputMediaAudio(media.file_id, thumb=media.thumbs[0])
+                    input_media = InputMediaAudio(media.file_id, thumb=media.thumbs[0].file_id)
                 elif media_message.media == MessageMediaType.PHOTO:
-                    input_media = InputMediaPhoto(media.file_id, thumb=media.thumbs[0])
+                    input_media = InputMediaPhoto(media.file_id, thumb=media.thumbs[0].file_id)
                 send_medias.append(input_media)
             send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
