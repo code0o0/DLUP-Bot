@@ -11,10 +11,20 @@ from bot.helper.ext_utils.bot_utils import new_task
 
 
 @new_task
-async def info(client, message):
-    msg = ''
+async def edit_msg(client, message):
     operator_user = message.from_user or message.sender_chat
     operator_id = operator_user.id
+    text = message.text.split()[1] if len(message.text.split()) > 1 else None
+    reply_message = message.reply_to_message
+    if not reply_message:
+        msg = 'Please use <i>/cmd caption</i> to reply to the media message you want to edit!'
+        reply_message = await sendMessage(message, msg)
+        await auto_delete_message(message, reply_message, delay=20)
+        return
+
+
+
+
     text = message.text.split()[1] if len(message.text.split()) > 1 else None
     tgclient = user or bot
     if operator_id in user_data and user_data[operator_id].get('is_sudo'):
@@ -51,7 +61,6 @@ async def info(client, message):
             msg += f'<b>Note: </b>If you want to query the group information, please add the bot to the group first!\n'
     elif all([is_sudo, message.reply_to_message]):
         origin_message = message.reply_to_message
-        LOGGER.info(origin_message)
         if from_user := origin_message.forward_from:
             queried_id = from_user.id
             username = from_user.username or from_user.mention
@@ -111,4 +120,4 @@ async def info(client, message):
     reply_message = await sendMessage(message, msg)
     await auto_delete_message(message, reply_message, delay=20)
 
-bot.add_handler(MessageHandler(info, filters=command(BotCommands.InfoCommand) & CustomFilters.authorized))
+# bot.add_handler(MessageHandler(edit_msg, filters=command(BotCommands.InfoCommand) & CustomFilters.authorized))
