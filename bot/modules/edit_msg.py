@@ -31,6 +31,8 @@ async def edit_msg(client, message):
         if origin_message.media_group_id:
             media_group = await client.get_media_group(chat_id, origin_message.id)
             send_medias = []
+            if not caption:
+                caption = escape(media_group[0].caption.html, quote=True) 
             for media_message in media_group:
                 media = getattr(origin_message, origin_message.media.value)
                 if media_message.media == MessageMediaType.VIDEO:
@@ -47,6 +49,8 @@ async def edit_msg(client, message):
             await client.send_media_group(chat_id, send_medias, protect_content=True)
             await client.delete_messages(chat_id, [msg.id for msg in media_group])
         else:
+            if not caption:
+                caption = escape(origin_message.caption.html, quote=True)
             await origin_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML)
             await client.delete_messages(chat_id, [message.id, origin_message.id])
     except Exception as e:
