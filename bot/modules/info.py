@@ -66,17 +66,13 @@ async def info(client, message):
             msg += f'<pre>Chat-Name: @{escape(chat_name)}</pre>\n'
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
             msg += f'<pre>Distance: {distance}</pre>\n'
-        for media in [origin_message.photo, origin_message.video, origin_message.audio,
-                      origin_message.voice, origin_message.sticker, origin_message.animation,
-                      origin_message.video_note, origin_message.document]:
-            if media and isinstance(media, tuple):
-                file_id = media[0].file_id
-                msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
-                break
-            elif media:
-                file_id = media.file_id
-                msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
-                break
+        media = getattr(message, message.media.value) if message.media else None
+        if media and isinstance(media, tuple):
+            file_id = media[0].file_id
+            msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
+        elif media:
+            file_id = media.file_id
+            msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
         if not msg:
             msg += '<b>Unable to obtain valid information, it may be due to the user setting privacy protection or invalid reply messages!</b>\n'
     else:
