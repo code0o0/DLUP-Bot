@@ -32,18 +32,21 @@ async def edit_msg(client, message):
             for media_message in media_group:
                 media = getattr(origin_message, origin_message.media.value)
                 if media_message.media == MessageMediaType.VIDEO:
-                    input_media = InputMediaVideo(media.file_id, caption=caption, parse_mode=ParseMode.HTML)
+                    input_media = InputMediaVideo(media.file_id, thumb=media.thumb[0])
                 elif media_message.media == MessageMediaType.DOCUMENT:
-                    input_media = InputMediaDocument(media.file_id, caption=caption, parse_mode=ParseMode.HTML)
+                    input_media = InputMediaDocument(media.file_id, thumb=media.thumb[0])
                 elif media_message.media == MessageMediaType.AUDIO:
-                    input_media = InputMediaAudio(media.file_id, caption=caption, parse_mode=ParseMode.HTML)
+                    input_media = InputMediaAudio(media.file_id, thumb=media.thumb[0])
                 elif media_message.media == MessageMediaType.PHOTO:
-                    input_media = InputMediaPhoto(media.file_id, caption=caption, parse_mode=ParseMode.HTML)
+                    input_media = InputMediaPhoto(media.file_id, thumb=media.thumb[0])
                 send_medias.append(input_media)
+            send_medias[0].caption = caption
+            send_medias[0].parse_mode = ParseMode.HTML
             await client.send_media_group(chat_id, send_medias, protect_content=True)
+            await client.delete_messages(chat_id, [msg.id for msg in media_group])
         else:
             await origin_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML)
-        await auto_delete_message(message, origin_message, delay=2)
+            await client.delete_messages(chat_id, [message.id, origin_message.id])
     except Exception as e:
         LOGGER.error(e)
         reply_message = await sendMessage(message, str(e))
