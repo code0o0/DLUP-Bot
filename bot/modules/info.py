@@ -33,9 +33,9 @@ async def info(client, message):
             queried_chat = await tgclient.get_chat(queried_id)
             chat_id = queried_chat.id
             chat_name = queried_chat.username or f"{queried_chat.first_name} {queried_chat.last_name}" or "Unknown"
+            phone_number = queried_chat.get('phone_number', '')
             chat_type = queried_chat.type
             dc_id = queried_chat.dc_id
-            phone_number = queried_chat.phone_number
         except Exception:
             pass
         else:
