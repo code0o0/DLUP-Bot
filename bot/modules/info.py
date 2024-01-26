@@ -80,12 +80,13 @@ async def info(client, message):
         else:
             msg += f'<pre>Date: </b><code>{origin_message.date.strftime("%Y-%m-%d %H:%M:%S")}</code></pre>\n'
         media = getattr(origin_message, origin_message.media.value) if origin_message.media else None
-        if media and isinstance(media, tuple):
-            file_id = media[0].file_id
-            msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
+        if media and isinstance(media, list):
+            for i in media:
+                file_id = i.file_id
+                msg += f'<pre>File-ID: </pre><code>{file_id}</code>\n'
         elif media:
             file_id = media.file_id
-            msg += f'<b>File-ID: </b><code>{file_id}</code>\n'
+            msg += f'<pre>File-ID: </pre><code>{file_id}</code>\n'
         if not msg:
             msg += '<b>Unable to obtain valid information, it may be due to the user setting privacy protection or invalid reply messages!</b>\n'
     else:
