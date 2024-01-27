@@ -18,7 +18,7 @@ async def edit_media(client, message):
     origin_message = message.reply_to_message
     if not origin_message or not origin_message.media or origin_message.poll:
         msg = 'Please use <i>/cmd caption</i> or <i>/cmd</i> to reply to the media message you want to edit!\n'
-        msg += '<i>/cmd caption -i</i> to ignore the source of the message.'
+        msg += '<i>/cmd caption -i</i> to ignore the source of the message.\n'
         msg += '<i>/cmd caption -p</i> to protects the contents of the sent message from forwarding and saving.'
         reply_message = await sendMessage(message, msg)
         await auto_delete_message(message, reply_message, delay=20)
@@ -31,11 +31,11 @@ async def edit_media(client, message):
         if forward_chat and not ignore_source:
             forward_chat_username = forward_chat.username
             forward_from_message_id = origin_message.forward_from_message_id
-            caption += f'\nSOURCE: <b><a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">{forward_chat_username}</a></b>'
+            caption += f'\n💒SOURCE: <b><a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">{forward_chat_username}</a></b>'
         if origin_message.media_group_id:
             media_group = await client.get_media_group(chat_id, origin_message.id)
             send_medias = []
-            if not caption or caption.startswith('\nSOURCE:'):
+            if not caption or caption.startswith('\n'):
                 media_caption = media_group[0].caption.html if media_group[0].caption else ''
                 caption = media_caption + caption
             for media_message in media_group:
