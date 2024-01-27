@@ -51,6 +51,7 @@ async def info(client, message):
             msg += f'<b>Note: </b>If you want to query the group information, please add the bot to the group first!\n'
     elif all([is_sudo, message.reply_to_message]):
         origin_message = message.reply_to_message
+        LOGGER.info(origin_message)
         if from_user := origin_message.forward_from:
             queried_id = from_user.id
             username = from_user.username or from_user.mention
@@ -75,15 +76,6 @@ async def info(client, message):
             msg += f'<pre>Message-ID: </b><code>{message_id}</code></pre>\n'
         else:
             msg += f'<pre>Message-ID: </b><code>{origin_message.id}</code></pre>\n'
-        if chat and message_id:
-            try:
-                _message = await tgclient.get_messages(chat.id, message_id)
-            except Exception as e:
-                LOGGER.error(e)
-            LOGGER.info(_message)
-
-
-
         if message_group_id := origin_message.media_group_id:
             msg += f'<pre>Message-GID: </b><code>{message_group_id}</code></pre>\n'
         if date := origin_message.forward_date:
