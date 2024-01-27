@@ -11,28 +11,32 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import new_task
 
 @new_task
-async def edit_msg(client, message):
+async def edit_media(client, message):
     chat_id = message.chat.id
-    caption = message.text.split(' ', 1)[1] if len(message.text.split()) > 1 else ''
+    text = message.text.split(' ', 1)[1] if len(message.text.split()) > 1 else ''
+    command = message.command
     origin_message = message.reply_to_message
     forward_chat = origin_message.forward_from_chat
     if not origin_message or not origin_message.media or origin_message.poll:
-        msg = 'Please use <i>/cmd caption</i> to reply to the media message you want to edit!'
+        msg = 'Please use <i>/cmd caption</i> or <i>/cmd</i> to reply to the media message you want to edit!\n'
+        msg += '<i>/cmd caption -i</i> to ignore the source of the message.'
+        msg += '<i>/cmd caption -p</i> to protects the contents of the sent message from forwarding and saving.'
         reply_message = await sendMessage(message, msg)
         await auto_delete_message(message, reply_message, delay=20)
         return
+    protect_content = True if '-p' in command else False
+    ignore_source = True if '-i' in command else False
+    caption = text.rsplit('-i', 1)[-1].rsplit('-p', 1)[-1].strip()    
     try:
-        if forward_chat and not caption.startswith('-i'):
+        if forward_chat and not ignore_source:
             forward_chat_username = forward_chat.username
             forward_from_message_id = origin_message.forward_from_message_id
-            caption += f'\n<b>SOURCE:</b> <a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">{forward_chat_username}</a>'
-        else:
-            caption = caption.rstrip('-i').strip()
+            caption += f'\nSOURCE: <b><a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">{forward_chat_username}</a></b>'
         if origin_message.media_group_id:
             media_group = await client.get_media_group(chat_id, origin_message.id)
             send_medias = []
-            if not caption:
-                caption = escape(media_group[0].caption.html, quote=True) 
+            if not caption or caption.startswith('\nSOURCE:'):
+                caption = media_group[0].caption.html
             for media_message in media_group:
                 media = getattr(media_message, media_message.media.value)
                 if media_message.media == MessageMediaType.VIDEO:
@@ -46,16 +50,16 @@ async def edit_msg(client, message):
                 send_medias.append(input_media)
             send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
-            await client.send_media_group(chat_id, send_medias, protect_content=True)
+            await client.send_media_group(chat_id, send_medias, protect_content=protect_content)
             await client.delete_messages(chat_id, [msg.id for msg in media_group])
         else:
-            if not caption:
-                caption = escape(origin_message.caption.html, quote=True)
-            await origin_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML)
+            if not caption or caption.startswith('\nSOURCE:'):
+                caption = origin_message.caption.html
+            await origin_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML, protect_content=protect_content)
             await client.delete_messages(chat_id, [message.id, origin_message.id])
     except Exception as e:
         LOGGER.error(e)
         reply_message = await sendMessage(message, str(e))
         await auto_delete_message(message, reply_message, delay=20)
     
-bot.add_handler(MessageHandler(edit_msg, filters=command(BotCommands.EditCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(edit_media, filters=command(BotCommands.EditCommand) & CustomFilters.sudo))

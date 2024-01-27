@@ -42,6 +42,7 @@ from .modules import (
     authorize,
     cancel_task,
     clone,
+    edit_media,
     exec,
     gd_count,
     gd_delete,
@@ -57,7 +58,7 @@ from .modules import (
     bot_settings,
     help,
     info,
-    edit_msg,
+    edit_media,
     force_start,
 )
 
