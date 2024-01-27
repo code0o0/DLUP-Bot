@@ -51,7 +51,6 @@ async def info(client, message):
             msg += f'<b>Note: </b>If you want to query the group information, please add the bot to the group first!\n'
     elif all([is_sudo, message.reply_to_message]):
         origin_message = message.reply_to_message
-        LOGGER.info(origin_message)
         if from_user := origin_message.forward_from:
             queried_id = from_user.id
             username = from_user.username or from_user.mention
