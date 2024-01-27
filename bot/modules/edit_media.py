@@ -28,15 +28,21 @@ async def edit_media(client, message):
     ignore_source = True if '-i' in command else False
     caption = text.rsplit('-i', 1)[-1].rsplit('-p', 1)[-1].strip()    
     try:
+        
+        
         if forward_chat and not ignore_source:
             forward_chat_username = forward_chat.username
             forward_from_message_id = origin_message.forward_from_message_id
             caption += f'\nSOURCE: <b><a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">{forward_chat_username}</a></b>'
+        
+        
+        
         if origin_message.media_group_id:
             media_group = await client.get_media_group(chat_id, origin_message.id)
             send_medias = []
             if not caption or caption.startswith('\nSOURCE:'):
-                caption = media_group[0].caption.html if media_group[0].caption else ''
+                media_caption = media_group[0].caption.html if media_group[0].caption else ''
+                caption = media_caption + caption
             for media_message in media_group:
                 media = getattr(media_message, media_message.media.value)
                 if media_message.media == MessageMediaType.VIDEO:
@@ -48,14 +54,19 @@ async def edit_media(client, message):
                 elif media_message.media == MessageMediaType.PHOTO:
                     input_media = InputMediaPhoto(media.file_id, thumb=media.thumbs[0].file_id)
                 send_medias.append(input_media)
-            send_medias[0].caption = caption
+            if caption:
+                send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
             await client.send_media_group(chat_id, send_medias, protect_content=protect_content)
             await client.delete_messages(chat_id, [msg.id for msg in media_group].append(message.id))
         else:
             if not caption or caption.startswith('\nSOURCE:'):
-                caption = origin_message.caption.html if origin_message.caption else ''
-            await origin_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML, protect_content=protect_content)
+                media_caption = origin_message.caption.html if origin_message.caption else ''
+                caption = media_caption + caption
+            if caption:
+                await origin_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML, protect_content=protect_content)
+            else:
+                await origin_message.copy(chat_id=chat_id, protect_content=protect_content)
             await client.delete_messages(chat_id, [message.id, origin_message.id])
     except Exception as e:
         LOGGER.error(e)
