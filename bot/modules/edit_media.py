@@ -36,7 +36,7 @@ async def edit_media(client, message):
             media_group = await client.get_media_group(chat_id, origin_message.id)
             send_medias = []
             if not caption or caption.startswith('\nSOURCE:'):
-                caption = media_group[0].caption.html
+                caption = media_group[0].caption.html if media_group[0].caption else ''
             for media_message in media_group:
                 media = getattr(media_message, media_message.media.value)
                 if media_message.media == MessageMediaType.VIDEO:
@@ -51,10 +51,10 @@ async def edit_media(client, message):
             send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
             await client.send_media_group(chat_id, send_medias, protect_content=protect_content)
-            await client.delete_messages(chat_id, [msg.id for msg in media_group])
+            await client.delete_messages(chat_id, [msg.id for msg in media_group].append(message.id))
         else:
             if not caption or caption.startswith('\nSOURCE:'):
-                caption = origin_message.caption.html
+                caption = origin_message.caption.html if origin_message.caption else ''
             await origin_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML, protect_content=protect_content)
             await client.delete_messages(chat_id, [message.id, origin_message.id])
     except Exception as e:
