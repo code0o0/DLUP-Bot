@@ -31,7 +31,7 @@ async def edit_media(client, message):
         if forward_chat and not ignore_source:
             forward_chat_username = forward_chat.username
             forward_from_message_id = origin_message.forward_from_message_id
-            caption += f'\n🧿<b>From</b>👉 <u><a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">@{forward_chat_username}</u></b>'
+            caption += f'\n🧿<b>From</b>👉 <u><a href="https://t.me/{forward_chat_username}/{forward_from_message_id}">@{forward_chat_username}</a></u>'
         if origin_message.media_group_id:
             media_group = await client.get_media_group(chat_id, origin_message.id)
             send_medias = []
