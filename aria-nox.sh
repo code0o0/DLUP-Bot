@@ -13,3 +13,4 @@ aria2c --max-concurrent-downloads=20 --max-upload-limit=100K --max-overall-uploa
        --bt-enable-lpd=true --enable-peer-exchange=true --enable-dht=true --enable-dht6=false \
        --dht-file-path=/usr/src/app/config/dht.dat --dht-file-path6=/usr/src/app/config/dht6.dat \
        --bt-force-encryption=true --bt-require-crypto=true --bt-min-crypto-level=arc4
+qbittorrent-nox -d --profile="$(pwd)"

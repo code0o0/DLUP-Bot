@@ -15,7 +15,7 @@ from logging import (
     ERROR,
 )
 import json
-from os import remove, path as ospath, environ, getcwd
+from os import remove, path as ospath, environ
 from pyrogram import Client as tgClient, enums
 from qbittorrentapi import Client as qbClient
 from socket import setdefaulttimeout
@@ -29,7 +29,6 @@ install()
 # from pyrogram import enums
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
-
 
 setdefaulttimeout(600)
 
@@ -52,12 +51,6 @@ LOCAL_DIR = '/usr/src/app/storage'
 CONFIG_DIR = '/usr/src/app/config'
 DATABASE_URL = f'{CONFIG_DIR}/data.db'
 DOWNLOAD_DIR = '/usr/src/app/downloads'
-
-aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
-if not ospath.exists(f'{CONFIG_DIR}/dht.dat'):
-    run(["touch", f"{CONFIG_DIR}/dht.dat"])
-if not ospath.exists(f'{CONFIG_DIR}/dht6.dat'):
-    run(["touch", f"{CONFIG_DIR}/dht6.dat"])
 
 try:
     load_dotenv('config.env', override=True)
@@ -373,14 +366,6 @@ if BASE_URL:
         f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent",
         shell=True,
     )
-run(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
-
-if not ospath.exists(".netrc"):
-    run(["touch", ".netrc"])
-run(
-    "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria.sh && ./aria.sh",
-    shell=True,
-)
 
 if ospath.exists("accounts.zip"):
     if ospath.exists("accounts"):
@@ -391,45 +376,24 @@ if ospath.exists("accounts.zip"):
 if not ospath.exists("accounts"):
     config_dict["USE_SERVICE_ACCOUNTS"] = False
 
+if not ospath.exists(".netrc"):
+    run(["touch", ".netrc"])
+run(
+    "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria-nox.sh && ./aria-nox.sh",
+    shell=True,
+)
+if not ospath.exists(f'{CONFIG_DIR}/dht.dat'):
+    run(["touch", f"{CONFIG_DIR}/dht.dat"])
+if not ospath.exists(f'{CONFIG_DIR}/dht6.dat'):
+    run(["touch", f"{CONFIG_DIR}/dht6.dat"])
 
-def get_client():
+def get_qb_client():
     return qbClient(
         host="localhost",
         port=8090,
         VERIFY_WEBUI_CERTIFICATE=False,
         REQUESTS_ARGS={"timeout": (30, 60)},
     )
-qb_client = get_client()
-
-qbit_edit_opts = ['dl_limit', 'up_limit', 'max_connec', 'max_connec_per_torrent', 'disk_cache', 'disk_cache_ttl',
-                  'preallocate_all', 'max_seeding_time_enabled', 'max_seeding_time', 'max_ratio_enabled', 'max_ratio',
-                  'dht', 'pex', 'lsd', 'encryption', 'anonymous_mode', 'proxy_type', 'proxy_peer_connections', 
-                  'proxy_torrents_only', 'proxy_ip', 'proxy_port', 'proxy_auth_enabled', 'proxy_username',
-                  'proxy_password']
-aria2c_edit_opts = ['max-overall-download-limit', 'max-overall-upload-limit', 'max-download-limit', 'max-upload-limit',
-                    'split', 'min-split-size', 'max-connection-per-server', 'disk-cache', 'file-allocation', 'user-agent',
-                    'seed-ratio', 'seed-time', 'bt-max-peers', 'enable-dht', 'enable-dht6', 'bt-enable-lpd',
-                    'enable-peer-exchange']
-aria2c_global = ["bt-max-open-files", "download-result", "keep-unfinished-download-result", "log", "log-level",
-                 "max-concurrent-downloads", "max-download-result", "max-overall-download-limit", "save-session",
-                 "max-overall-upload-limit", "optimize-concurrent-downloads", "save-cookies", "server-stat-of"]
-
-if not qbit_options:
-    qbit_all_options = dict(qb_client.app_preferences())
-    qbit_options = {key: qbit_all_options[key] for key in qbit_edit_opts}
-else:
-    qb_opt = {**qbit_options}
-    for k, v in qb_opt.items():
-        if v in ["", "*"]:
-            del qb_opt[k]
-    qb_client.app_set_preferences(qb_opt)
-
-if not aria2_options:
-    aria2_all_options = aria2.client.get_global_option()
-    aria2_options = {key: aria2_all_options[key] for key in aria2c_edit_opts}
-else:
-    a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
-    aria2.set_global_options(a2c_glo)
 
 log_info("Creating client from BOT_TOKEN")
 app = tgClient(
@@ -446,3 +410,34 @@ bot = app.start()
 bot_loop = bot.loop
 
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
+
+qbit_edit_opts = ['dl_limit', 'up_limit', 'max_connec', 'max_connec_per_torrent', 'disk_cache', 'disk_cache_ttl',
+                  'preallocate_all', 'max_seeding_time_enabled', 'max_seeding_time', 'max_ratio_enabled', 'max_ratio',
+                  'dht', 'pex', 'lsd', 'encryption', 'anonymous_mode', 'proxy_type', 'proxy_peer_connections', 
+                  'proxy_torrents_only', 'proxy_ip', 'proxy_port', 'proxy_auth_enabled', 'proxy_username',
+                  'proxy_password']
+aria2c_edit_opts = ['max-overall-download-limit', 'max-overall-upload-limit', 'max-download-limit', 'max-upload-limit',
+                    'split', 'min-split-size', 'max-connection-per-server', 'disk-cache', 'file-allocation', 'user-agent',
+                    'seed-ratio', 'seed-time', 'bt-max-peers', 'enable-dht', 'enable-dht6', 'bt-enable-lpd',
+                    'enable-peer-exchange']
+aria2c_global = ["bt-max-open-files", "download-result", "keep-unfinished-download-result", "log", "log-level",
+                 "max-concurrent-downloads", "max-download-result", "max-overall-download-limit", "save-session",
+                 "max-overall-upload-limit", "optimize-concurrent-downloads", "save-cookies", "server-stat-of"]
+
+if not qbit_options:
+    qbit_all_options = dict(get_qb_client().app_preferences())
+    qbit_options = {key: qbit_all_options[key] for key in qbit_edit_opts}
+else:
+    qb_opt = {**qbit_options}
+    for k, v in qb_opt.items():
+        if v in ["", "*"]:
+            del qb_opt[k]
+    get_qb_client().app_set_preferences(qb_opt)
+
+aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
+if not aria2_options:
+    aria2_all_options = aria2.client.get_global_option()
+    aria2_options = {key: aria2_all_options[key] for key in aria2c_edit_opts}
+else:
+    a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
+    aria2.set_global_options(a2c_glo)
