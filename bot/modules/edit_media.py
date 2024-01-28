@@ -26,7 +26,7 @@ async def edit_media(client, message):
     forward_chat = origin_message.forward_from_chat
     protect_content = True if '-p' in command else False
     ignore_source = True if '-i' in command else False
-    caption = text.rsplit('-i', 1)[-1].rsplit('-p', 1)[-1].strip()    
+    caption = text.split('-i', 1)[-1].split('-p', 1)[-1].strip()    
     try:
         if forward_chat and not ignore_source:
             forward_chat_username = forward_chat.username
