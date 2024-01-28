@@ -116,6 +116,12 @@ async def button_callback(client, query):
         await query.answer()
         await set_forward_pars(client, message)
 
+
+
+
+
+
+
 async def forward(client, message):
     command = message.command
     user_id = message.from_user.id
