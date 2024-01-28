@@ -142,6 +142,7 @@ async def set_auth(client, query, key):
 
 @new_thread
 async def auth_callback(client, query):
+    LOGGER.info(query)
     user_id = query.from_user.id
     message = query.message
     data = query.data.split()
