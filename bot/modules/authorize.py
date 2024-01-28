@@ -142,7 +142,7 @@ async def set_auth(client, query, key):
 
 @new_thread
 async def auth_callback(client, query):
-    LOGGER.INFO(query)
+    LOGGER.info(query)
     user_id = query.from_user.id
     message = query.message
     data = query.data.split()
@@ -171,7 +171,7 @@ async def auth_callback(client, query):
 async def authorize(client, message):
     msg, button = await get_buttons(message.from_user)
     query = await sendMessage(message, msg, button)
-    LOGGER.INFO(query)
+    LOGGER.info(query)
 
 
 bot.add_handler(MessageHandler(authorize, filters=filters.command(BotCommands.AuthorizeCommand) & CustomFilters.sudo))
