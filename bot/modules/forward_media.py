@@ -129,7 +129,7 @@ async def conversation_text(client, query, reply_text_message):
 async def forward_callback(client, query):
     user_id = query.from_user.id
     message = query.message
-    message_id = message.reply_to_message_id
+    message_id = message.id
     data = query.data.split()
     if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer('You are not allowed to do this', show_alert=True)
