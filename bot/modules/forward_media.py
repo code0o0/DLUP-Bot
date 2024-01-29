@@ -193,9 +193,11 @@ async def forward(client, message):
     }
     if len(command) > 1 and command[1].startswith('https://t.me/'):
         _, from_chat_id, from_message_id = command[1].rstrip('?single').rsplit('/', 2)
+        if from_chat_id.isdigit():
+            from_chat_id = int(from_chat_id)
+        else:
+            from_chat_id = from_chat_id if from_chat_id.startswith('@') else f'@{from_chat_id}'
     elif from_message := message.reply_to_message:
-        # from_chat_id = from_message.forward_from_chat.id if from_message.forward_from_chat else ''
-        # from_message_id = from_message.forward_from_message_id
         from_chat_id = from_message.chat.id
         from_message_id = from_message.id
     else:
