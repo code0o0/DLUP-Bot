@@ -1,4 +1,5 @@
 from asyncio import sleep
+from pyrogram.enums import ParseMode
 from pyrogram.errors import FloodWait
 from re import match as re_match
 from time import time
@@ -82,6 +83,33 @@ async def sendRss(text):
     except Exception as e:
         LOGGER.error(str(e))
         return str(e)
+
+
+async def copyMedia(message, chat_id, caption=None, parse_mode=ParseMode.HTML, protect_content=False):
+    try:
+        await message.copy(chat_id=chat_id, caption=caption, parse_mode=parse_mode,
+                           protect_content=protect_content)
+    except FloodWait as f:
+        LOGGER.warning(str(f))
+        await sleep(f.value * 1.2)
+        return await copyMedia(message, chat_id, caption, parse_mode, protect_content)
+    except Exception as e:
+        LOGGER.error(str(e))
+        return str(e)
+    return None
+
+
+async def copyMediaGroup(client, chat_id, send_medias, protect_content=False):
+    try:
+        await client.send_media_group(chat_id, send_medias, protect_content=protect_content)
+    except FloodWait as f:
+        LOGGER.warning(str(f))
+        await sleep(f.value * 1.2)
+        return await copyMediaGroup(client, chat_id, send_medias, protect_content)
+    except Exception as e:
+        LOGGER.error(str(e))
+        return str(e)
+    return None
 
 
 async def deleteMessage(message):

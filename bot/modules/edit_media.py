@@ -5,7 +5,7 @@ from pyrogram.types import InputMediaDocument, InputMediaPhoto, InputMediaVideo,
 from html import escape
 
 from bot import bot, LOGGER
-from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage
+from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage, copyMedia, copyMediaGroup
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import new_task
@@ -55,12 +55,10 @@ async def edit_media(client, message):
             if caption:
                 send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
-            await client.send_media_group(chat_id, send_medias, protect_content=protect_content)
-            media_group.append(message)
-            await auto_delete_message(client, media_group, 0) 
+            await copyMediaGroup(client, chat_id, send_medias, protect_content)
+            await auto_delete_message(client, media_group+[message], 0)
         else:
-            await from_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML,
-                                    protect_content=protect_content)
+            await copyMedia(from_message, chat_id, caption, ParseMode.HTML, protect_content)
             await auto_delete_message(client, [message, from_message], 0)
     except Exception as e:
         LOGGER.error(e)

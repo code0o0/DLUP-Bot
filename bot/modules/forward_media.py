@@ -1,7 +1,7 @@
 from asyncio import TimeoutError, sleep
 from html import escape
 import random
-from pyrogram.handlers import MessageHandler
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
 from pyrogram.enums import ParseMode, MessageMediaType
 from pyrogram.types import InputMediaDocument, InputMediaPhoto, InputMediaVideo, InputMediaAudio
@@ -10,7 +10,8 @@ from bot.helper.ext_utils.bot_utils import new_thread
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage, editMessage
+from bot.helper.telegram_helper.message_utils import (auto_delete_message, sendMessage, editMessage,
+                                                      copyMedia, copyMediaGroup)
 
 handler_dict = {}
 
@@ -33,29 +34,32 @@ async def update_buttons(query, message_id):
     msg, button = await get_buttons(query.from_user, message_id)
     await editMessage(query.message, msg, button)
 
-
 async def forward_message(client, message, message_id):
     msg_dict = handler_dict[message_id]
+    del handler_dict[message_id]
     from_chat = msg_dict['from_chat']
     from_message_id = msg_dict['from_message_id']
     forward_chat = msg_dict['forward_chat']
     forward_number = msg_dict['forward_number']
     protect_content = msg_dict['protect_content']
+    msg = f'<pre> Forward Task: from {from_chat} to {forward_chat}</pre>\n'
     try:
         message_list = await bot.get_chat_history(from_chat, limit=forward_number, offset_id=from_message_id)
     except Exception as e:
         try:
             message_list = await user.get_chat_history(from_chat, limit=forward_number, offset_id=from_message_id)
         except Exception as e:
-            LOGGER.error(e)
-            msg = '<b>Failed to get message from the chat!</b>\n'
+            LOGGER.error(e) 
+            msg += f'<pre>Status: Failed</pre>\n'
             msg += f'<b>Reason:</b> {escape(str(e))}'
             error_message = await sendMessage(message, msg)
             await auto_delete_message(client, [message, error_message], 20)
             return
     if not message_list:
-        null_message = await sendMessage(message, 'No message found!')
-        await auto_delete_message(client, [message, null_message], 20)
+        msg += f'<pre>Status: Failed</pre>\n'
+        msg += f'<b>Reason:</b> No message found!'
+        error_message = await sendMessage(message, msg)
+        await auto_delete_message(client, [message, error_message], 20)
         return
     media_messages = {}
     for message in message_list:
@@ -71,8 +75,7 @@ async def forward_message(client, message, message_id):
         if len(messages) == 1:
             message = message_list[0]
             caption = message.caption.html if message.caption else ''
-            await message.copy(chat_id=forward_chat, caption=caption, parse_mode=ParseMode.HTML,
-                               protect_content=protect_content)
+            result = await copyMedia(message, forward_chat, caption, ParseMode.HTML, protect_content)
         else:
             send_medias = []
             for message in messages:
@@ -90,9 +93,17 @@ async def forward_message(client, message, message_id):
             if caption:
                 send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
-            await bot.send_media_group(chat_id=forward_chat, media=send_medias, protect_content=protect_content)
-        sleep(random.randint(1, 5))
-         
+            result = await copyMediaGroup(client, forward_chat, send_medias, protect_content)
+        if result:
+            msg += f'<pre>Status: Failed</pre>\n'
+            msg += f'<b>Reason:</b> {escape(result)}'
+            error_message = await sendMessage(message, msg)
+            await auto_delete_message(client, [message, error_message], 20)
+            return
+        await sleep(random.randint(1.5, 2))
+    msg += f'<pre>Status: Success</pre>\n'
+    success_message = await sendMessage(message, msg)
+    await auto_delete_message(client, [message, success_message], 20)
     
 async def conversation_text(client, query, reply_text_message):
     chat_id = query.chat.id
@@ -111,7 +122,7 @@ async def conversation_text(client, query, reply_text_message):
     return response_text
 
 @new_thread
-async def button_callback(client, query):
+async def forward_callback(client, query):
     user_id = query.from_user.id
     message = query.message
     query_id = query.id
@@ -161,7 +172,6 @@ async def button_callback(client, query):
         await editMessage(message, msg)
         await forward_message(client, message, message_id)
 
-
 async def forward(client, message):
     command = message.command
     message_id = message.message_id
@@ -191,5 +201,5 @@ async def forward(client, message):
     await sendMessage(message, msg, button)
 
 
-
-# bot.add_handler(MessageHandler(forward, filters=command(BotCommands.EditCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(forward, filters=filters.command(BotCommands.ForwardCommand) & CustomFilters.sudo))
+bot.add_handler(CallbackQueryHandler(forward_callback, filters=filters.regex("^forwardset") & CustomFilters.sudo))

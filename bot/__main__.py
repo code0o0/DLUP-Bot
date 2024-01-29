@@ -59,6 +59,7 @@ from .modules import (
     help,
     info,
     edit_media,
+    forward_media,
     force_start,
 )
 
@@ -174,6 +175,7 @@ NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.AuthorizeCommand}: Manage a chat or a user to use the bot.
 /{BotCommands.InfoCommand}: Get info about a user.
 /{BotCommands.EditCommand}: Edit a message (Only Owner & Sudo).
+/{BotCommands.ForwardCommand[0]} or /{BotCommands.ForwardCommand[1]}: Forward a media message to another chat (Only Owner & Sudo).
 /{BotCommands.UsersCommand}: show users settings (Only Owner & Sudo).
 /{BotCommands.RestartCommand}: Restart and update the bot (Only Owner & Sudo).
 /{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports (Only Owner & Sudo).
