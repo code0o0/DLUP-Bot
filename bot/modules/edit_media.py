@@ -37,7 +37,7 @@ async def edit_media(client, message):
         from_chat_id = origin_message.chat.id
         message_id = origin_message.id
         if origin_message.media_group_id:
-            copy_message = await client.copy_media_group(chat_id, from_chat_id, message_id, caption=caption,
+            copy_message = await client.copy_media_group(chat_id, from_chat_id, message_id, captions=caption,
                                                         parse_mode=ParseMode.HTML, protect_content=protect_content)
         else:
             copy_message = await client.copy_message(chat_id, from_chat_id, message_id, caption=caption,
