@@ -120,9 +120,10 @@ async def conversation_text(client, query, reply_text_message):
         return None
     if response_message:
         response_text = response_message.text
+        await auto_delete_message(client, [reply_text_message, response_message], 0)
     else:
         response_text = None
-    await auto_delete_message(client, [reply_text_message, response_message], 0)
+        await auto_delete_message(client, reply_text_message, 0)
     return response_text
 
 @new_thread
