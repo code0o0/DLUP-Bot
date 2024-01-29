@@ -178,7 +178,7 @@ async def forward_callback(client, query):
     elif data[2] == 'run':
         await query.answer()
         msg = '🚴Forwarding...'
-        message = await editMessage(message, msg)
+        await editMessage(message, msg)
         await forward_message(client, message, cmd_message_id)
 
 async def forward(client, message):
