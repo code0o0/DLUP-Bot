@@ -56,6 +56,7 @@ async def forward_message(client, message, message_id):
             error_message = await sendMessage(message, msg)
             await auto_delete_message(client, [message, error_message], 20)
             return
+    LOGGER.info(message_list)
     if not message_list:
         msg += f'<pre>Status: Failed</pre>\n'
         msg += f'<b>Reason:</b> No message found!'
@@ -63,6 +64,9 @@ async def forward_message(client, message, message_id):
         await auto_delete_message(client, [message, error_message], 20)
         return
     LOGGER.info(message_list)
+    
+    
+    
     media_messages = {}
     for message in message_list:
         if not message.media:
