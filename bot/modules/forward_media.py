@@ -129,19 +129,20 @@ async def conversation_text(client, query, reply_text_message):
 async def forward_callback(client, query):
     user_id = query.from_user.id
     message = query.message
-    message_id = message.id
+    cmd_message_id = message.reply_to_message_id
+    callback_message_id = message.id
     data = query.data.split()
     if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer('You are not allowed to do this', show_alert=True)
         return
-    await client.listen.Cancel(f'{message_id}')
-    if message_id not in handler_dict:
+    await client.listen.Cancel(f'{callback_message_id}')
+    if cmd_message_id not in handler_dict:
         await query.answer('This message has expired', show_alert=True)
         await auto_delete_message(client, [message, message.reply_to_message], 0)
         return
     if data[2] == 'close':
         await query.answer()
-        del handler_dict[message_id]
+        del handler_dict[cmd_message_id]
         await auto_delete_message(client, [message, message.reply_to_message], 0)
     elif data[2] == 'forward_chat':
         await query.answer()
@@ -151,10 +152,10 @@ async def forward_callback(client, query):
         if response_text is None:
             return
         elif response_text.isdigit():
-            handler_dict[message_id]['forward_chat'] = int(response_text)
+            handler_dict[cmd_message_id]['forward_chat'] = int(response_text)
         else:
-            handler_dict[message_id]['forward_chat'] = response_text if response_text.startswith('@') else f'@{response_text}'
-        await update_buttons(query, message_id)
+            handler_dict[cmd_message_id]['forward_chat'] = response_text if response_text.startswith('@') else f'@{response_text}'
+        await update_buttons(query, cmd_message_id)
     elif data[2] == 'forward_number':
         await query.answer()
         msg = 'Please send the number of messages you want to forward.\n<b>Timeout:</b> 20s.'
@@ -162,8 +163,8 @@ async def forward_callback(client, query):
         response_text = await conversation_text(client, query, reply_text_message)
         if response_text is None:
             return
-        handler_dict[message_id]['forward_number'] = int(response_text) if response_text.isdigit() else 1
-        await update_buttons(query, message_id)
+        handler_dict[cmd_message_id]['forward_number'] = int(response_text) if response_text.isdigit() else 1
+        await update_buttons(query, cmd_message_id)
     elif data[2] == 'protect_content':
         await query.answer()
         msg = 'Do you want to protect the content? True or False.\n<b>Timeout:</b> 20s.'
@@ -171,13 +172,13 @@ async def forward_callback(client, query):
         response_text = await conversation_text(client, query, reply_text_message)
         if response_text is None:
             return
-        handler_dict[message_id]['protect_content'] = True if response_text.lower() == 'true' else False
-        await update_buttons(query, message_id)
+        handler_dict[cmd_message_id]['protect_content'] = True if response_text.lower() == 'true' else False
+        await update_buttons(query, cmd_message_id)
     elif data[2] == 'run':
         await query.answer()
         msg = '🚴Forwarding...'
         message = await editMessage(message, msg)
-        await forward_message(client, message, message_id)
+        await forward_message(client, message, cmd_message_id)
 
 async def forward(client, message):
     command = message.command
