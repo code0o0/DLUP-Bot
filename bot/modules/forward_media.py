@@ -44,6 +44,7 @@ async def forward_message(client, message, message_id):
     protect_content = msg_dict['protect_content']
     messages_id_list = [from_message_id + i for i in range(forward_number)]
     msg = f'<pre> Forward Task: from {from_chat} to {forward_chat}</pre>\n'
+    LOGGER.info(messages_id_list)
     try:
         message_list = await client.get_messages(from_chat, messages_id_list)
     except Exception as e:
