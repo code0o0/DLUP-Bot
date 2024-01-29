@@ -108,11 +108,11 @@ async def forward_message(client, message, message_id):
     
 async def conversation_text(client, query, reply_text_message):
     chat_id = reply_text_message.chat.id
-    query_id = query.id
+    message_id = query.message.id
     user_id = query.from_user.id
     try:
         response_message = await client.listen.Message(filters=filters.regex(r'^[^/]') & filters.user(user_id) &
-                                                       filters.chat(chat_id), id=f'{query_id}', timeout=20)
+                                                       filters.chat(chat_id), id=f'{message_id}', timeout=20)
     except TimeoutError:
         msg = 'Timeout, the conversation has been closed!'
         await editMessage(reply_text_message, msg)
@@ -129,13 +129,12 @@ async def conversation_text(client, query, reply_text_message):
 async def forward_callback(client, query):
     user_id = query.from_user.id
     message = query.message
-    query_id = query.id
     message_id = message.reply_to_message_id
     data = query.data.split()
     if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer('You are not allowed to do this', show_alert=True)
         return
-    await client.listen.Cancel(f'{query_id}')
+    await client.listen.Cancel(f'{message_id}')
     if message_id not in handler_dict:
         await query.answer('This message has expired', show_alert=True)
         await auto_delete_message(client, [message, message.reply_to_message], 0)
