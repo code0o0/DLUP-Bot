@@ -129,17 +129,19 @@ async def forward_callback(client, query):
     user_id = query.from_user.id
     message = query.message
     query_id = query.id
-    message_id = message.reply_to_message_id or None
+    message_id = message.reply_to_message_id
     data = query.data.split()
     if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer('You are not allowed to do this', show_alert=True)
         return
     await client.listen.Cancel(f'{query_id}')
-    LOGGER.info(query)
-    if data[2] == 'close' or not message_id:
+    if message_id not in handler_dict:
+        await query.answer('This message has expired', show_alert=True)
+        await auto_delete_message(client, [message, message.reply_to_message], 0)
+        return
+    if data[2] == 'close':
         await query.answer()
-        if message_id and message_id in handler_dict:
-            del handler_dict[message_id]
+        del handler_dict[message_id]
         await auto_delete_message(client, [message, message.reply_to_message], 0)
     elif data[2] == 'forward_chat':
         await query.answer()
