@@ -118,7 +118,7 @@ async def conversation_text(client, query, reply_text_message):
         await auto_delete_message(client, reply_text_message, 20)
         return None
     response_text = response_message.text
-    await auto_delete_message(client, [reply_text_message, response_text], 0)
+    await auto_delete_message(client, [reply_text_message, response_message], 0)
     return response_text
 
 @new_thread
@@ -139,7 +139,7 @@ async def forward_callback(client, query):
     elif data[2] == 'forward_chat':
         await query.answer()
         msg = 'Please send the chat ID or Username you want to forward to.\nTimeout in 20 seconds.'
-        reply_text_message = await sendMessage(message, msg)
+        reply_text_message = await client.send_message(message.chat.id, msg)
         response_text = await conversation_text(client, query, reply_text_message)
         if response_text is None:
             return
@@ -151,7 +151,7 @@ async def forward_callback(client, query):
     elif data[2] == 'forward_number':
         await query.answer()
         msg = 'Please send the number of messages you want to forward.\nTimeout in 20 seconds.'
-        reply_text_message = await sendMessage(message, msg)
+        reply_text_message = await client.send_message(message.chat.id, msg)
         response_text = await conversation_text(client, query, reply_text_message)
         if response_text is None:
             return
@@ -160,7 +160,7 @@ async def forward_callback(client, query):
     elif data[2] == 'protect_content':
         await query.answer()
         msg = 'Do you want to protect the content? True or False.\nTimeout in 20 seconds.'
-        reply_text_message = await sendMessage(message, msg)
+        reply_text_message = await client.send_message(message.chat.id, msg)
         response_text = await conversation_text(client, query, reply_text_message)
         if response_text is None:
             return
