@@ -117,7 +117,10 @@ async def conversation_text(client, query, reply_text_message):
         await editMessage(reply_text_message, msg)
         await auto_delete_message(client, reply_text_message, 20)
         return None
-    response_text = response_message.text
+    if response_message:
+        response_text = response_message.text
+    else:
+        response_text = None
     await auto_delete_message(client, [reply_text_message, response_message], 0)
     return response_text
 
@@ -132,6 +135,7 @@ async def forward_callback(client, query):
         await query.answer('You are not allowed to do this', show_alert=True)
         return
     await client.listen.Cancel(f'{query_id}')
+    LOGGER.info(query)
     if data[2] == 'close' or not message_id:
         await query.answer()
         if message_id and message_id in handler_dict:
