@@ -36,9 +36,6 @@ async def update_buttons(query, message_id):
 
 async def forward_message(client, message, message_id):
     msg_dict = handler_dict[message_id]
-    LOGGER.info(f'{handler_dict}-{message_id}')
-
-
     del handler_dict[message_id]
     from_chat = msg_dict['from_chat']
     from_message_id = msg_dict['from_message_id']
@@ -185,10 +182,6 @@ async def forward_callback(client, query):
         await forward_message(client, message, cmd_message_id)
 
 async def forward(client, message):
-    LOGGER.info(message)
-
-
-
     command = message.command
     message_id = message.id
     handler_dict[message_id] = {
@@ -204,6 +197,7 @@ async def forward(client, message):
             from_chat_id = int(from_chat_id)
         else:
             from_chat_id = from_chat_id if from_chat_id.startswith('@') else f'@{from_chat_id}'
+        from_message_id = int(from_message_id)
     elif from_message := message.reply_to_message:
         from_chat_id = from_message.chat.id
         from_message_id = from_message.id
