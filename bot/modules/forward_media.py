@@ -44,10 +44,10 @@ async def forward_message(client, message, message_id):
     protect_content = msg_dict['protect_content']
     msg = f'<pre> Forward Task: from {from_chat} to {forward_chat}</pre>\n'
     try:
-        message_list = await bot.get_chat_history(from_chat, limit=forward_number, offset_id=from_message_id)
+        message_list = bot.get_chat_history(from_chat, limit=forward_number, offset_id=from_message_id)
     except Exception as e:
         try:
-            message_list = await user.get_chat_history(from_chat, limit=forward_number, offset_id=from_message_id)
+            message_list = user.get_chat_history(from_chat, limit=forward_number, offset_id=from_message_id)
         except Exception as e:
             LOGGER.error(e) 
             msg += f'<pre>Status: Failed</pre>\n'
@@ -62,7 +62,7 @@ async def forward_message(client, message, message_id):
         await auto_delete_message(client, [message, error_message], 20)
         return
     media_messages = {}
-    for message in message_list:
+    async for message in message_list:
         if not message.media:
             continue
         if not message.media_group_id:
@@ -106,7 +106,7 @@ async def forward_message(client, message, message_id):
     await auto_delete_message(client, [message, success_message], 20)
     
 async def conversation_text(client, query, reply_text_message):
-    chat_id = reply_text_message.id
+    chat_id = reply_text_message.chat.id
     query_id = query.id
     user_id = query.from_user.id
     try:
