@@ -34,11 +34,6 @@ async def update_buttons(query, message_id):
     msg, button = await get_buttons(query.from_user, message_id)
     await editMessage(query.message, msg, button)
 
-
-
-
-
-
 async def forward_message(client, message, message_id):
     msg_dict = handler_dict[message_id]
     del handler_dict[message_id]
@@ -182,7 +177,7 @@ async def forward_callback(client, query):
     elif data[2] == 'run':
         await query.answer()
         msg = '🚴Forwarding...'
-        await editMessage(message, msg)
+        message = await editMessage(message, msg)
         await forward_message(client, message, message_id)
 
 async def forward(client, message):
