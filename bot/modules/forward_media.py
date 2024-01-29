@@ -34,6 +34,11 @@ async def update_buttons(query, message_id):
     msg, button = await get_buttons(query.from_user, message_id)
     await editMessage(query.message, msg, button)
 
+
+
+
+
+
 async def forward_message(client, message, message_id):
     msg_dict = handler_dict[message_id]
     del handler_dict[message_id]
@@ -71,9 +76,11 @@ async def forward_message(client, message, message_id):
             media_messages[message.media_group_id] = [message]
         else:
             media_messages[message.media_group_id].append(message)
+    
+    LOGGER.info(media_messages)
     for messages in media_messages.values():
         if len(messages) == 1:
-            message = message_list[0]
+            message = messages[0]
             caption = message.caption.html if message.caption else ''
             result = await copyMedia(message, forward_chat, caption, ParseMode.HTML, protect_content)
         else:
