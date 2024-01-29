@@ -66,7 +66,8 @@ async def forward_message(client, message, message_id):
         error_message = await sendMessage(message, msg)
         await auto_delete_message(client, [message, error_message], 20)
         return
-    LOGGER.info(f'message_list: {type(message_list)} {message_list}')
+    message_list0 = [message async for message in message_list]
+    LOGGER.info(f'message_list0: {message_list0}')
     media_messages = {}
     async for message in message_list:
         LOGGER.info(message)
