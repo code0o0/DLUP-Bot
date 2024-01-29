@@ -54,13 +54,13 @@ async def forward_message(client, message, message_id):
             msg += f'<pre>Status: Failed</pre>\n'
             msg += f'<b>Reason:</b> {escape(str(e))}'
             error_message = await sendMessage(message, msg)
-            await auto_delete_message(client, [message, error_message], 20)
+            await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
             return
     if not message_list:
         msg += f'<pre>Status: Failed</pre>\n'
         msg += f'<b>Reason:</b> No message found!'
         error_message = await sendMessage(message, msg)
-        await auto_delete_message(client, [message, error_message], 20)
+        await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
         return
     media_messages = {}
     for msge in message_list:
@@ -99,12 +99,12 @@ async def forward_message(client, message, message_id):
             msg += f'<pre>Status: Failed</pre>\n'
             msg += f'<b>Reason:</b> {escape(result)}'
             error_message = await sendMessage(message, msg)
-            await auto_delete_message(client, [message, error_message], 20)
+            await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
             return
         await sleep(1 + random.random())
     msg += f'<pre>Status: Success</pre>\n'
     success_message = await sendMessage(message, msg)
-    await auto_delete_message(client, [message, success_message], 20)
+    await auto_delete_message(client, [message, message.reply_to_message, success_message], 20)
     
 async def conversation_text(client, query, reply_text_message):
     chat_id = reply_text_message.chat.id
@@ -194,7 +194,7 @@ async def forward(client, message):
     if len(command) > 1 and command[1].startswith('https://t.me/'):
         _, from_chat_id, from_message_id = command[1].rstrip('?single').rsplit('/', 2)
         if from_chat_id.isdigit():
-            from_chat_id = int(from_chat_id)
+            from_chat_id = int(from_chat_id) if from_chat_id.startswith('-100') else int(f'-100{from_chat_id}')
         else:
             from_chat_id = from_chat_id if from_chat_id.startswith('@') else f'@{from_chat_id}'
         from_message_id = int(from_message_id)
