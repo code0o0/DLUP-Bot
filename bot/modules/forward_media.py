@@ -106,7 +106,7 @@ async def forward_message(client, message, message_id):
     await auto_delete_message(client, [message, success_message], 20)
     
 async def conversation_text(client, query, reply_text_message):
-    chat_id = query.chat.id
+    chat_id = reply_text_message.id
     query_id = query.id
     user_id = query.from_user.id
     try:
