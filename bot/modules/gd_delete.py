@@ -11,7 +11,7 @@ from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMe
 
 
 @new_task
-async def deletefile(_, message):
+async def deletefile(client, message):
     args = message.text.split()
     user = message.from_user or message.sender_chat
     if len(args) > 1:
@@ -28,7 +28,7 @@ async def deletefile(_, message):
             "Send Gdrive link along with command or by replying to the link by command"
         )
     reply_message = await sendMessage(message, msg)
-    await auto_delete_message(message, reply_message)
+    await auto_delete_message(client, [message, reply_message], 20)
 
 
 bot.add_handler(

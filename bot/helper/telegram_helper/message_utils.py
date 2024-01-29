@@ -91,13 +91,17 @@ async def deleteMessage(message):
         LOGGER.warning(str(e))
 
 
-async def auto_delete_message(cmd_message=None, bot_message=None, delay=20):
+async def auto_delete_message(client, messages, delay=20):
     if delay:
         await sleep(delay)
-    if cmd_message is not None:
-        await deleteMessage(cmd_message)
-    if bot_message is not None:
-        await deleteMessage(bot_message)
+    if isinstance(messages, list):
+        chat_id = messages[0].chat.id
+    else:
+        chat_id = messages.chat.id
+    try:
+        await client.delete_messages(chat_id, messages)
+    except Exception as e:
+        LOGGER.error(str(e))
 
 
 async def delete_status():

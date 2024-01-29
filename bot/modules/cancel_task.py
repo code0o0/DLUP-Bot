@@ -97,7 +97,7 @@ def create_cancel_buttons():
     return buttons.build_menu(2)
 
 
-async def cancell_all_buttons(_, message):
+async def cancell_all_buttons(client, message):
     async with task_dict_lock:
         count = len(task_dict)
     if count == 0:
@@ -105,7 +105,7 @@ async def cancell_all_buttons(_, message):
         return
     button = create_cancel_buttons()
     can_msg = await sendMessage(message, "Choose tasks to cancel.", button)
-    await auto_delete_message(message, can_msg)
+    await auto_delete_message(client, [message, can_msg], 20)
 
 
 @new_task

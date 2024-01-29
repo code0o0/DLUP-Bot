@@ -138,11 +138,10 @@ async def set_auth(client, query, key):
         msg = 'UserID or UserName not found, please resend UserID or UserName!'
         reply_message = await response_message.reply(msg)
         await set_auth(client, query, key)
-        await auto_delete_message(response_message, reply_message, 0)
+        await auto_delete_message(client, [response_message, reply_message], 0)
 
 @new_thread
 async def auth_callback(client, query):
-    LOGGER.info(query)
     user_id = query.from_user.id
     message = query.message
     data = query.data.split()
@@ -154,7 +153,7 @@ async def auth_callback(client, query):
     await client.listen.Cancel(f'{query_id}')
     if data[2] == 'close':
         await query.answer()
-        await auto_delete_message(message, message.reply_to_message, 0)
+        await auto_delete_message(client, [message, message.reply_to_message], 0)
     elif data[2] == 'back':
         key = data[3] if len(data) == 4 else None
         await query.answer()
@@ -170,8 +169,7 @@ async def auth_callback(client, query):
 
 async def authorize(client, message):
     msg, button = await get_buttons(message.from_user)
-    query = await sendMessage(message, msg, button)
-    LOGGER.info(query)
+    await sendMessage(message, msg, button)
 
 
 bot.add_handler(MessageHandler(authorize, filters=filters.command(BotCommands.AuthorizeCommand) & CustomFilters.sudo))

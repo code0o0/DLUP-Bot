@@ -232,7 +232,7 @@ async def restart_notification():
             message = await bot.edit_message_text(
                 chat_id=chat_id, message_id=msg_id, text="Restarted Successfully!"
             )
-            await auto_delete_message(message, message.reply_to_message, delay=20)
+            await auto_delete_message(bot, [message, message.reply_to_message], delay=20)
         except:
             pass
         await remove(".restartmsg")

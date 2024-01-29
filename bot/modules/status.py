@@ -31,7 +31,7 @@ from bot.helper.telegram_helper.message_utils import (
 
 
 @new_task
-async def mirror_status(_, message):
+async def mirror_status(client, message):
     async with task_dict_lock:
         count = len(task_dict)
     if count == 0:
@@ -43,7 +43,7 @@ async def mirror_status(_, message):
             f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {currentTime}"
         )
         reply_message = await sendMessage(message, msg)
-        await auto_delete_message(message, reply_message)
+        await auto_delete_message(client, [message, reply_message], 20)
     else:
         text = message.text.split()
         if len(text) > 1:
