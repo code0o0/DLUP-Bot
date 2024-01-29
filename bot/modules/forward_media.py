@@ -47,12 +47,13 @@ async def forward_message(client, message, message_id):
     forward_chat = msg_dict['forward_chat']
     forward_number = msg_dict['forward_number']
     protect_content = msg_dict['protect_content']
+    messages_id_list = [from_message_id + i for i in range(forward_number)]
     msg = f'<pre> Forward Task: from {from_chat} to {forward_chat}</pre>\n'
     try:
-        message_list = client.get_chat_history(from_chat, limit=forward_number, offset_id=from_message_id)
+        message_list = await client.get_messages(from_chat, messages_id_list)
     except Exception as e:
         try:
-            message_list = user.get_chat_history(from_chat, limit=forward_number, offset_id=from_message_id)
+            message_list = user.get_messages(from_chat, messages_id_list)
         except Exception as e:
             LOGGER.error(e) 
             msg += f'<pre>Status: Failed</pre>\n'
@@ -66,11 +67,8 @@ async def forward_message(client, message, message_id):
         error_message = await sendMessage(message, msg)
         await auto_delete_message(client, [message, error_message], 20)
         return
-    message_list0 = [message async for message in message_list]
-    LOGGER.info(f'message_list0: {message_list0}')
     media_messages = {}
-    async for message in message_list:
-        LOGGER.info(message)
+    for message in message_list:
         if not message.media:
             continue
         if not message.media_group_id:
@@ -79,8 +77,6 @@ async def forward_message(client, message, message_id):
             media_messages[message.media_group_id] = [message]
         else:
             media_messages[message.media_group_id].append(message)
-    
-    LOGGER.info(media_messages)
     for messages in media_messages.values():
         if len(messages) == 1:
             message = messages[0]
