@@ -174,7 +174,7 @@ async def forward_callback(client, query):
 
 async def forward(client, message):
     command = message.command
-    message_id = message.message_id
+    message_id = message.id
     handler_dict[message_id] = {
         'from_chat': None,
         'from_message_id': None,
