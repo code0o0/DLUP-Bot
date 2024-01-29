@@ -101,7 +101,7 @@ async def forward_message(client, message, message_id):
             error_message = await sendMessage(message, msg)
             await auto_delete_message(client, [message, error_message], 20)
             return
-        await sleep(random.randint(1.5, 2))
+        await sleep(1 + random.random())
     msg += f'<pre>Status: Success</pre>\n'
     success_message = await sendMessage(message, msg)
     await auto_delete_message(client, [message, success_message], 20)
