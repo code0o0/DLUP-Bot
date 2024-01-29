@@ -36,6 +36,9 @@ async def update_buttons(query, message_id):
 
 async def forward_message(client, message, message_id):
     msg_dict = handler_dict[message_id]
+    LOGGER.info(f'{handler_dict}-{message_id}')
+
+
     del handler_dict[message_id]
     from_chat = msg_dict['from_chat']
     from_message_id = msg_dict['from_message_id']
@@ -44,7 +47,6 @@ async def forward_message(client, message, message_id):
     protect_content = msg_dict['protect_content']
     messages_id_list = [from_message_id + i for i in range(forward_number)]
     msg = f'<pre> Forward Task: from {from_chat} to {forward_chat}</pre>\n'
-    LOGGER.info(messages_id_list)
     try:
         message_list = await client.get_messages(from_chat, messages_id_list)
     except Exception as e:
@@ -57,17 +59,12 @@ async def forward_message(client, message, message_id):
             error_message = await sendMessage(message, msg)
             await auto_delete_message(client, [message, error_message], 20)
             return
-    LOGGER.info(message_list)
     if not message_list:
         msg += f'<pre>Status: Failed</pre>\n'
         msg += f'<b>Reason:</b> No message found!'
         error_message = await sendMessage(message, msg)
         await auto_delete_message(client, [message, error_message], 20)
         return
-    LOGGER.info(message_list)
-    
-    
-    
     media_messages = {}
     for message in message_list:
         if not message.media:
@@ -188,6 +185,10 @@ async def forward_callback(client, query):
         await forward_message(client, message, cmd_message_id)
 
 async def forward(client, message):
+    LOGGER.info(message)
+
+
+
     command = message.command
     message_id = message.id
     handler_dict[message_id] = {
