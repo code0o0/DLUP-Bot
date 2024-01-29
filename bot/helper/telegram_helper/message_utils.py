@@ -96,10 +96,12 @@ async def auto_delete_message(client, messages, delay=20):
         await sleep(delay)
     if isinstance(messages, list):
         chat_id = messages[0].chat.id
+        message_ids = [message.id for message in messages]
     else:
         chat_id = messages.chat.id
+        message_ids = messages.id
     try:
-        await client.delete_messages(chat_id, messages)
+        await client.delete_messages(chat_id, message_ids)
     except Exception as e:
         LOGGER.error(str(e))
 
