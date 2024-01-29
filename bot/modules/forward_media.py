@@ -48,7 +48,7 @@ async def forward_message(client, message, message_id):
         message_list = await client.get_messages(from_chat, messages_id_list)
     except Exception as e:
         try:
-            message_list = user.get_messages(from_chat, messages_id_list)
+            message_list = await user.get_messages(from_chat, messages_id_list)
         except Exception as e:
             LOGGER.error(e) 
             msg += f'<pre>Status: Failed</pre>\n'
@@ -63,34 +63,34 @@ async def forward_message(client, message, message_id):
         await auto_delete_message(client, [message, error_message], 20)
         return
     media_messages = {}
-    for message in message_list:
-        if not message.media:
+    for msge in message_list:
+        if not msge.media:
             continue
-        if not message.media_group_id:
-            media_messages[message.id] = [message]
-        elif message.media_group_id not in media_messages:
-            media_messages[message.media_group_id] = [message]
+        if not msge.media_group_id:
+            media_messages[message.id] = [msge]
+        elif msge.media_group_id not in media_messages:
+            media_messages[msge.media_group_id] = [msge]
         else:
-            media_messages[message.media_group_id].append(message)
-    for messages in media_messages.values():
-        if len(messages) == 1:
-            message = messages[0]
-            caption = message.caption.html if message.caption else ''
-            result = await copyMedia(message, forward_chat, caption, ParseMode.HTML, protect_content)
+            media_messages[msge.media_group_id].append(msge)
+    for msges in media_messages.values():
+        if len(msges) == 1:
+            msge = msges[0]
+            caption = msge.caption.html if msge.caption else ''
+            result = await copyMedia(msge, forward_chat, caption, ParseMode.HTML, protect_content)
         else:
             send_medias = []
-            for message in messages:
-                media = getattr(message, message.media.value)
-                if message.media == MessageMediaType.VIDEO:
+            for msge in msges:
+                media = getattr(msge, msge.media.value)
+                if msge.media == MessageMediaType.VIDEO:
                     input_media = InputMediaVideo(media.file_id, thumb=media.thumbs[0].file_id)
-                elif message.media == MessageMediaType.DOCUMENT:
+                elif msge.media == MessageMediaType.DOCUMENT:
                     input_media = InputMediaDocument(media.file_id, thumb=media.thumbs[0].file_id)
-                elif message.media == MessageMediaType.AUDIO:
+                elif msge.media == MessageMediaType.AUDIO:
                     input_media = InputMediaAudio(media.file_id, thumb=media.thumbs[0].file_id)
-                elif message.media == MessageMediaType.PHOTO:
+                elif msge.media == MessageMediaType.PHOTO:
                     input_media = InputMediaPhoto(media.file_id, thumb=media.thumbs[0].file_id)
                 send_medias.append(input_media)
-            caption = messages[0].caption.html if messages[0].caption else ''
+            caption = msges[0].caption.html if msges[0].caption else ''
             if caption:
                 send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
