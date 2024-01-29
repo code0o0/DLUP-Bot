@@ -56,10 +56,12 @@ async def edit_media(client, message):
                 send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
             await client.send_media_group(chat_id, send_medias, protect_content=protect_content)
+            media_group.append(message)
+            await auto_delete_message(client, media_group, 0) 
         else:
             await from_message.copy(chat_id=chat_id, caption=caption, parse_mode=ParseMode.HTML,
                                     protect_content=protect_content)
-        await auto_delete_message(client, [message, from_message], 0)
+            await auto_delete_message(client, [message, from_message], 0)
     except Exception as e:
         LOGGER.error(e)
         reply_message = await sendMessage(message, str(e))
