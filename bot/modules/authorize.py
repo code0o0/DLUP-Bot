@@ -34,16 +34,16 @@ async def get_buttons(from_user, key=None, text=None):
         buttons.ibutton('🔚Close', f'authset {user_id} close', position='footer')
         if key == 'sudoadd':
             msg = 'Send UserID or UserName to promote as Adminstator.\n'
-            msg += 'Time out: 20 seconds'
+            msg += '<b>Timeout:</b> 20s.'
         elif key == 'sudodl':
             msg = 'Send UserID or UserName to remove from Adminstator.\n'
-            msg += 'Time out: 20 seconds'
+            msg += '<b>Timeout:</b> 20s.'
         elif key == 'authadd':
             msg = 'Send UserID or UserName to authorize.\n'
-            msg += 'Time out: 20 seconds'
+            msg += '<b>Timeout:</b> 20s.'
         elif key == 'authdl':
             msg = 'Send UserID or UserName to unauthorize\n'
-            msg += 'Time out: 20 seconds'
+            msg += '<b>Timeout:</b> 20s.'
         elif key == 'list':
             msg = '<b>Authorized Users:</b> 👁️‍🗨️\n'
             if len(user_data) == 0:
@@ -80,7 +80,7 @@ async def set_auth(client, query, key):
         response_message = await client.listen.Message(filters=filters.regex(r'^[^/]') & filters.user(user_id) &
                                                        filters.chat(chat_id), id=f'{query_id}', timeout=20)
     except TimeoutError:
-        msg = 'Time out, please click the button to choose whether to return or close!'
+        msg = 'Timeout, the conversation has been closed!'
         await update_buttons(query, 'authset', text=msg)
         return
     if response_message:

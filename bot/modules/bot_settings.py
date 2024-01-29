@@ -83,23 +83,25 @@ async def get_buttons(key=None, edit_type=None):
             buttons.ibutton("Close", "botset close", position="footer")
             if key in ["CMD_SUFFIX", "OWNER_ID", "USER_SESSION_STRING"]:
                 msg += "Restart required for this edit to take effect!\n\n"
-            msg += f"Send a valid value for {key}. Current value is '{config_dict[key]}'. Timeout: 60 sec"
+            msg += f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{config_dict[key]}'</b>.\n"
+            msg += "<b>Timeout:</b> 60 sec"
         elif edit_type == "ariavar":
             if key != "newkey":
                 buttons.ibutton("Default", f"botset resetaria {key}")
                 buttons.ibutton("Empty String", f"botset emptyaria {key}")
             buttons.ibutton("Back", "botset aria", position="footer")
             buttons.ibutton("Close", "botset close", position="footer")
-            msg = (
-                "Send a key with value. Example: https-proxy-user:value"
-                if key == "newkey"
-                else f"Send a valid value for {key}. Current value is '{aria2_options[key]}'. Timeout: 60 sec"
-            )
+            if key == "newkey":
+                msg = "Send a key with value.\nExample: https-proxy-user:value"
+            else:
+                msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{aria2_options[key]}'</b>.\n"
+            msg += "<b>Timeout:</b> 60 sec"
         elif edit_type == "qbitvar":
             buttons.ibutton("Empty String", f"botset emptyqbit {key}")
             buttons.ibutton("Back", "botset qbit", position="footer")
             buttons.ibutton("Close", "botset close", position="footer")
-            msg = f"Send a valid value for {key}. Current value is '{qbit_options[key]}'. Timeout: 60 sec"
+            msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{qbit_options[key]}'</b>.\n"
+            msg += "<b>Timeout:</b> 60 sec"
     elif key == "var":
         var_list = ["STATUS_UPDATE_INTERVAL", "STATUS_LIMIT", "QUEUE_ALL", "QUEUE_DOWNLOAD", "QUEUE_UPLOAD",
                     "USER_SESSION_STRING", "CMD_SUFFIX", "UPSTREAM_REPO", "UPSTREAM_BRANCH", "BASE_URL_PORT",

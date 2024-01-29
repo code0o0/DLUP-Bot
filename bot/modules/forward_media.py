@@ -114,7 +114,7 @@ async def conversation_text(client, query, reply_text_message):
         response_message = await client.listen.Message(filters=filters.regex(r'^[^/]') & filters.user(user_id) &
                                                        filters.chat(chat_id), id=f'{query_id}', timeout=20)
     except TimeoutError:
-        msg = 'Time out, please click the button to close conversation.'
+        msg = 'Timeout, the conversation has been closed!'
         await editMessage(reply_text_message, msg)
         await auto_delete_message(client, reply_text_message, 20)
         return None
@@ -146,7 +146,7 @@ async def forward_callback(client, query):
         await auto_delete_message(client, [message, message.reply_to_message], 0)
     elif data[2] == 'forward_chat':
         await query.answer()
-        msg = 'Please send the chat ID or Username you want to forward to.\nTimeout in 20 seconds.'
+        msg = 'Please send the chat ID or Username you want to forward to.\n<b>Timeout:</b> 20s.'
         reply_text_message = await client.send_message(message.chat.id, msg)
         response_text = await conversation_text(client, query, reply_text_message)
         if response_text is None:
@@ -158,7 +158,7 @@ async def forward_callback(client, query):
         await update_buttons(query, message_id)
     elif data[2] == 'forward_number':
         await query.answer()
-        msg = 'Please send the number of messages you want to forward.\nTimeout in 20 seconds.'
+        msg = 'Please send the number of messages you want to forward.\n<b>Timeout:</b> 20s.'
         reply_text_message = await client.send_message(message.chat.id, msg)
         response_text = await conversation_text(client, query, reply_text_message)
         if response_text is None:
@@ -167,7 +167,7 @@ async def forward_callback(client, query):
         await update_buttons(query, message_id)
     elif data[2] == 'protect_content':
         await query.answer()
-        msg = 'Do you want to protect the content? True or False.\nTimeout in 20 seconds.'
+        msg = 'Do you want to protect the content? True or False.\n<b>Timeout:</b> 20s.'
         reply_text_message = await client.send_message(message.chat.id, msg)
         response_text = await conversation_text(client, query, reply_text_message)
         if response_text is None:
