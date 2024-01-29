@@ -67,7 +67,7 @@ async def forward_message(client, message, message_id):
         if not msge.media:
             continue
         if not msge.media_group_id:
-            media_messages[message.id] = [msge]
+            media_messages[msge.id] = [msge]
         elif msge.media_group_id not in media_messages:
             media_messages[msge.media_group_id] = [msge]
         else:
