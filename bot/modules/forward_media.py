@@ -77,11 +77,12 @@ async def forward_message(client, message, message_id):
     for msges in media_messages.values():
         caption = msges[0].caption.html if msges[0].caption else ''
         if copyright:
-            caption += f'\n<b>©️CopyRight:</b> {copyright}'
+            caption += f'\n<b>CopyRight©️:</b> {copyright}'
         if len(msges) == 1:
             result = await copyMedia(msges[0], forward_chat, caption, ParseMode.HTML, protect_content)
         else:
             send_medias = []
+            LOGGER.info(msges)
             for msge in msges:
                 media = getattr(msge, msge.media.value)
                 if msge.media == MessageMediaType.VIDEO:
@@ -96,6 +97,7 @@ async def forward_message(client, message, message_id):
             if caption:
                 send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
+            LOGGER.info(send_medias)
             result = await copyMediaGroup(client, forward_chat, send_medias, protect_content)
         if result:
             msg += f'<pre>Status: Failed</pre>\n'
@@ -112,11 +114,8 @@ async def conversation_text(client, query, msg):
     chat_id = query.message.chat.id
     message_id = query.message.id
     user_id = query.from_user.id
-    buttons = ButtonMaker()
-    buttons.ibutton('Cancel', f'forwardset {user_id} cancel')
-    button = buttons.build_menu()
     try:
-        reply_text_message = await client.send_message(chat_id, msg, reply_markup=button)
+        reply_text_message = await client.send_message(chat_id, msg)
         response_message = await client.listen.Message(filters=filters.regex(r'^[^/]') & filters.user(user_id) &
                                                        filters.chat(chat_id), id=f'{message_id}', timeout=20)
     except TimeoutError:
@@ -151,9 +150,6 @@ async def forward_callback(client, query):
         await query.answer()
         del handler_dict[cmd_message_id]
         await auto_delete_message(client, [message, message.reply_to_message], 0)
-    elif data[2] == 'cancel':
-        await query.answer()
-        return
     elif data[2] == 'forward_chat':
         await query.answer()
         msg = 'Please send the chat ID or Username you want to forward to.\n<b>Timeout:</b> 20s.'
