@@ -60,7 +60,7 @@ try:
 except:
     pass
 
-Intervals = {"status": {}, "qb": "", "jd": ""}
+Intervals = {"status": {}, "qb": "", "jd": "", "stopAll": False}
 QbTorrents = {}
 jd_downloads = {}
 DRIVES_NAMES = []
