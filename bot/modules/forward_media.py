@@ -47,9 +47,11 @@ async def forward_message(client, message, message_id):
     messages_id_list = [from_message_id + i for i in range(forward_number)]
     msg = f'<pre> Forward Task: from {from_chat} to {forward_chat}</pre>\n'
     try:
+        tgclient = client
         message_list = await client.get_messages(from_chat, messages_id_list)
     except Exception as e:
         try:
+            tgclient = user
             message_list = await user.get_messages(from_chat, messages_id_list)
         except Exception as e:
             LOGGER.error(e) 
@@ -98,7 +100,7 @@ async def forward_message(client, message, message_id):
                 send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
             LOGGER.info(send_medias)
-            result = await copyMediaGroup(client, forward_chat, send_medias, protect_content)
+            result = await copyMediaGroup(tgclient, forward_chat, send_medias, protect_content)
         if result:
             msg += f'<pre>Status: Failed</pre>\n'
             msg += f'<b>Reason:</b> {escape(result)}'
