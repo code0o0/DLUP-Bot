@@ -22,9 +22,12 @@ async def get_buttons(from_user, message_id):
     msg = '<b>Forward Media</b>\n'
     for key, value in msg_dict.items():
         msg += f'<u>{key}</u> is <b>{value}</b>\n'
-    buttons.ibutton('Forward Chat🎫', f'forwardset {user_id} forward_chat', position='header')
+    buttons.ibutton('Forward Chat📊', f'forwardset {user_id} forward_chat', position='header')
     buttons.ibutton('Forward Number📑', f'forwardset {user_id} forward_number', position='header')
-    buttons.ibutton('Protect Content🔒', f'forwardset {user_id} protect_content', position='header')
+    if msg_dict.get('protect_content'):
+        buttons.ibutton('Protect Content🔐', f'forwardset {user_id} protect_content', position='header')
+    else:
+        buttons.ibutton('Protect Content🔒', f'forwardset {user_id} protect_content', position='header')
     buttons.ibutton('CopyRight🔗', f'forwardset {user_id} copyright', position='header')
     buttons.ibutton('RUN🔥', f'forwardset {user_id} run')
     buttons.ibutton('Close', f'forwardset {user_id} close', position='footer')
@@ -79,7 +82,7 @@ async def forward_message(client, message, message_id):
     for msges in media_messages.values():
         caption = msges[0].caption.html if msges[0].caption else ''
         if copyright:
-            caption += f'\n<b>⚓CopyRight👉</b> {copyright}'
+            caption += f'\n<b>©CopyRight👉</b> {copyright}'
         if len(msges) == 1:
             result = await copyMedia(msges[0], forward_chat, caption, ParseMode.HTML, protect_content)
         else:
@@ -173,11 +176,10 @@ async def forward_callback(client, query):
         await update_buttons(query, cmd_message_id)
     elif data[2] == 'protect_content':
         await query.answer()
-        msg = 'Do you want to protect the content? True or False.\n<b>Timeout:</b> 20s.'
-        response_text = await conversation_text(client, query, msg)
-        if response_text is None:
-            return
-        handler_dict[cmd_message_id]['protect_content'] = True if response_text.lower() == 'true' else False
+        if handler_dict[cmd_message_id]['protect_content']:
+            handler_dict[cmd_message_id]['protect_content'] = False
+        else:
+            handler_dict[cmd_message_id]['protect_content'] = True
         await update_buttons(query, cmd_message_id)
     elif data[2] == 'copyright':
         await query.answer()
