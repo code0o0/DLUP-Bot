@@ -25,6 +25,7 @@ async def get_buttons(from_user, message_id):
     buttons.ibutton('Forward Chat🎫', f'forwardset {user_id} forward_chat', position='header')
     buttons.ibutton('Forward Number📑', f'forwardset {user_id} forward_number', position='header')
     buttons.ibutton('Protect Content🔒', f'forwardset {user_id} protect_content', position='header')
+    buttons.ibutton('CopyRight⚓', f'forwardset {user_id} copyright', position='header')
     buttons.ibutton('RUN✅', f'forwardset {user_id} run')
     buttons.ibutton('Close', f'forwardset {user_id} close', position='footer')
     button = buttons.build_menu(1, 2, 1)
@@ -42,6 +43,7 @@ async def forward_message(client, message, message_id):
     forward_chat = msg_dict['forward_chat']
     forward_number = msg_dict['forward_number']
     protect_content = msg_dict['protect_content']
+    copyright = msg_dict['copyright']
     messages_id_list = [from_message_id + i for i in range(forward_number)]
     msg = f'<pre> Forward Task: from {from_chat} to {forward_chat}</pre>\n'
     try:
@@ -73,10 +75,11 @@ async def forward_message(client, message, message_id):
         else:
             media_messages[msge.media_group_id].append(msge)
     for msges in media_messages.values():
+        caption = msges[0].caption.html if msges[0].caption else ''
+        if copyright:
+            caption += f'\n<b>©️CopyRight:</b> {copyright}'
         if len(msges) == 1:
-            msge = msges[0]
-            caption = msge.caption.html if msge.caption else ''
-            result = await copyMedia(msge, forward_chat, caption, ParseMode.HTML, protect_content)
+            result = await copyMedia(msges[0], forward_chat, caption, ParseMode.HTML, protect_content)
         else:
             send_medias = []
             for msge in msges:
@@ -90,7 +93,6 @@ async def forward_message(client, message, message_id):
                 elif msge.media == MessageMediaType.PHOTO:
                     input_media = InputMediaPhoto(media.file_id, thumb=media.thumbs[0].file_id)
                 send_medias.append(input_media)
-            caption = msges[0].caption.html if msges[0].caption else ''
             if caption:
                 send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
@@ -106,11 +108,15 @@ async def forward_message(client, message, message_id):
     success_message = await sendMessage(message, msg)
     await auto_delete_message(client, [message, message.reply_to_message, success_message], 20)
     
-async def conversation_text(client, query, reply_text_message):
-    chat_id = reply_text_message.chat.id
+async def conversation_text(client, query, msg):
+    chat_id = query.message.chat.id
     message_id = query.message.id
     user_id = query.from_user.id
+    buttons = ButtonMaker()
+    buttons.ibutton('Cancel', f'forwardset {user_id} cancel')
+    button = buttons.build_menu()
     try:
+        reply_text_message = await client.send_message(chat_id, msg, reply_markup=button)
         response_message = await client.listen.Message(filters=filters.regex(r'^[^/]') & filters.user(user_id) &
                                                        filters.chat(chat_id), id=f'{message_id}', timeout=20)
     except TimeoutError:
@@ -145,11 +151,13 @@ async def forward_callback(client, query):
         await query.answer()
         del handler_dict[cmd_message_id]
         await auto_delete_message(client, [message, message.reply_to_message], 0)
+    elif data[2] == 'cancel':
+        await query.answer()
+        return
     elif data[2] == 'forward_chat':
         await query.answer()
         msg = 'Please send the chat ID or Username you want to forward to.\n<b>Timeout:</b> 20s.'
-        reply_text_message = await client.send_message(message.chat.id, msg)
-        response_text = await conversation_text(client, query, reply_text_message)
+        response_text = await conversation_text(client, query, msg)
         if response_text is None:
             return
         elif response_text.isdigit():
@@ -159,9 +167,8 @@ async def forward_callback(client, query):
         await update_buttons(query, cmd_message_id)
     elif data[2] == 'forward_number':
         await query.answer()
-        msg = 'Please send the number of messages you want to forward.\n<b>Timeout:</b> 20s.'
-        reply_text_message = await client.send_message(message.chat.id, msg)
-        response_text = await conversation_text(client, query, reply_text_message)
+        msg = 'Please send the number of messages you want to forward.\n<b>Limit:</b> 200.\n<b>Timeout:</b> 20s.'
+        response_text = await conversation_text(client, query, msg)
         if response_text is None:
             return
         handler_dict[cmd_message_id]['forward_number'] = int(response_text) if response_text.isdigit() else 1
@@ -169,11 +176,25 @@ async def forward_callback(client, query):
     elif data[2] == 'protect_content':
         await query.answer()
         msg = 'Do you want to protect the content? True or False.\n<b>Timeout:</b> 20s.'
-        reply_text_message = await client.send_message(message.chat.id, msg)
-        response_text = await conversation_text(client, query, reply_text_message)
+        response_text = await conversation_text(client, query, msg)
         if response_text is None:
             return
         handler_dict[cmd_message_id]['protect_content'] = True if response_text.lower() == 'true' else False
+        await update_buttons(query, cmd_message_id)
+    elif data[2] == 'copyright':
+        await query.answer()
+        msg = 'Please send the copy right.\n<b>Timeout:</b> 20s.'
+        msg += '\n<b>Note:</b> Please send a text or tg channel link.'
+        response_text = await conversation_text(client, query, msg)
+        if response_text is None:
+            return
+        elif response_text.startswith('https://t.me/'):
+            chat_username = response_text.strip('https://t.me/').strip('https://t.me/c/').split('/')[0]
+            response_text = f'<a href="{response_text}"><u>{chat_username}</u></a>'
+        elif response_text.startswith(('http://', 'https://')):
+            domain = response_text.split('//', 1)[-1].split('/', 1)[0]
+            response_text = f'<a href="{response_text}"><u>{domain}</u></a>'
+        handler_dict[cmd_message_id]['copyright'] = response_text
         await update_buttons(query, cmd_message_id)
     elif data[2] == 'run':
         await query.answer()
@@ -190,6 +211,7 @@ async def forward(client, message):
         'forward_chat': 'me',
         'forward_number': 1,
         'protect_content': False,
+        'copyright': None
     }
     if len(command) > 1 and command[1].startswith('https://t.me/'):
         _, from_chat_id, from_message_id = command[1].rstrip('?single').rsplit('/', 2)
