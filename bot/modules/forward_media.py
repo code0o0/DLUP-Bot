@@ -25,8 +25,8 @@ async def get_buttons(from_user, message_id):
     buttons.ibutton('Forward Chat🎫', f'forwardset {user_id} forward_chat', position='header')
     buttons.ibutton('Forward Number📑', f'forwardset {user_id} forward_number', position='header')
     buttons.ibutton('Protect Content🔒', f'forwardset {user_id} protect_content', position='header')
-    buttons.ibutton('CopyRight⚓', f'forwardset {user_id} copyright', position='header')
-    buttons.ibutton('RUN✅', f'forwardset {user_id} run')
+    buttons.ibutton('CopyRight🔗', f'forwardset {user_id} copyright', position='header')
+    buttons.ibutton('RUN🔥', f'forwardset {user_id} run')
     buttons.ibutton('Close', f'forwardset {user_id} close', position='footer')
     button = buttons.build_menu(1, 2, 1)
     return msg, button
@@ -79,7 +79,7 @@ async def forward_message(client, message, message_id):
     for msges in media_messages.values():
         caption = msges[0].caption.html if msges[0].caption else ''
         if copyright:
-            caption += f'\n<b>CopyRight©️:</b> {copyright}'
+            caption += f'\n<b>⚓CopyRight👉</b> {copyright}'
         if len(msges) == 1:
             result = await copyMedia(msges[0], forward_chat, caption, ParseMode.HTML, protect_content)
         else:
