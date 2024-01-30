@@ -22,14 +22,14 @@ async def get_buttons(from_user, message_id):
     msg = '<b>Forward Media</b>\n'
     for key, value in msg_dict.items():
         msg += f'<u>{key}</u> is <b>{value}</b>\n'
-    buttons.ibutton('Forward Chat📊', f'forwardset {user_id} forward_chat', position='header')
-    buttons.ibutton('Forward Number📑', f'forwardset {user_id} forward_number', position='header')
+    buttons.ibutton('📊Forward Chat', f'forwardset {user_id} forward_chat', position='header')
+    buttons.ibutton('📑Forward Number', f'forwardset {user_id} forward_number', position='header')
     if msg_dict.get('protect_content'):
-        buttons.ibutton('Protect Content🔐', f'forwardset {user_id} protect_content', position='header')
+        buttons.ibutton('🔐Protect Content', f'forwardset {user_id} protect_content', position='header')
     else:
-        buttons.ibutton('Protect Content🔒', f'forwardset {user_id} protect_content', position='header')
-    buttons.ibutton('CopyRight🔗', f'forwardset {user_id} copyright', position='header')
-    buttons.ibutton('RUN🔥', f'forwardset {user_id} run')
+        buttons.ibutton('🔒Protect Content', f'forwardset {user_id} protect_content', position='header')
+    buttons.ibutton('🔗CopyRight', f'forwardset {user_id} copyright', position='header')
+    buttons.ibutton('🔥RUN', f'forwardset {user_id} run')
     buttons.ibutton('Close', f'forwardset {user_id} close', position='footer')
     button = buttons.build_menu(1, 2, 1)
     return msg, button
