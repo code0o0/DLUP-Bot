@@ -89,7 +89,6 @@ async def forward_message(client, message, message_id):
             send_medias = []
             for msge in msges:
                 media = getattr(msge, msge.media.value)
-                LOGGER.info(media)
                 if msge.media == MessageMediaType.VIDEO:
                     input_media = InputMediaVideo(media.file_id, thumb=media.thumbs[0].file_id)
                 elif msge.media == MessageMediaType.DOCUMENT:
@@ -97,7 +96,7 @@ async def forward_message(client, message, message_id):
                 elif msge.media == MessageMediaType.AUDIO:
                     input_media = InputMediaAudio(media.file_id, thumb=media.thumbs[0].file_id)
                 elif msge.media == MessageMediaType.PHOTO:
-                    input_media = InputMediaPhoto(media.file_id, thumb=media.thumbs[0].file_id)
+                    input_media = InputMediaPhoto(media.file_id)
                 send_medias.append(input_media)
             if caption:
                 send_medias[0].caption = caption
