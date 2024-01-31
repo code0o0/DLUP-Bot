@@ -125,10 +125,10 @@ async def auto_delete_message(client, messages, delay=20):
         await sleep(delay)
     if isinstance(messages, list):
         chat_id = messages[0].chat.id
-        message_ids = [message.id for message in messages if message.date - datetime.now() < timedelta(hours=48)]
+        message_ids = [message.id for message in messages if datetime.now() - message.date < timedelta(hours=48)]
     else:
         chat_id = messages.chat.id
-        message_ids = messages.id if messages.date - datetime.now() < timedelta(hours=48) else None
+        message_ids = messages.id if datetime.now() - messages.date < timedelta(hours=48) else None
     if not message_ids:
         return
     try:
