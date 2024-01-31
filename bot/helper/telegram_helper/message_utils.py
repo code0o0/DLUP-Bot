@@ -3,6 +3,7 @@ from pyrogram.enums import ParseMode
 from pyrogram.errors import FloodWait
 from re import match as re_match
 from time import time
+from datetime import datetime, timedelta
 
 from bot import config_dict, LOGGER, status_dict, task_dict_lock, Intervals, bot, user
 from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async
@@ -124,10 +125,12 @@ async def auto_delete_message(client, messages, delay=20):
         await sleep(delay)
     if isinstance(messages, list):
         chat_id = messages[0].chat.id
-        message_ids = [message.id for message in messages]
+        message_ids = [message.id for message in messages if message.date - datetime.now() > timedelta(hours=48)]
     else:
         chat_id = messages.chat.id
-        message_ids = messages.id
+        message_ids = messages.id if messages.date - datetime.now() > timedelta(hours=48) else None
+    if not message_ids:
+        return
     try:
         await client.delete_messages(chat_id, message_ids)
     except Exception as e:
