@@ -87,7 +87,6 @@ async def forward_message(client, message, message_id):
             result = await copyMedia(msges[0], forward_chat, caption, ParseMode.HTML, protect_content)
         else:
             send_medias = []
-            LOGGER.info(msges)
             for msge in msges:
                 media = getattr(msge, msge.media.value)
                 if msge.media == MessageMediaType.VIDEO:
@@ -102,7 +101,6 @@ async def forward_message(client, message, message_id):
             if caption:
                 send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
-            LOGGER.info(send_medias)
             result = await copyMediaGroup(tgclient, forward_chat, send_medias, protect_content)
         if result:
             msg += f'<pre>Status: Failed</pre>\n'
