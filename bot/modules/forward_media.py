@@ -161,7 +161,7 @@ async def forward_callback(client, query):
         response_text = await conversation_text(client, query, msg)
         if response_text is None:
             return
-        elif response_text.isdigit():
+        elif response_text.lstrip('-').isdigit():
             handler_dict[cmd_message_id]['forward_chat'] = int(response_text)
         else:
             handler_dict[cmd_message_id]['forward_chat'] = response_text if response_text.startswith('@') else f'@{response_text}'
