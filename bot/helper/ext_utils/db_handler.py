@@ -102,6 +102,7 @@ class DbManager:
             query = 'UPDATE settings SET config_dict = :config_dict  WHERE _id = :id'
             values = {'id': bot_id, 'config_dict': _config_dict}
             await self.__db.execute(query=query, values=values)
+        LOGGER.info("Config data has been updated in Database.")
     
     async def update_aria2(self, key, value):
         _aria2_options = json.dumps(aria2_options)
