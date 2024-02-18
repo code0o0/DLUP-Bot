@@ -26,7 +26,7 @@ class SplitStatus:
     def eta(self):
         return "0s"
 
-    def status(self):
+    async def status(self):
         return MirrorStatus.STATUS_SPLITTING
 
     def processed_bytes(self):
@@ -37,7 +37,7 @@ class SplitStatus:
 
     async def cancel_task(self):
         LOGGER.info(f"Cancelling Split: {self.listener.name}")
-        self.listener.cancelled = True
+        self.listener.isCancelled = True
         async with subprocess_lock:
             if (
                 self.listener.suproc is not None

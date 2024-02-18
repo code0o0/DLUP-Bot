@@ -48,7 +48,7 @@ class ZipStatus:
         except:
             return "-"
 
-    def status(self):
+    async def status(self):
         return MirrorStatus.STATUS_ARCHIVING
 
     def processed_raw(self):
@@ -65,7 +65,7 @@ class ZipStatus:
 
     async def cancel_task(self):
         LOGGER.info(f"Cancelling Archive: {self.listener.name}")
-        self.listener.cancelled = True
+        self.listener.isCancelled = True
         async with subprocess_lock:
             if (
                 self.listener.suproc is not None
