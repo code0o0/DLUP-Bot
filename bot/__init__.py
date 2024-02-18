@@ -101,9 +101,13 @@ if cur.fetchone():
     current_config = dict(dotenv_values("config.env"))
     deploy_config = json.loads(row[1]) if row else None
     if deploy_config != current_config:
+        LOGGER.info(deploy_config)
+        LOGGER.info(current_config)
         deploy_config = current_config
+        
     else:
         config_dict = json.loads(row[2])
+        LOGGER.info(config_dict)
         for key, value in config_dict.items():
             environ[key] = str(value)
         pf_dict = json.loads(row[3]) if row else {}
