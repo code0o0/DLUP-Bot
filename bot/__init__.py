@@ -430,7 +430,7 @@ if not qbit_options:
     qbit_options = {key: qbit_all_options[key] for key in qbit_edit_opts}
 else:
     qb_opt = {**qbit_options}
-    for k, v in qb_opt.items():
+    for k, v in list(qb_opt.items()):
         if v in ["", "*"]:
             del qb_opt[k]
     get_qb_client().app_set_preferences(qb_opt)
