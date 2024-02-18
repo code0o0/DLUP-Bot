@@ -94,21 +94,18 @@ bot_id = BOT_TOKEN.split(":", 1)[0]
 
 conn = connect(DATABASE_URL)
 cur = conn.cursor()
-cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='config'")
+cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'")
 if cur.fetchone():
-    cur.execute("SELECT * FROM config WHERE _id = ?", (bot_id,))
+    cur.execute("SELECT * FROM settings WHERE _id = ?", (bot_id,))
     row = cur.fetchone()
     current_config = dict(dotenv_values("config.env"))
     deploy_config = json.loads(row[1]) if row else None
     if deploy_config != current_config:
-        LOGGER.info(deploy_config)
-        LOGGER.info(current_config)
         deploy_config = current_config
     else:
         config_dict = json.loads(row[2])
         for key, value in config_dict.items():
             environ[key] = str(value)
-        LOGGER.info(config_dict)
         pf_dict = json.loads(row[3]) if row else {}
     for key, value in pf_dict.items():
         with open(key, "wb+") as f:
