@@ -139,13 +139,14 @@ programming in Python.
 - Add sudo users
 - Supported Direct links Generators:
 
-> mediafire (file/folders), hxfile.co, streamtape.com, streamsb.net, streamhub.ink, streamvid.net, doodstream.com,
+> mediafire (file/folders), hxfile.co (need cookies txt with name) [hxfile.txt], streamtape.com, streamsb.net, streamhub.ink,
+> streamvid.net, doodstream.com,
 > feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business
 > account), filelions.com, streamwish.com, send.cm (file/folders), solidfiles.com, linkbox.to (file/folders),
 > shrdsk.me (
 > sharedisk.io), akmfiles.com, wetransfer.com, pcloud.link, gofile.io (file/folders), easyupload.io, mdisk.me (with
 > ytdl),
-> tmpsend.com, qiwi.gg, terabox.com (file/folders) (you need to add cookies txt with
+> tmpsend.com, qiwi.gg, berkasdrive.com, mp4upload.com, terabox.com (file/folders) (you need to add cookies txt with
 > name) [terabox.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl).
 
 # How to deploy?
@@ -288,8 +289,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `MEDIA_GROUP`: View Uploaded splitted file parts in media group. Default is `False`. `Bool`.
 - `USER_TRANSMISSION`: Upload/Download by user session. Default is `False`. `Bool`
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
-- `LEECH_DUMP_CHAT`: Chat ID or USERNAME to where files would be uploaded. `Int`|`Str`. **NOTE**: Only available for
-  superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot or account id!
+- `LEECH_DUMP_CHAT`: ID or USERNAME or PM(private message) to where files would be uploaded. `Int`|`Str`. Add `-100` before channel/superGroup id.
 
 ### qBittorrent/Aria2c
 
