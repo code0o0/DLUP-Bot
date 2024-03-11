@@ -114,8 +114,8 @@ async def get_buttons(key=None, edit_type=None):
         var_list = ["STATUS_UPDATE_INTERVAL", "STATUS_LIMIT", "QUEUE_ALL", "QUEUE_DOWNLOAD", "QUEUE_UPLOAD",
                     "USER_SESSION_STRING", "CMD_SUFFIX", "UPSTREAM_REPO", "UPSTREAM_BRANCH", "BASE_URL_PORT",
                     "BASE_URL", "WEB_PINCODE", "INCOMPLETE_TASK_NOTIFIER", "YT_DLP_OPTIONS", "TORRENT_TIMEOUT",
-                    "DEFAULT_UPLOAD", "EXTENSION_FILTER", "USE_SERVICE_ACCOUNTS", "GDRIVE_ID", "STOP_DUPLICATE",
-                    "IS_TEAM_DRIVE", "INDEX_URL", "RCLONE_PATH", "RCLONE_FLAGS", "RCLONE_SERVE_URL",
+                    "DEFAULT_UPLOAD", "EXTENSION_FILTER", "USE_SERVICE_ACCOUNTS", "NAME_SUBSTITUTE", "GDRIVE_ID",
+                    "STOP_DUPLICATE", "IS_TEAM_DRIVE", "INDEX_URL", "RCLONE_PATH", "RCLONE_FLAGS", "RCLONE_SERVE_URL",
                     "RCLONE_SERVE_PORT", "RCLONE_SERVE_USER", "RCLONE_SERVE_PASS", "LEECH_SPLIT_SIZE", "AS_DOCUMENT", 
                     "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX", "LEECH_DUMP_CHAT",
                     "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", 
@@ -318,23 +318,23 @@ async def edit_qbit(_, message, pre_message, key):
         await DbManager().update_qbittorrent(key, value)
 
 async def sync_jdownloader():
-    if DATABASE_URL and jdownloader.device is not None:
-        await jdownloader.device.system.exit_jd()
-        if await aiopath.exists("cfg.zip"):
-            await remove("cfg.zip")
-        await sleep(6)
-        await (
-            await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
-        ).wait()
-        await DbManager().update_private_file("cfg.zip")
-        try:
-            await wait_for(retry_function(jdownloader.update_devices), timeout=10)
-        except:
-            is_connected = await jdownloader.jdconnect()
-            if not is_connected:
-                LOGGER.error(jdownloader.error)
-                return
-        await jdownloader.connectToDevice()
+    if not DATABASE_URL or jdownloader.device is None:
+        return
+    await jdownloader.device.system.exit_jd()
+    if await aiopath.exists("cfg.zip"):
+        await remove("cfg.zip")
+    try:
+        await wait_for(retry_function(jdownloader.update_devices), timeout=10)
+    except:
+        is_connected = await jdownloader.jdconnect()
+        if not is_connected:
+            LOGGER.error(jdownloader.error)
+            return
+    await jdownloader.connectToDevice()
+    await (
+        await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
+    ).wait()
+    await DbManager().update_private_file("cfg.zip")
 
 async def update_private_file(_, message, pre_message):
     handler_dict[message.chat.id] = False
@@ -730,6 +730,8 @@ async def load_config():
             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
     USE_SERVICE_ACCOUNTS = environ.get("USE_SERVICE_ACCOUNTS", "")
     USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == "true"
+    NAME_SUBSTITUTE = environ.get("NAME_SUBSTITUTE", "")
+    NAME_SUBSTITUTE = "" if len(NAME_SUBSTITUTE) == 0 else NAME_SUBSTITUTE
     # GDrive Tools
     GDRIVE_ID = environ.get("GDRIVE_ID", "")
     if len(GDRIVE_ID) == 0:
@@ -846,6 +848,7 @@ async def load_config():
             'DEFAULT_UPLOAD': DEFAULT_UPLOAD,
             'EXTENSION_FILTER': EXTENSION_FILTER,
             'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
+            "NAME_SUBSTITUTE": NAME_SUBSTITUTE,
             'GDRIVE_ID': GDRIVE_ID,
             'STOP_DUPLICATE': STOP_DUPLICATE,
             'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
