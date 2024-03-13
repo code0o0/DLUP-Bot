@@ -128,7 +128,7 @@ async def get_user_settings(from_user):
     else:
         sd_msg = "Disabled"
 
-    upload_paths = "Exists" if user_dict.get("upload_paths", False) else "Not Exists"
+    upload_paths = "Added" if user_dict.get("upload_paths", False) else "None"
     buttons.ibutton("Upload Paths", f"userset {user_id} upload_paths")
 
     default_upload = (
@@ -146,7 +146,7 @@ async def get_user_settings(from_user):
     else:
         ex_ex = "None"
     
-    ns_msg = "Exists" if user_dict.get("name_sub", False) else "Not Exists"
+    ns_msg = "Added" if user_dict.get("name_sub", False) else "None"
     buttons.ibutton("Name Subtitute", f"userset {user_id} name_subtitute", position="header")
 
     buttons.ibutton("YT-DLP Options", f"userset {user_id} yto", position="header")
