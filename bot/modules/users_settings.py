@@ -99,7 +99,15 @@ async def get_user_settings(from_user):
         leech_method = "user"
     else:
         leech_method = "bot"
-
+    if (
+        IS_PREMIUM_USER
+        and user_dict.get("mixed_leech", False)
+        or "mixed_leech" not in user_dict
+        and config_dict["MIXED_LEECH"]
+    ):
+        mixed_leech = "Enabled"
+    else:
+        mixed_leech = "Disabled"
     buttons.ibutton("Leech", f"userset {user_id} leech", position="header")
     buttons.ibutton("Rclone", f"userset {user_id} rclone", position="header")
     rccmsg = "Exists" if await aiopath.exists(rclone_conf) else "Not Exists"
@@ -170,6 +178,7 @@ Media Group is <b>{media_group}</b>
 Leech Prefix is <code>{escape(lprefix)}</code>
 Leech Destination is <code>{leech_dest}</code>
 Leech by <b>{leech_method}</b> session
+Mixed Leech is <b>{mixed_leech}</b>
 Rclone Config <b>{rccmsg}</b>
 Rclone Path is <code>{rccpath}</code>
 Gdrive Token <b>{tokenmsg}</b>
@@ -333,6 +342,7 @@ async def edit_user_settings(client, query):
         "media_group",
         "user_transmission",
         "stop_duplicate",
+        "mixed_leech",
     ]:
         update_user_ldata(user_id, data[2], data[3] == "true")
         await query.answer()
@@ -455,6 +465,25 @@ async def edit_user_settings(client, query):
             )
         else:
             leech_method = "bot"
+
+        if (
+            IS_PREMIUM_USER
+            and user_dict.get("mixed_leech", False)
+            or "mixed_leech" not in user_dict
+            and config_dict["MIXED_LEECH"]
+        ):
+            mixed_leech = "Enabled"
+            buttons.ibutton(
+                "Disable Mixed Leech", f"userset {user_id} mixed_leech false"
+            )
+        elif IS_PREMIUM_USER:
+            mixed_leech = "Disabled"
+            buttons.ibutton(
+                "Enable Mixed Leech", f"userset {user_id} mixed_leech true"
+            )
+        else:
+            mixed_leech = "Disabled"
+
         buttons.ibutton("Back", f"userset {user_id} back")
         buttons.ibutton("Close", f"userset {user_id} close")
         text = f"""<u>Leech Settings for {name}</u>
@@ -466,6 +495,7 @@ Media Group is <b>{media_group}</b>
 Leech Prefix is <code>{escape(lprefix)}</code>
 Leech Destination is <code>{leech_dest}</code>
 Leech by <b>{leech_method}</b> session
+Mixed Leech is <b>{mixed_leech}</b>
 """
         await editMessage(message, text, buttons.build_menu(8, 2, 2))
     elif data[2] == "rclone":

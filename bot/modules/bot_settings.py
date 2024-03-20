@@ -118,7 +118,7 @@ async def get_buttons(key=None, edit_type=None):
                     "STOP_DUPLICATE", "IS_TEAM_DRIVE", "INDEX_URL", "RCLONE_PATH", "RCLONE_FLAGS", "RCLONE_SERVE_URL",
                     "RCLONE_SERVE_PORT", "RCLONE_SERVE_USER", "RCLONE_SERVE_PASS", "LEECH_SPLIT_SIZE", "AS_DOCUMENT", 
                     "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX", "LEECH_DUMP_CHAT",
-                    "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", 
+                    "MIXED_LEECH", "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", 
                     "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
         msg = ""
         for index, k in enumerate(var_list[18*START : 18 + 18*START]):
@@ -783,6 +783,8 @@ async def load_config():
     LEECH_DUMP_CHAT = "" if len(LEECH_DUMP_CHAT) == 0 else LEECH_DUMP_CHAT
     if LEECH_DUMP_CHAT.isdigit() or LEECH_DUMP_CHAT.startswith("-"):
         LEECH_DUMP_CHAT = int(LEECH_DUMP_CHAT)
+    MIXED_LEECH = environ.get("MIXED_LEECH", "")
+    MIXED_LEECH = MIXED_LEECH.lower() == "true" and IS_PREMIUM_USER
     # Additional
     JD_EMAIL = environ.get("JD_EMAIL", "")
     JD_PASS = environ.get("JD_PASS", "")
@@ -866,6 +868,7 @@ async def load_config():
             'USER_TRANSMISSION': USER_TRANSMISSION,
             'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
             'LEECH_DUMP_CHAT': LEECH_DUMP_CHAT,
+            'MIXED_LEECH': MIXED_LEECH,
             'JD_EMAIL': JD_EMAIL,
             'JD_PASS': JD_PASS,
             'FILELION_API': FILELION_API,
