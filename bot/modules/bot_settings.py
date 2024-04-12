@@ -330,6 +330,7 @@ async def sync_jdownloader():
         if not is_connected:
             LOGGER.error(jdownloader.error)
             return
+    jdownloader.boot()
     await jdownloader.connectToDevice()
     await (
         await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
