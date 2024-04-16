@@ -22,7 +22,7 @@ async def get_buttons(from_user, message_id):
     msg = '<b>Forward Media</b>\n'
     for key, value in msg_dict.items():
         msg += f'<u>{key}</u> is <b>{value}</b>\n'
-    buttons.ibutton('📻Forward Chat', f'forwardset {user_id} forward_chat', position='header')
+    buttons.ibutton('📲Forward Chat', f'forwardset {user_id} forward_chat', position='header')
     buttons.ibutton('📝Forward Number', f'forwardset {user_id} forward_number', position='header')
     if msg_dict.get('protect_content'):
         buttons.ibutton('🔓Protect Content', f'forwardset {user_id} protect_content', position='header')
@@ -55,8 +55,9 @@ async def forward_message(client, message, message_id):
     except Exception as e:
         try:
             tgclient = user
-            if handler_dict[message_id]['forward_chat'] == user.get_me().id:
-                handler_dict[message_id]['forward_chat'] = client.get_me().id
+            if handler_dict[message_id]['forward_chat'] == OWNER_ID:
+                bot_user = await client.get_me()
+                handler_dict[message_id]['forward_chat'] = bot_user.id
             message_list = await user.get_messages(from_chat, messages_id_list)
         except Exception as e:
             LOGGER.error(e) 
