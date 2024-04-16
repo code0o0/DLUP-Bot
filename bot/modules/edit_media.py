@@ -57,7 +57,6 @@ async def edit_media(client, message):
                 message_list.append(m)
             if len(message_list) >= media_number:
                 break
-    LOGGER.info(message_list)
     try:
         if len(message_list) == 1:
             await copyMedia(from_message, chat_id, caption, ParseMode.HTML, protect_content)
@@ -78,6 +77,8 @@ async def edit_media(client, message):
         group_count = (len(send_medias) + 10 - 1) // 10
         group_size = (len(send_medias) + group_count - 1) // group_count
         send_media_groups = [send_medias[i:i + group_size] for i in range(0, len(send_medias), group_size)]
+        LOGGER.info(send_medias)
+        LOGGER.info(send_media_groups)
         for send_media_group in send_media_groups:
             if caption:
                 send_media_group[0].caption = caption
