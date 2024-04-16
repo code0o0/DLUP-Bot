@@ -46,11 +46,14 @@ async def edit_media(client, message):
             message_list = await client.get_media_group(chat_id, from_message.id)
         else:
             message_list = [from_message]
+            message_id = from_message.id
             while len(message_list) < media_number:
-                message_id = message_list[-1].id + 1
+                message_id = message_id + 1
                 next_message = await client.get_messages(chat_id, message_id)
                 if next_message.media in [MessageMediaType.PHOTO, MessageMediaType.VIDEO, MessageMediaType.AUDIO, MessageMediaType.DOCUMENT]:
                     message_list.append(next_message)
+                if message_id >= from_message.id + 50:
+                    break
     except Exception as e:
         LOGGER.error(e)
         reply_message = await sendMessage(message, str(e))
