@@ -66,7 +66,7 @@ async def edit_media(client, message):
             elif media_message.media == MessageMediaType.AUDIO:
                 input_media = InputMediaAudio(media.file_id, thumb=media.thumbs[0].file_id)
             elif media_message.media == MessageMediaType.PHOTO:
-                input_media = InputMediaPhoto(media.file_id, thumb=media.thumbs[0].file_id)
+                input_media = InputMediaPhoto(media.file_id)
             send_medias.append(input_media)
         group_count = (len(send_medias) + 10 - 1) // 10
         group_size = (len(send_medias) + group_count - 1) // group_count
