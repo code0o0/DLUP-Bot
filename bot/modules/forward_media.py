@@ -89,12 +89,13 @@ async def forward_message(client, message, message_id):
             send_medias = []
             for msge in msges:
                 media = getattr(msge, msge.media.value)
+                thumb = media.thumbs[0].file_id if media.thumbs else ''
                 if msge.media == MessageMediaType.VIDEO:
-                    input_media = InputMediaVideo(media.file_id, thumb=media.thumbs[0].file_id)
+                    input_media = InputMediaVideo(media.file_id, thumb=thumb)
                 elif msge.media == MessageMediaType.DOCUMENT:
-                    input_media = InputMediaDocument(media.file_id, thumb=media.thumbs[0].file_id)
+                    input_media = InputMediaDocument(media.file_id, thumb=thumb)
                 elif msge.media == MessageMediaType.AUDIO:
-                    input_media = InputMediaAudio(media.file_id, thumb=media.thumbs[0].file_id)
+                    input_media = InputMediaAudio(media.file_id, thumb=thumb)
                 elif msge.media == MessageMediaType.PHOTO:
                     input_media = InputMediaPhoto(media.file_id)
                 send_medias.append(input_media)
