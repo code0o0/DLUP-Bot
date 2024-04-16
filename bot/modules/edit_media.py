@@ -34,23 +34,29 @@ async def edit_media(client, message):
         forward_chat_username = forward_chat.username
         forward_from_message_id = from_message.forward_from_message_id
         caption += f'\n🧿<b>From</b>👉 <a href="https://t.me/{forward_chat_username}/{forward_from_message_id}"><u>@{forward_chat_username}</u></a>'
-
-    if '-g' in text:
-        media_number = text.split('-g', 1)[1].split('-i', 1)[0].split('-p', 1)[0].strip()
-        media_number = int(media_number) if media_number else 0
-    else:
-        media_number = 0
-    if not from_message.media_group_id and media_number == 0:
-        message_list = [from_message]
-    elif from_message.media_group_id and media_number == 0:
-        message_list = await client.get_media_group(chat_id, from_message.id)
-    else:
-        message_list = [from_message]
-        while len(message_list) < media_number:
-            message_id = message_list[-1].id + 1
-            next_message = await client.get_messages(chat_id, message_id)
-            if next_message.media:
-                message_list.append(next_message)
+    try:
+        if '-g' in text:
+            media_number = text.split('-g', 1)[1].split('-i', 1)[0].split('-p', 1)[0].strip()
+            media_number = int(media_number) if media_number else 0
+        else:
+            media_number = 0
+        if not from_message.media_group_id and media_number == 0:
+            message_list = [from_message]
+        elif from_message.media_group_id and media_number == 0:
+            message_list = await client.get_media_group(chat_id, from_message.id)
+        else:
+            message_list = [from_message]
+            while len(message_list) < media_number:
+                message_id = message_list[-1].id + 1
+                next_message = await client.get_messages(chat_id, message_id)
+                if next_message.media in [MessageMediaType.PHOTO, MessageMediaType.VIDEO, MessageMediaType.AUDIO, MessageMediaType.DOCUMENT]:
+                    message_list.append(next_message)
+    except Exception as e:
+        LOGGER.error(e)
+        reply_message = await sendMessage(message, str(e))
+        await auto_delete_message(client, [message, reply_message], 20)
+        return
+    
     try:
         if len(message_list) == 1:
             await copyMedia(from_message, chat_id, caption, ParseMode.HTML, protect_content)
