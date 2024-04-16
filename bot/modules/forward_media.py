@@ -58,13 +58,13 @@ async def forward_message(client, message, message_id):
             message_list = await user.get_messages(from_chat, messages_id_list)
         except Exception as e:
             LOGGER.error(e) 
-            msg += f'<pre>Status: Failed</pre>\n'
+            msg += f'<pre>Status: Parse Failed</pre>\n'
             msg += f'<b>Reason:</b> {escape(str(e))}'
             error_message = await sendMessage(message, msg)
             await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
             return
     if not message_list:
-        msg += f'<pre>Status: Failed</pre>\n'
+        msg += f'<pre>Status: Parse Failed</pre>\n'
         msg += f'<b>Reason:</b> No message found!'
         error_message = await sendMessage(message, msg)
         await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
@@ -103,7 +103,7 @@ async def forward_message(client, message, message_id):
             send_medias[0].parse_mode = ParseMode.HTML
             result = await copyMediaGroup(tgclient, forward_chat, send_medias, protect_content)
         if result:
-            msg += f'<pre>Status: Failed</pre>\n'
+            msg += f'<pre>Status: Send Failed</pre>\n'
             msg += f'<b>Reason:</b> {escape(result)}'
             error_message = await sendMessage(message, msg)
             await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
@@ -229,7 +229,7 @@ async def forward(client, message):
         return
     handler_dict[message_id]['from_chat'] = from_chat_id
     handler_dict[message_id]['from_message_id'] = from_message_id
-    handler_dict[message_id]['forward_chat'] = message.chat.id
+    handler_dict[message_id]['forward_chat'] = message.chat.username if message.chat.username else message.chat.id
     msg, button = await get_buttons(message.from_user, message_id)
     await sendMessage(message, msg, button)
 
