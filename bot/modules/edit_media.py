@@ -47,9 +47,13 @@ async def edit_media(client, message):
     else:
         message_list = [from_message]
         message_ids = [from_message.id + i for i in range(1, 30)]
+        # if from_message.media in [MessageMediaType.PHOTO, MessageMediaType.VIDEO]:
+        #     message_type = [MessageMediaType.PHOTO, MessageMediaType.VIDEO]
+        # else:
+        #     message_type = [from_message.media]
         hestory_messages = await client.get_messages(chat_id, message_ids)
         for m in hestory_messages:
-            if m.media in [MessageMediaType.PHOTO, MessageMediaType.VIDEO, MessageMediaType.AUDIO, MessageMediaType.DOCUMENT] and m.media_group_id == from_message.media_group_id:
+            if m.media in [MessageMediaType.PHOTO, MessageMediaType.VIDEO, MessageMediaType.AUDIO, MessageMediaType.DOCUMENT]:
                 message_list.append(m)
             if len(message_list) >= media_number:
                 break
