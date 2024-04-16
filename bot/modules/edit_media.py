@@ -63,20 +63,19 @@ async def edit_media(client, message):
             await auto_delete_message(client, [message, from_message], 0)
             return
         send_medias = []
-        LOGGER.info(message_list)
-        LOGGER.info(len(message_list))
         for media_message in message_list:
             media = getattr(media_message, media_message.media.value)
+            if media.thumbs:
+                thumb=media.thumbs[0].file_id
             if media_message.media == MessageMediaType.VIDEO:
-                input_media = InputMediaVideo(media.file_id, thumb=media.thumbs[0].file_id)
+                input_media = InputMediaVideo(media.file_id, thumb=thumb)
             elif media_message.media == MessageMediaType.DOCUMENT:
-                input_media = InputMediaDocument(media.file_id, thumb=media.thumbs[0].file_id)
+                input_media = InputMediaDocument(media.file_id, thumb=thumb)
             elif media_message.media == MessageMediaType.AUDIO:
-                input_media = InputMediaAudio(media.file_id, thumb=media.thumbs[0].file_id)
+                input_media = InputMediaAudio(media.file_id, thumb=thumb)
             elif media_message.media == MessageMediaType.PHOTO:
                 input_media = InputMediaPhoto(media.file_id)
             send_medias.append(input_media)
-        
         group_count = (len(send_medias) + 10 - 1) // 10
         group_size = (len(send_medias) + group_count - 1) // group_count
         send_media_groups = [send_medias[i:i + group_size] for i in range(0, len(send_medias), group_size)]
