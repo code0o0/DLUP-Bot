@@ -229,7 +229,7 @@ async def forward(client, message):
         return
     handler_dict[message_id]['from_chat'] = from_chat_id
     handler_dict[message_id]['from_message_id'] = from_message_id
-    handler_dict[message_id]['forward_chat'] = message.chat.username if message.chat.username else message.chat.id
+    handler_dict[message_id]['forward_chat'] = f'@{message.chat.username}' if message.chat.username else message.chat.id
     msg, button = await get_buttons(message.from_user, message_id)
     await sendMessage(message, msg, button)
 
