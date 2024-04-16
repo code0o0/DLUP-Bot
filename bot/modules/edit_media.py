@@ -57,6 +57,7 @@ async def edit_media(client, message):
                 message_list.append(m)
             if len(message_list) >= media_number:
                 break
+    LOGGER.info(message_list)
     try:
         if len(message_list) == 1:
             await copyMedia(from_message, chat_id, caption, ParseMode.HTML, protect_content)
