@@ -74,11 +74,12 @@ async def edit_media(client, message):
             elif media_message.media == MessageMediaType.PHOTO:
                 input_media = InputMediaPhoto(media.file_id)
             send_medias.append(input_media)
+        LOGGER.info(send_medias)
+        LOGGER.info(len(send_medias))
+        LOGGER.info(len(message_list), len(send_medias))
         group_count = (len(send_medias) + 10 - 1) // 10
         group_size = (len(send_medias) + group_count - 1) // group_count
         send_media_groups = [send_medias[i:i + group_size] for i in range(0, len(send_medias), group_size)]
-        LOGGER.info(send_medias)
-        LOGGER.info(send_media_groups)
         for send_media_group in send_media_groups:
             if caption:
                 send_media_group[0].caption = caption
