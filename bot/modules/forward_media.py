@@ -55,9 +55,6 @@ async def forward_message(client, message, message_id):
     except Exception as e:
         try:
             tgclient = user
-            if from_chat == OWNER_ID:
-                bot_user = await client.get_me()
-                from_chat = bot_user.id
             message_list = await user.get_messages(from_chat, messages_id_list)
         except Exception as e:
             LOGGER.error(e) 
