@@ -22,10 +22,10 @@ async def get_buttons(from_user, message_id):
     msg = '<b>Forward Media</b>\n'
     for key, value in msg_dict.items():
         msg += f'<u>{key}</u> is <b>{value}</b>\n'
-    buttons.ibutton('📊Forward Chat', f'forwardset {user_id} forward_chat', position='header')
-    buttons.ibutton('📑Forward Number', f'forwardset {user_id} forward_number', position='header')
+    buttons.ibutton('📻Forward Chat', f'forwardset {user_id} forward_chat', position='header')
+    buttons.ibutton('📝Forward Number', f'forwardset {user_id} forward_number', position='header')
     if msg_dict.get('protect_content'):
-        buttons.ibutton('🔐Protect Content', f'forwardset {user_id} protect_content', position='header')
+        buttons.ibutton('🔓Protect Content', f'forwardset {user_id} protect_content', position='header')
     else:
         buttons.ibutton('🔒Protect Content', f'forwardset {user_id} protect_content', position='header')
     buttons.ibutton('🔗CopyRight', f'forwardset {user_id} copyright', position='header')
@@ -55,6 +55,8 @@ async def forward_message(client, message, message_id):
     except Exception as e:
         try:
             tgclient = user
+            if handler_dict[message_id]['forward_chat'] == user.get_me().id:
+                handler_dict[message_id]['forward_chat'] = client.get_me().id
             message_list = await user.get_messages(from_chat, messages_id_list)
         except Exception as e:
             LOGGER.error(e) 
@@ -206,7 +208,7 @@ async def forward(client, message):
     handler_dict[message_id] = {
         'from_chat': None,
         'from_message_id': None,
-        'forward_chat': 'me',
+        'forward_chat': '',
         'forward_number': 1,
         'protect_content': False,
         'copyright': None
@@ -229,6 +231,7 @@ async def forward(client, message):
         return
     handler_dict[message_id]['from_chat'] = from_chat_id
     handler_dict[message_id]['from_message_id'] = from_message_id
+    handler_dict[message_id]['forward_chat'] = message.chat.id
     msg, button = await get_buttons(message.from_user, message_id)
     await sendMessage(message, msg, button)
 
