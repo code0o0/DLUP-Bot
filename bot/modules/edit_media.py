@@ -65,8 +65,7 @@ async def edit_media(client, message):
         send_medias = []
         for media_message in message_list:
             media = getattr(media_message, media_message.media.value)
-            if media.thumbs:
-                thumb=media.thumbs[0].file_id
+            thumb = media.thumbs[0].file_id if media.thumbs else ''
             if media_message.media == MessageMediaType.VIDEO:
                 input_media = InputMediaVideo(media.file_id, thumb=thumb)
             elif media_message.media == MessageMediaType.DOCUMENT:
