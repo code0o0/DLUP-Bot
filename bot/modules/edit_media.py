@@ -63,6 +63,8 @@ async def edit_media(client, message):
             await auto_delete_message(client, [message, from_message], 0)
             return
         send_medias = []
+        LOGGER.info(message_list)
+        LOGGER.info(len(message_list))
         for media_message in message_list:
             media = getattr(media_message, media_message.media.value)
             if media_message.media == MessageMediaType.VIDEO:
@@ -74,9 +76,7 @@ async def edit_media(client, message):
             elif media_message.media == MessageMediaType.PHOTO:
                 input_media = InputMediaPhoto(media.file_id)
             send_medias.append(input_media)
-        LOGGER.info(send_medias)
-        LOGGER.info(len(send_medias))
-        LOGGER.info(len(message_list), len(send_medias))
+        
         group_count = (len(send_medias) + 10 - 1) // 10
         group_size = (len(send_medias) + group_count - 1) // group_count
         send_media_groups = [send_medias[i:i + group_size] for i in range(0, len(send_medias), group_size)]
