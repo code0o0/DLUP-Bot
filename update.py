@@ -6,11 +6,15 @@ from logging import (
     basicConfig,
     error as log_error,
     info as log_info,
+    getLogger,
+    ERROR,
 )
 from os import path, environ, remove, makedirs
 from sqlite3 import connect
 from subprocess import run as srun
 import json
+
+getLogger("pymongo").setLevel(ERROR)
 
 if path.exists("log.txt"):
     with open("log.txt", "r+") as f:
