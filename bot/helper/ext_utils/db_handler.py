@@ -14,7 +14,6 @@ from bot import (
     config_dict,
     aria2_options,
     qbit_options,
-    bot_loop,
 )
 
 
@@ -239,6 +238,3 @@ class DbManager:
     async def trunc_table(self, name):
         async with self.__db.transaction():
             await self.__db.execute(query=f'DELETE FROM {name}')
-
-if DATABASE_URL:
-    bot_loop.run_until_complete(DbManager().db_load())
