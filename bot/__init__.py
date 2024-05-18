@@ -460,7 +460,7 @@ scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
 qbit_edit_opts = ['dl_limit', 'up_limit', 'max_connec', 'max_connec_per_torrent', 'disk_cache', 'disk_cache_ttl',
                   'preallocate_all', 'max_seeding_time_enabled', 'max_seeding_time', 'max_ratio_enabled', 'max_ratio',
                   'dht', 'pex', 'lsd', 'encryption', 'anonymous_mode', 'proxy_type', 'proxy_peer_connections', 
-                  'proxy_torrents_only', 'proxy_ip', 'proxy_port', 'proxy_auth_enabled', 'proxy_username',
+                  'proxy_bittorrent', 'proxy_ip', 'proxy_port', 'proxy_auth_enabled', 'proxy_username',
                   'proxy_password']
 aria2c_edit_opts = ['max-overall-download-limit', 'max-overall-upload-limit', 'max-download-limit', 'max-upload-limit',
                     'split', 'min-split-size', 'max-connection-per-server', 'disk-cache', 'file-allocation', 'user-agent',
@@ -474,7 +474,6 @@ def get_qb_options():
     global qbit_options
     if not qbit_options:
         qbit_all_options = dict(get_qb_client().app_preferences())
-        print(qbit_all_options)
         qbit_options = {key: qbit_all_options[key] for key in qbit_edit_opts}
     else:
         qb_opt = {**qbit_options}
