@@ -147,9 +147,7 @@ async def get_buttons(key=None, edit_type=None):
             value = config_dict[k]
             if not value:
                 value = "None"
-            elif k in ["USENET_SERVERS", "SEARCH_PLUGINS"]:
-                value = "[…]"
-            elif k == "USER_SESSION_STRING":
+            elif len(value) > 15:
                 value = value[:3] + "…" + value[-3:]
             msg += f'<b>{index+1}.</b> <u>{k}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{k}</u> is <b>{value}</b>\n'
             buttons.ibutton(index+1, f"botset botvar {k}", position="header")
@@ -177,15 +175,22 @@ Timeout: 60 sec"""
             value = aria2_options[k]
             if not value:
                 value = "None"
+            elif len(value) > 15:
+                value = value[:3] + "…" + value[-3:]
             msg += f'<b>{index+1}.</b> <u>{k}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{k}</u> is <b>{value}</b>\n'
             buttons.ibutton(index+1, f"botset ariavar {k}", position="header")
         pages = (len(aria2_options) - 1) // 18 + 1
-        if pages > 1 and START == 0:
+        if pages == 1:
+            pass
+        elif START == 0:
             buttons.ibutton("Next Page", "botset start aria next")
-        elif pages > 1 and START == 1:
+        elif START == pages - 1:
             buttons.ibutton("Prev Page", "botset start aria prev")
+        else:
+            buttons.ibutton("Prev Page", "botset start aria prev")
+            buttons.ibutton("Next Page", "botset start aria next")
         msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
-        buttons.ibutton("Add new key", "botset ariavar newkey")
+        buttons.ibutton("Add new key", "botset ariavar newkey", position="footer")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "qbit":
@@ -194,13 +199,22 @@ Timeout: 60 sec"""
             value = qbit_options[k]
             if not value:
                 value = "None"
+            elif len(value) > 15:
+                value = value[:3] + "…" + value[-3:]
             msg += f'<b>{index+1}.</b> <u>{k}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{k}</u> is <b>{value}</b>\n'
             buttons.ibutton(index+1, f"botset qbitvar {k}", position="header")
         if START == 0:
             buttons.ibutton("Next Page", "botset start qbit next")
-        elif START == 1:
+        elif START == pages - 1:
             buttons.ibutton("Prev Page", "botset start qbit prev")
+        else:
+            buttons.ibutton("Prev Page", "botset start qbit prev")
+            buttons.ibutton("Next Page", "botset start qbit next")
         msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
+        if qbit_options["web_ui_address"] != "*":
+            buttons.ibutton("Start WebUI", "botset qbitvar start_webui", position="footer")
+        else:
+            buttons.ibutton("Stop WebUI", "botset qbitvar stop_webui", position="footer")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "nzb":
@@ -209,16 +223,23 @@ Timeout: 60 sec"""
             value = nzb_options[k]
             if not value:
                 value = "None"
+            elif len(value) > 15:
+                value = value[:3] + "…" + value[-3:]
             msg += f'<b>{index+1}.</b> <u>{k}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{k}</u> is <b>{value}</b>\n'
             buttons.ibutton(index+1, f"botset nzbvar {k}", position="header")
         pages = (len(nzb_options) - 1) // 18 + 1
-        if pages > 1 and START == 0:
+        if pages == 1:
+            pass
+        elif START == 0:
             buttons.ibutton("Next Page", "botset start nzb next")
-        elif pages > 1 and START == 1:
+        elif START == pages - 1:
             buttons.ibutton("Prev Page", "botset start nzb prev")
+        else:
+            buttons.ibutton("Prev Page", "botset start nzb prev")
+            buttons.ibutton("Next Page", "botset start nzb next")
         msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
-        buttons.ibutton("Servers", "botset nzbserver")
-        buttons.ibutton("Sync Sabnzbd", "botset syncnzb")
+        buttons.ibutton("Servers", "botset nzbserver", position="footer")
+        buttons.ibutton("Sync Sabnzbd", "botset syncnzb", position="footer")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "nzbserver":
@@ -229,12 +250,17 @@ Timeout: 60 sec"""
                 msg += f'<b>{index+1}.</b> <u>{value}</u>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{value}</u>\n'
                 buttons.ibutton(index+1, f"botset nzbser{index}", position="header")
         pages = (len(config_dict["USENET_SERVERS"]) - 1) // 18 + 1
-        if pages > 1 and START == 0:
-            buttons.ibutton("Next Page", "botset start nzbser next")
-        elif pages > 1 and START == 1:
-            buttons.ibutton("Prev Page", "botset start nzbser prev")
+        if pages == 1:
+            pass
+        elif START == 0:
+            buttons.ibutton("Next Page", "botset start nzbserver next")
+        elif START == pages - 1:
+            buttons.ibutton("Prev Page", "botset start nzbserver prev")
+        else:
+            buttons.ibutton("Prev Page", "botset start nzbserver prev")
+            buttons.ibutton("Next Page", "botset start nzbserver next")
         msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
-        buttons.ibutton("Add New", "botset nzbsevar newser")
+        buttons.ibutton("Add New", "botset nzbsevar newser", position="footer")
         buttons.ibutton("Back", "botset nzb", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key.startswith("nzbser"):
@@ -244,15 +270,22 @@ Timeout: 60 sec"""
             value = config_dict["USENET_SERVERS"][index][k]
             if not value:
                 value = "None"
+            elif len(value) > 15:
+                value = value[:3] + "…" + value[-3:]
             msg += f'<b>{i+1}.</b> <u>{k}</u> is <b>{value}</b>\n' if i >=9 else f'<b>{i+1}.</b>   <u>{k}</u> is <b>{value}</b>\n'
             buttons.ibutton(i+1, f"botset nzbser{index} {k}", position="header")
         pages = (len(config_dict["USENET_SERVERS"][index]) - 1) // 18 + 1
-        if pages > 1 and START == 0:
+        if pages == 1:
+            pass
+        elif START == 0:
             buttons.ibutton("Next Page", f"botset start {key} next")
-        elif pages > 1 and START == 1:
+        elif START == pages - 1:
             buttons.ibutton("Prev Page", f"botset start {key} prev")
+        else:
+            buttons.ibutton("Prev Page", f"botset start {key} prev")
+            buttons.ibutton("Next Page", f"botset start {key} next")
         msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
-        buttons.ibutton("Remove Server", f"botset remser {index}")
+        buttons.ibutton("Remove Server", f"botset remser {index}", position="footer")
         buttons.ibutton("Back", "botset nzbserver", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     
@@ -790,11 +823,26 @@ async def edit_bot_settings(client, query):
         rfunc = partial(update_buttons, message, "aria")
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == "qbitvar":
-        await query.answer()
-        await update_buttons(message, data[2], data[1])
-        pfunc = partial(edit_qbit, pre_message=message, key=data[2])
-        rfunc = partial(update_buttons, message, "qbit")
-        await event_handler(client, query, pfunc, rfunc)
+        if data[2] == "start_webui":
+            await query.answer("WebUI Started!", show_alert=True)
+            await sync_to_async(get_qb_client().app_set_preferences, {"web_ui_address": "*"})
+            qbit_options["web_ui_address"] = "*"
+            if DATABASE_URL:
+                await DbManager().update_qbittorrent("web_ui_address", "*")
+            await update_buttons(message, "qbit")
+        elif data[2] == "stop_webui":
+            await query.answer("WebUI Stopped!", show_alert=True)
+            await sync_to_async(get_qb_client().app_set_preferences, {"web_ui_address": "127.0.0.1"})
+            qbit_options["web_ui_address"] = "127.0.0.1"
+            if DATABASE_URL:
+                await DbManager().update_qbittorrent("web_ui_address", "127.0.0.1")
+            await update_buttons(message, "qbit")
+        else:
+            await query.answer()
+            await update_buttons(message, data[2], data[1])
+            pfunc = partial(edit_qbit, pre_message=message, key=data[2])
+            rfunc = partial(update_buttons, message, "qbit")
+            await event_handler(client, query, pfunc, rfunc)
     elif data[1] == "nzbvar":
         await query.answer()
         await update_buttons(message, data[2], data[1])
