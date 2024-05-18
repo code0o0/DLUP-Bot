@@ -33,9 +33,13 @@ from bot import (
     task_dict,
     qbit_options,
     get_qb_client,
+    get_sabnzb_client,
     LOGGER,
     bot,
     jd_downloads,
+    nzb_options,
+    get_nzb_options,
+    get_qb_options,
 )
 from bot.helper.ext_utils.bot_utils import (
     setInterval,
@@ -77,9 +81,10 @@ async def get_buttons(key=None, edit_type=None):
     buttons = ButtonMaker()
     if key is None:
         buttons.ibutton("Config Variables", "botset var")
+        buttons.ibutton("Private Files", "botset private")
         buttons.ibutton("Qbit Settings", "botset qbit")
         buttons.ibutton("Aria2c Settings", "botset aria")
-        buttons.ibutton("Private Files", "botset private")
+        buttons.ibutton("Sabnzbd Settings", "botset nzb")
         buttons.ibutton("JDownloader Sync", "botset syncjd")
         buttons.ibutton("Close", "botset close", position="footer")
         msg = "Bot Settings:"
@@ -94,15 +99,14 @@ async def get_buttons(key=None, edit_type=None):
             msg += f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{config_dict[key]}'</b>.\n"
             msg += "<b>Timeout:</b> 60 sec"
         elif edit_type == "ariavar":
+            buttons.ibutton("Back", "botset aria", position="footer")
+            buttons.ibutton("Close", "botset close", position="footer")
             if key != "newkey":
                 buttons.ibutton("Default", f"botset resetaria {key}")
                 buttons.ibutton("Empty String", f"botset emptyaria {key}")
-            buttons.ibutton("Back", "botset aria", position="footer")
-            buttons.ibutton("Close", "botset close", position="footer")
-            if key == "newkey":
-                msg = "Send a key with value.\nExample: https-proxy-user:value"
-            else:
                 msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{aria2_options[key]}'</b>.\n"
+            else:
+                msg = "Send a key with value.\nExample: https-proxy-user:value\n"    
             msg += "<b>Timeout:</b> 60 sec"
         elif edit_type == "qbitvar":
             buttons.ibutton("Empty String", f"botset emptyqbit {key}")
@@ -110,22 +114,40 @@ async def get_buttons(key=None, edit_type=None):
             buttons.ibutton("Close", "botset close", position="footer")
             msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{qbit_options[key]}'</b>.\n"
             msg += "<b>Timeout:</b> 60 sec"
+        elif edit_type == "nzbvar":
+            buttons.ibutton("Default", f"botset resetnzb {key}")
+            buttons.ibutton("Empty String", f"botset emptynzb {key}")
+            buttons.ibutton("Back", "botset nzb", position="footer")
+            buttons.ibutton("Close", "botset close", position="footer")
+            msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{nzb_options[key]}'</b>.\n"
+            msg += "<b>Note:</b> If the value is list then seperate them by space or ,\nExample: .exe,info or .exe .info\n"
+            msg += "<b>Timeout:</b> 60 sec"
+        elif edit_type.startswith("nzbsevar"):
+            index = 0 if key == "newser" else int(edit_type.replace("nzbsevar", ""))
+            buttons.ibutton("Back", f"botset nzbser{index}", position="footer")
+            buttons.ibutton("Close", "botset close", position="footer")
+            if key != "newser":
+                buttons.ibutton("Empty", f"botset emptyserkey {index} {key}")
+                msg = f"Send a valid value for <b>{key}</b> in server {config_dict['USENET_SERVERS'][index]['name']}.\nCurrent value is <b>'{config_dict['USENET_SERVERS'][index][key]}'</b>.\n"
+            else:
+                msg = "Send one server as dictionary {}, like in config.env without [].\n"
+            msg += "<b>Timeout:</b> 60 sec"
     elif key == "var":
         var_list = ["STATUS_UPDATE_INTERVAL", "STATUS_LIMIT", "QUEUE_ALL", "QUEUE_DOWNLOAD", "QUEUE_UPLOAD",
                     "USER_SESSION_STRING", "CMD_SUFFIX", "UPSTREAM_REPO", "UPSTREAM_BRANCH", "BASE_URL_PORT",
                     "BASE_URL", "WEB_PINCODE", "INCOMPLETE_TASK_NOTIFIER", "YT_DLP_OPTIONS", "TORRENT_TIMEOUT",
-                    "DEFAULT_UPLOAD", "EXTENSION_FILTER", "USE_SERVICE_ACCOUNTS", "NAME_SUBSTITUTE", "GDRIVE_ID",
-                    "STOP_DUPLICATE", "IS_TEAM_DRIVE", "INDEX_URL", "RCLONE_PATH", "RCLONE_FLAGS", "RCLONE_SERVE_URL",
-                    "RCLONE_SERVE_PORT", "RCLONE_SERVE_USER", "RCLONE_SERVE_PASS", "LEECH_SPLIT_SIZE", "AS_DOCUMENT", 
-                    "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX", "LEECH_DUMP_CHAT",
-                    "MIXED_LEECH", "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", 
-                    "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
+                    "USENET_SERVERS", "DEFAULT_UPLOAD", "EXTENSION_FILTER", "USE_SERVICE_ACCOUNTS", "NAME_SUBSTITUTE",
+                    "GDRIVE_ID", "STOP_DUPLICATE", "IS_TEAM_DRIVE", "INDEX_URL", "RCLONE_PATH", "RCLONE_FLAGS",
+                    "RCLONE_SERVE_URL", "RCLONE_SERVE_PORT", "RCLONE_SERVE_USER", "RCLONE_SERVE_PASS", "LEECH_SPLIT_SIZE",
+                    "AS_DOCUMENT", "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX",
+                    "LEECH_DUMP_CHAT", "MIXED_LEECH", "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", 
+                    "RSS_CHAT", "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
         msg = ""
         for index, k in enumerate(var_list[18*START : 18 + 18*START]):
             value = config_dict[k]
             if not value:
                 value = "None"
-            elif k == "SEARCH_PLUGINS":
+            elif k in ["USENET_SERVERS", "SEARCH_PLUGINS"]:
                 value = "[…]"
             elif k == "USER_SESSION_STRING":
                 value = value[:3] + "…" + value[-3:]
@@ -181,7 +203,59 @@ Timeout: 60 sec"""
         msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
-
+    elif key == "nzb":
+        msg = ""
+        for index, k in enumerate(list(nzb_options.keys())[18*START : 18 + 18*START]):
+            value = nzb_options[k]
+            if not value:
+                value = "None"
+            msg += f'<b>{index+1}.</b> <u>{k}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{k}</u> is <b>{value}</b>\n'
+            buttons.ibutton(index+1, f"botset nzbvar {k}", position="header")
+        pages = (len(nzb_options) - 1) // 18 + 1
+        if pages > 1 and START == 0:
+            buttons.ibutton("Next Page", "botset start nzb next")
+        elif pages > 1 and START == 1:
+            buttons.ibutton("Prev Page", "botset start nzb prev")
+        msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
+        buttons.ibutton("Servers", "botset nzbserver")
+        buttons.ibutton("Sync Sabnzbd", "botset syncnzb")
+        buttons.ibutton("Back", "botset back", position="footer")
+        buttons.ibutton("Close", "botset close", position="footer")
+    elif key == "nzbserver":
+        msg = ""
+        if len(config_dict["USENET_SERVERS"]) > 0:
+            for index, k in enumerate(config_dict["USENET_SERVERS"][18*START : 18 + 18*START]):
+                value = k["name"]
+                msg += f'<b>{index+1}.</b> <u>{value}</u>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{value}</u>\n'
+                buttons.ibutton(index+1, f"botset nzbser{index}", position="header")
+        pages = (len(config_dict["USENET_SERVERS"]) - 1) // 18 + 1
+        if pages > 1 and START == 0:
+            buttons.ibutton("Next Page", "botset start nzbser next")
+        elif pages > 1 and START == 1:
+            buttons.ibutton("Prev Page", "botset start nzbser prev")
+        msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
+        buttons.ibutton("Add New", "botset nzbsevar newser")
+        buttons.ibutton("Back", "botset nzb", position="footer")
+        buttons.ibutton("Close", "botset close", position="footer")
+    elif key.startswith("nzbser"):
+        msg = ""
+        index = int(key.replace("nzbser", ""))
+        for i, k in enumerate(list(config_dict["USENET_SERVERS"][index].keys())[18*START : 18 + 18*START]):
+            value = config_dict["USENET_SERVERS"][index][k]
+            if not value:
+                value = "None"
+            msg += f'<b>{i+1}.</b> <u>{k}</u> is <b>{value}</b>\n' if i >=9 else f'<b>{i+1}.</b>   <u>{k}</u> is <b>{value}</b>\n'
+            buttons.ibutton(i+1, f"botset nzbser{index} {k}", position="header")
+        pages = (len(config_dict["USENET_SERVERS"][index]) - 1) // 18 + 1
+        if pages > 1 and START == 0:
+            buttons.ibutton("Next Page", f"botset start {key} next")
+        elif pages > 1 and START == 1:
+            buttons.ibutton("Prev Page", f"botset start {key} prev")
+        msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
+        buttons.ibutton("Remove Server", f"botset remser {index}")
+        buttons.ibutton("Back", "botset nzbserver", position="footer")
+        buttons.ibutton("Close", "botset close", position="footer")
+    
     button = buttons.build_menu(2, 6, 2)
     return msg, button
 
@@ -251,6 +325,8 @@ async def edit_variable(_, message, pre_message, key):
             INDEX_URLS.insert(0, value)
     elif value.isdigit():
         value = int(value)
+    elif value.startswith("[") and value.endswith("]"):
+        value = eval(value)
     config_dict[key] = value
     await update_buttons(pre_message, "var")
     await deleteMessage(message)
@@ -271,6 +347,11 @@ async def edit_variable(_, message, pre_message, key):
         jdownloader.initiate()
     elif key == "RSS_DELAY":
         addJob()
+    elif key == "USET_SERVERS":
+        nzb_client = get_sabnzb_client()
+        for s in value:
+            await nzb_client.set_special_config("servers", s)
+        await nzb_client.log_out()
 
 async def edit_aria(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
@@ -316,6 +397,58 @@ async def edit_qbit(_, message, pre_message, key):
     await deleteMessage(message)
     if DATABASE_URL:
         await DbManager().update_qbittorrent(key, value)
+
+async def edit_nzb(_, message, pre_message, key):
+    handler_dict[message.chat.id] = False
+    value = message.text
+    nzb_client = get_sabnzb_client()
+    if value.isdigit():
+        value = int(value)
+    elif value.startswith("[") and value.endswith("]"):
+        value = ",".join(eval(value))
+    res = await nzb_client.set_config("misc", key, value)
+    value = res["config"]["misc"][key]
+    nzb_options[key] = value
+    await nzb_client.log_out()
+    await update_buttons(pre_message, "nzb")
+    await deleteMessage(message)
+    if DATABASE_URL:
+        await DbManager().update_nzb_config()
+
+async def edit_nzb_server(_, message, pre_message, key, index=0):
+    handler_dict[message.chat.id] = False
+    value = message.text
+    nzb_client = get_sabnzb_client()
+    if value.startswith("{") and value.endswith("}"):
+        if key == "newser":
+            try:
+                value = eval(value)
+            except:
+                await sendMessage(message, "Invalid dict format!")
+                await update_buttons(pre_message, "nzbserver")
+                return
+            res = await nzb_client.add_server(value)
+            if not res["config"]["servers"][0]["host"]:
+                await sendMessage(message, "Invalid server!")
+                await update_buttons(pre_message, "nzbserver")
+                return
+            config_dict["USENET_SERVERS"].append(value)
+            await update_buttons(pre_message, "nzbserver")
+    elif key != "newser":
+        if value.isdigit():
+            value = int(value)
+        res = await nzb_client.add_server(
+            {"name": config_dict["USENET_SERVERS"][index]["name"], key: value}
+        )
+        if res["config"]["servers"][0][key] == "":
+            await sendMessage(message, "Invalid value")
+            return
+        config_dict["USENET_SERVERS"][index][key] = value
+        await update_buttons(pre_message, f"nzbser{index}")
+    await deleteMessage(message)
+    if DATABASE_URL:
+        await DbManager().update_config({"USENET_SERVERS": config_dict["USENET_SERVERS"]})
+    await nzb_client.log_out()
 
 async def sync_jdownloader():
     if not DATABASE_URL or jdownloader.device is None:
@@ -477,7 +610,11 @@ async def edit_bot_settings(client, query):
             show_alert=True,
         )
         await sync_jdownloader()
-    elif data[1] in ["var", "aria", "qbit"]:
+    elif data[1] in ["var", "aria", "qbit", "nzb", "nzbserver"] or data[1].startswith(
+        "nzbser"
+    ):
+        if data[1] == "nzbserver":
+            globals()["START"] = 0
         await query.answer()
         await update_buttons(message, data[1])
     elif data[1] == "resetvar":
@@ -534,7 +671,12 @@ async def edit_bot_settings(client, query):
         elif data[2] in ["JD_EMAIL", "JD_PASS"]:
             jdownloader.device = None
             jdownloader.error = "JDownloader Credentials not provided!"
-            await create_subprocess_exec(["pkill", "-9", "-f", "java"])
+            await create_subprocess_exec("pkill", "-9", "-f", "java")
+        elif data[2] == "USENET_SERVERS":
+            nzb_client = get_sabnzb_client()
+            for s in config_dict["USENET_SERVERS"]:
+                await nzb_client.delete_config("servers", s["name"])
+            await nzb_client.log_out()
         config_dict[data[2]] = value
         await update_buttons(message, "var")
         if DATABASE_URL:
@@ -570,6 +712,25 @@ async def edit_bot_settings(client, query):
                     LOGGER.error(e)
         if DATABASE_URL:
             await DbManager().update_aria2(data[2], value)
+    elif data[1] == "resetnzb":
+        await query.answer()
+        nzb_client = get_sabnzb_client()
+        res = await nzb_client.set_config_default(data[2])
+        nzb_options[data[2]] = res["config"]["misc"][data[2]]
+        await nzb_client.log_out()
+        await update_buttons(message, "nzb")
+        if DATABASE_URL:
+            await DbManager().update_nzb_config()
+    elif data[1] == "syncnzb":
+        await query.answer("Syncronization Started. It takes up to 2 sec!", show_alert=True)
+        await get_nzb_options()
+        if DATABASE_URL:
+            await DbManager().update_nzb_config()
+    elif data[1] == "syncqbit":
+        await query.answer("Syncronization Started. It takes up to 2 sec!", show_alert=True)
+        await get_qb_options()
+        if DATABASE_URL:
+            await DbManager().save_qbit_settings()
     elif data[1] == "emptyaria":
         await query.answer()
         aria2_options[data[2]] = ""
@@ -592,6 +753,24 @@ async def edit_bot_settings(client, query):
         await update_buttons(message, "qbit")
         if DATABASE_URL:
             await DbManager().update_qbittorrent(data[2], "")
+    elif data[1] == "emptynzb":
+        await query.answer()
+        nzb_client = get_sabnzb_client()
+        res = await nzb_client.set_config("misc", data[2], "")
+        nzb_options[data[2]] = res["config"]["misc"][data[2]]
+        await nzb_client.log_out()
+        await update_buttons(message, "nzb")
+        if DATABASE_URL:
+            await DbManager().update_nzb_config()
+    elif data[1] == "remser":
+        index = int(data[2])
+        nz_client = get_sabnzb_client()
+        await nz_client.delete_config("servers", config_dict["USENET_SERVERS"][index]["name"])
+        del config_dict["USENET_SERVERS"][index]
+        await update_buttons(message, "nzbserver")
+        if DATABASE_URL:
+            await DbManager().update_config({"USENET_SERVERS": config_dict["USENET_SERVERS"]})
+        await nz_client.log_out()
     elif data[1] == "private":
         await query.answer()
         await update_buttons(message, data[1])
@@ -614,7 +793,30 @@ async def edit_bot_settings(client, query):
         await query.answer()
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_qbit, pre_message=message, key=data[2])
-        rfunc = partial(update_buttons, message, "var")
+        rfunc = partial(update_buttons, message, "qbit")
+        await event_handler(client, query, pfunc, rfunc)
+    elif data[1] == "nzbvar":
+        await query.answer()
+        await update_buttons(message, data[2], data[1])
+        pfunc = partial(edit_nzb, pre_message=message, key=data[2])
+        rfunc = partial(update_buttons, message, "nzb")
+        await event_handler(client, query, pfunc, rfunc)
+    elif data[1] == "emptyserkey":
+        await query.answer()
+        await update_buttons(message, f"nzbser{data[2]}")
+        index = int(data[2])
+        nzb_client = get_sabnzb_client()
+        res = await nzb_client.add_server({"name": config_dict["USENET_SERVERS"][index]['name'], data[3]: ""})
+        config_dict["USENET_SERVERS"][index][data[3]] = res['config']['servers'][0][data[3]]
+        await nzb_client.log_out()
+        if DATABASE_URL:
+            await DbManager().update_config(config_dict)
+    elif data[1].startswith("nzbsevar"):
+        index = 0 if data[2] == "newser" else int(data[1].replace("nzbsevar", ""))
+        await query.answer()
+        await update_buttons(message, data[2], data[1])
+        pfunc = partial(edit_nzb_server, pre_message=message, key=data[2], index=index)
+        rfunc = partial(update_buttons, message, data[1])
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == "start":
         await query.answer()
@@ -725,6 +927,17 @@ async def load_config():
                 except Exception as e:
                     LOGGER.error(e)
         TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
+    USENET_SERVERS = environ.get("USENET_SERVERS", "")
+    try:
+        if len(USENET_SERVERS) == 0:
+            USENET_SERVERS = []
+        elif not eval(USENET_SERVERS)[0]["host"]:
+            USENET_SERVERS = []
+        else:
+            USENET_SERVERS = eval(USENET_SERVERS)
+    except:
+        LOGGER.error(f"Wrong USENET_SERVERS format: {USENET_SERVERS}")
+        USENET_SERVERS = []
     #UPLOAD
     DEFAULT_UPLOAD = environ.get("DEFAULT_UPLOAD", "")
     if DEFAULT_UPLOAD != "rc":
@@ -857,6 +1070,7 @@ async def load_config():
             'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
             'YT_DLP_OPTIONS': YT_DLP_OPTIONS,
             'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
+            'USENET_SERVERS': USENET_SERVERS,
             'DEFAULT_UPLOAD': DEFAULT_UPLOAD,
             'EXTENSION_FILTER': EXTENSION_FILTER,
             'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,

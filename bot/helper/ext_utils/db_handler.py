@@ -111,12 +111,15 @@ class DbManager:
             values = {'id': bot_id, 'aria2_options': _aria2_options}
             await self.__db.execute(query=query, values=values)
     
-    async def update_qbittorrent(self, key, value):
+    async def update_qbittorrent(self, key=None, value=None):
         _qbit_options = json.dumps(qbit_options)
         async with self.__db.transaction():
             query = 'UPDATE settings SET qbit_options = :qbit_options  WHERE _id = :id'
             values = {'id': bot_id, 'qbit_options': _qbit_options}
             await self.__db.execute(query=query, values=values)
+    
+    async def save_qbit_settings(self):
+        await self.update_qbittorrent()
     
     async def update_private_file(self, path):
         if await aiopath.exists(path):
@@ -139,6 +142,9 @@ class DbManager:
             await self.__db.execute(query=query, values=values)
         if path == "config.env":
             await self.update_deploy_config()
+    
+    async def update_nzb_config(self):
+        await self.update_private_file("sabnzbd/SABnzbd.ini")
 
     async def update_user_data(self, user_id):
         data = user_data.get(user_id, {})

@@ -14,3 +14,4 @@ aria2c --max-concurrent-downloads=20 --max-upload-limit=100K --max-overall-uploa
        --dht-file-path=/usr/src/app/config/dht.dat --dht-file-path6=/usr/src/app/config/dht6.dat \
        --bt-force-encryption=true --bt-require-crypto=true --bt-min-crypto-level=arc4
 qbittorrent-nox -d --profile="$(pwd)"
+sabnzbdplus -f sabnzbd/SABnzbd.ini -s :::8070 -b 0 -d -c -l 0 --console
