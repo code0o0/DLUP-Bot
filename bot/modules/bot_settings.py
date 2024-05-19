@@ -170,7 +170,7 @@ async def get_buttons(key=None, edit_type=None):
         buttons, msg = get_content_buttons(content_dict, "botvar", "var")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
-        print("var")
+        LOGGER.info(content_dict)
 
 
     elif key == "private":
@@ -577,7 +577,7 @@ async def edit_bot_settings(client, query):
 
 
 
-        print("var0")   
+        LOGGER.info(data[1]) 
         await query.answer()
         await update_buttons(message, data[1])
     elif data[1] == "resetvar":
