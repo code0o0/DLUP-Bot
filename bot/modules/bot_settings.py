@@ -170,6 +170,9 @@ async def get_buttons(key=None, edit_type=None):
         buttons, msg = get_content_buttons(content_dict, "botvar", "var")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
+        print("var")
+
+
     elif key == "private":
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
@@ -571,6 +574,10 @@ async def edit_bot_settings(client, query):
     elif data[1] in ["var", "aria", "qbit", "nzb", "nzbserver"] or data[1].startswith("nzbser"):
         if data[1] == "nzbserver":
             globals()["START"] = 0
+
+
+
+        print("var0")   
         await query.answer()
         await update_buttons(message, data[1])
     elif data[1] == "resetvar":
