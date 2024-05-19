@@ -81,7 +81,7 @@ def get_content_buttons(content_dict, edit_type="", page_type=""):
     msg = ""
     buttons = ButtonMaker()
     for index, key in enumerate(list(content_dict.keys())[18*START : 18 + 18*START]):
-        value = content_dict[key]
+        value = str(content_dict[key])
         if not value:
             value = "None"
         elif len(value) > 15:
@@ -166,9 +166,7 @@ async def get_buttons(key=None, edit_type=None):
                     "AS_DOCUMENT", "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX",
                     "LEECH_DUMP_CHAT", "MIXED_LEECH", "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", 
                     "RSS_CHAT", "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
-        LOGGER.info(config_dict)
         content_dict = {k: config_dict[k] for k in var_list}
-        LOGGER.info(content_dict)
         buttons, msg = get_content_buttons(content_dict, "botvar", "var")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
