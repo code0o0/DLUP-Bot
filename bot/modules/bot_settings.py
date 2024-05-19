@@ -700,6 +700,7 @@ async def edit_bot_settings(client, query):
             await sync_to_async(get_qb_client().app_set_preferences, {"web_ui_address": "*"})
             if DATABASE_URL:
                 await DbManager().update_qbittorrent("web_ui_address", "*")
+        await update_buttons(message, "qbit")
     elif data[1] == "emptyaria":
         await query.answer()
         aria2_options[data[2]] = ""
