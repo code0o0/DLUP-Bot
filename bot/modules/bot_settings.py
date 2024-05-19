@@ -89,6 +89,7 @@ def get_content_buttons(content_dict, edit_type="", page_type=""):
         msg += f'<b>{index+1}.</b> <u>{key}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{key}</u> is <b>{value}</b>\n'
         buttons.ibutton(index+1, f"botset {edit_type} {key}", position="header")
     pages = (len(content_dict) - 1) // 18 + 1
+    LOGGER.info(pages, START, page_type)
     if pages == 1:
         pass
     elif START == 0:
@@ -170,9 +171,6 @@ async def get_buttons(key=None, edit_type=None):
         buttons, msg = get_content_buttons(content_dict, "botvar", "var")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
-        LOGGER.info(content_dict)
-
-
     elif key == "private":
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
@@ -574,6 +572,8 @@ async def edit_bot_settings(client, query):
     elif data[1] in ["var", "aria", "qbit", "nzb", "nzbserver"] or data[1].startswith("nzbser"):
         if data[1] == "nzbserver":
             globals()["START"] = 0
+
+
 
 
 
