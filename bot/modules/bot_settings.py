@@ -89,9 +89,6 @@ def get_content_buttons(content_dict, edit_type="", page_type=""):
         msg += f'<b>{index+1}.</b> <u>{key}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{key}</u> is <b>{value}</b>\n'
         buttons.ibutton(index+1, f"botset {edit_type} {key}", position="header")
     pages = (len(content_dict) - 1) // 18 + 1
-    LOGGER.info(pages)
-    LOGGER.info(START)
-    LOGGER.info(page_type)
     if pages == 1:
         pass
     elif START == 0:
@@ -169,7 +166,9 @@ async def get_buttons(key=None, edit_type=None):
                     "AS_DOCUMENT", "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX",
                     "LEECH_DUMP_CHAT", "MIXED_LEECH", "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", 
                     "RSS_CHAT", "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
+        LOGGER.info(config_dict)
         content_dict = {k: config_dict[k] for k in var_list}
+        LOGGER.info(content_dict)
         buttons, msg = get_content_buttons(content_dict, "botvar", "var")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
@@ -574,12 +573,6 @@ async def edit_bot_settings(client, query):
     elif data[1] in ["var", "aria", "qbit", "nzb", "nzbserver"] or data[1].startswith("nzbser"):
         if data[1] == "nzbserver":
             globals()["START"] = 0
-
-
-
-
-
-        LOGGER.info(data[1]) 
         await query.answer()
         await update_buttons(message, data[1])
     elif data[1] == "resetvar":
