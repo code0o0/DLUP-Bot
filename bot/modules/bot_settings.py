@@ -89,7 +89,9 @@ def get_content_buttons(content_dict, edit_type="", page_type=""):
         msg += f'<b>{index+1}.</b> <u>{key}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{key}</u> is <b>{value}</b>\n'
         buttons.ibutton(index+1, f"botset {edit_type} {key}", position="header")
     pages = (len(content_dict) - 1) // 18 + 1
-    LOGGER.info(pages, START, page_type)
+    LOGGER.info(pages)
+    LOGGER.info(START)
+    LOGGER.info(page_type)
     if pages == 1:
         pass
     elif START == 0:
