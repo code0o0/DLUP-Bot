@@ -365,8 +365,7 @@ async def edit_nzb(_, message, pre_message, key):
     elif value.startswith("[") and value.endswith("]"):
         value = ",".join(eval(value))
     res = await nzb_client.set_config("misc", key, value)
-    value = res["config"]["misc"][key]
-    nzb_options[key] = value
+    nzb_options[key] = res["config"]["misc"][key]
     await nzb_client.log_out()
     await update_buttons(pre_message, "nzb")
     await deleteMessage(message)
@@ -850,7 +849,7 @@ async def load_config():
                 STATUS_UPDATE_INTERVAL, update_status_message, key
             )
     STATUS_LIMIT = environ.get("STATUS_LIMIT", "")
-    STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+    STATUS_LIMIT = 4 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
     QUEUE_ALL = environ.get("QUEUE_ALL", "")
     QUEUE_ALL = "" if len(QUEUE_ALL) == 0 else int(QUEUE_ALL)
     QUEUE_DOWNLOAD = environ.get("QUEUE_DOWNLOAD", "")

@@ -154,7 +154,7 @@ if len(STATUS_UPDATE_INTERVAL) == 0:
 else:
     STATUS_UPDATE_INTERVAL = int(STATUS_UPDATE_INTERVAL)
 STATUS_LIMIT = environ.get("STATUS_LIMIT", "")
-STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+STATUS_LIMIT = 4 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 QUEUE_ALL = environ.get("QUEUE_ALL", "")
 QUEUE_ALL = "" if len(QUEUE_ALL) == 0 else int(QUEUE_ALL)
 QUEUE_DOWNLOAD = environ.get("QUEUE_DOWNLOAD", "")
