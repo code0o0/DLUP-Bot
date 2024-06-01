@@ -1,6 +1,6 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aria2p import API as ariaAPI, Client as ariaClient
-from asyncio import Lock
+from asyncio import Lock, get_event_loop
 from convopyro import Conversation
 from dotenv import load_dotenv, dotenv_values
 from logging import (
@@ -42,6 +42,7 @@ getLogger("pyrogram").setLevel(ERROR)
 getLogger("httpx").setLevel(ERROR)
 
 botStartTime = time()
+bot_loop = get_event_loop()
 
 basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -175,7 +176,7 @@ if len(USER_SESSION_STRING) != 0:
         ).start()
         IS_PREMIUM_USER = user.me.is_premium
     except:
-        log_error("Failed to create client from USER_SESSION_STRING")
+        log_error("Failed to start client from USER_SESSION_STRING")
         IS_PREMIUM_USER = False
         user = ""
 else:
@@ -424,21 +425,23 @@ if not ospath.exists(f'{CONFIG_DIR}/dht.dat'):
 if not ospath.exists(f'{CONFIG_DIR}/dht6.dat'):
     run(["touch", f"{CONFIG_DIR}/dht6.dat"])
 
-def get_qb_client():
-    return qbClient(
-        host="localhost",
-        port=8090,
-        VERIFY_WEBUI_CERTIFICATE=False,
-        REQUESTS_ARGS={"timeout": (30, 60)},
-    )
+qbittorrent_client = qbClient(
+    host="localhost",
+    port=8090,
+    VERIFY_WEBUI_CERTIFICATE=False,
+    REQUESTS_ARGS={"timeout": (30, 60)},
+    HTTPADAPTER_ARGS={
+        "pool_maxsize": 500,
+        "max_retries": 10,
+        "pool_block": True,
+    },
+)
 
-def get_sabnzb_client():
-    return sabnzbdClient(
-        host="http://localhost",
-        api_key="mltb",
-        port="8070",
-        HTTPX_REQUETS_ARGS={"timeout": 10},
-    )
+sabnzbd_client = sabnzbdClient(
+    host="http://localhost",
+    api_key="mltb",
+    port="8070",
+)
 
 log_info("Creating client from BOT_TOKEN")
 app = tgClient(
@@ -452,7 +455,6 @@ app = tgClient(
 )
 Conversation(app)
 bot = app.start()
-bot_loop = bot.loop
 bot_name = bot.me.username
 
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
@@ -461,17 +463,14 @@ scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
 def get_qb_options():
     global qbit_options
     if not qbit_options:
-        qbit_options = dict(get_qb_client().app_preferences())
+        qbit_options = dict(qbittorrent_client.app_preferences())
         del qbit_options["listen_port"]
         for k in list(qbit_options.keys()):
             if k.startswith("rss"):
                 del qbit_options[k]
     else:
         qb_opt = {**qbit_options}
-        for k, v in list(qb_opt.items()):
-            if v in ["", "*"]:
-                del qb_opt[k]
-        get_qb_client().app_set_preferences(qb_opt)
+        qbittorrent_client.app_set_preferences(qb_opt)
 get_qb_options()
 
 aria2c_edit_opts = ['max-overall-download-limit', 'max-overall-upload-limit', 'max-download-limit', 'max-upload-limit',
@@ -492,7 +491,5 @@ else:
 
 async def get_nzb_options():
     global nzb_options
-    zclient = get_sabnzb_client()
-    nzb_options = (await zclient.get_config())["config"]["misc"]
-    await zclient.log_out()
-aiorun(get_nzb_options())
+    nzb_options = (await sabnzbd_client.get_config())["config"]["misc"]
+bot_loop.run_until_complete(get_nzb_options())

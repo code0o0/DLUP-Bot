@@ -47,7 +47,7 @@ async def editMessage(message, text, buttons=None, block=True):
         return str(e)
 
 
-async def sendFile(message, file, caption=None):
+async def sendFile(message, file, caption=""):
     try:
         return await message.reply_document(
             document=file, quote=True, caption=caption, disable_notification=True
@@ -207,6 +207,8 @@ async def get_tg_link_message(link):
 
 
 async def update_status_message(sid, force=False):
+    if Intervals["stopAll"]:
+        return
     async with task_dict_lock:
         if not status_dict.get(sid):
             if obj := Intervals["status"].get(sid):
@@ -249,6 +251,8 @@ async def update_status_message(sid, force=False):
 
 
 async def sendStatusMessage(msg, user_id=0):
+    if Intervals["stopAll"]:
+        return
     async with task_dict_lock:
         sid = user_id or msg.chat.id
         is_user = bool(user_id)
