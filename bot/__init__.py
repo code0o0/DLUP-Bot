@@ -25,7 +25,6 @@ from subprocess import Popen, run
 from time import time
 from tzlocal import get_localzone
 from uvloop import install
-from asyncio import run as aiorun
 
 # from pyromod import Client as tgClient
 # from pyrogram import enums
