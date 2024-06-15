@@ -25,16 +25,16 @@ async def get_buttons(from_user, message_id):
     buttons.ibutton('Provider', f'editset {user_id} provider', position='header')
     buttons.ibutton('Source', f'editset {user_id} source', position='header')
     buttons.ibutton('Tag', f'editset {user_id} tag', position='header')
+    buttons.ibutton('Note', f'editset {user_id} note', position='header')
+    buttons.ibutton('📝Caption', f'editset {user_id} caption', position='header')
     buttons.ibutton('📈Count', f'editset {user_id} count', position='header')
-    buttons.ibutton('📝Note', f'editset {user_id} note', position='header')
-    buttons.ibutton('📑Caption', f'editset {user_id} caption', position='header')
     if msg_dict.get('protect'):
-        buttons.ibutton('🔓Protect', f'editset {user_id} protect', position='header')
+        buttons.ibutton('➰Protect', f'editset {user_id} protect', position='header')
     else:
-        buttons.ibutton('🔒Protect', f'editset {user_id} protect', position='header')
+        buttons.ibutton('🔰Protect', f'editset {user_id} protect', position='header')
     buttons.ibutton('🔥RUN', f'editset {user_id} run')
     buttons.ibutton('Close', f'editset {user_id} close', position='footer')
-    button = buttons.build_menu(1, 4, 1)
+    button = buttons.build_menu(1, 3, 1)
     return msg, button
 
 async def update_buttons(query, message_id):

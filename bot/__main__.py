@@ -13,6 +13,7 @@ from psutil import (
 )
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
+from pyrogram.types import BotCommand
 from signal import signal, SIGINT
 from sys import executable
 from time import time
@@ -201,6 +202,32 @@ NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.RssCommand}: RSS Menu.
 """
 
+BotCommandsList = [
+    BotCommand(BotCommands.MirrorCommand[1], "Start mirroring to cloud"),
+    BotCommand(BotCommands.QbMirrorCommand[1], "Start Mirroring to cloud using qBittorrent"),
+    BotCommand(BotCommands.YtdlCommand[1], "Mirror yt-dlp supported link"),
+    BotCommand(BotCommands.LeechCommand[1], "Start leeching to Telegram"),
+    BotCommand(BotCommands.QbLeechCommand[1], "Start leeching using qBittorrent"),
+    BotCommand(BotCommands.YtdlLeechCommand[1], "Leech yt-dlp supported link"),
+    BotCommand(BotCommands.EditCommand, "Edit a message (Only Owner & Sudo)"),
+    BotCommand(BotCommands.ForwardCommand[1], "Forward a media message to another chat (Only Owner & Sudo)"),
+    BotCommand(BotCommands.CancelTaskCommand[1], "Cancel task by gid or reply"),
+    BotCommand(BotCommands.BotSetCommand[1], "Bot settings"),
+    BotCommand(BotCommands.UserSetCommand[1], "Users settings"),
+    BotCommand(BotCommands.AuthorizeCommand, "Manage a chat or a user to use the bot"),
+    BotCommand(BotCommands.InfoCommand, "Get info about a user"),
+    BotCommand(BotCommands.SelectCommand, "Select files from torrents or nzb by gid or reply"),
+    BotCommand(BotCommands.ForceStartCommand[1], "Force start task by gid or reply"),
+    BotCommand(BotCommands.SearchCommand, "Search for torrents with API"),
+    BotCommand(BotCommands.StatusCommand, "Shows a status of all the downloads"),
+    BotCommand(BotCommands.StatsCommand, "Show stats of the machine where the bot is hosted in"),
+    BotCommand(BotCommands.PingCommand, "Check how long it takes to Ping the Bot (Only Owner & Sudo)"),
+    BotCommand(BotCommands.RestartCommand, "Restart and update the bot (Only Owner & Sudo)"),
+    BotCommand(BotCommands.LogCommand, "Get a log file of the bot. Handy for getting crash reports (Only Owner & Sudo)"),
+    BotCommand(BotCommands.ShellCommand, "Run shell commands (Only Owner)"),
+    BotCommand(BotCommands.HelpCommand, "Get help about the bot"),
+]
+
 
 async def bot_help(_, message):
     await sendMessage(message, help_string)
@@ -296,6 +323,7 @@ async def main():
             stats, filters=command(BotCommands.StatsCommand) & CustomFilters.authorized
         )
     )
+    await bot.set_bot_commands(BotCommandsList)
     LOGGER.info("Bot Started!")
     signal(SIGINT, exit_clean_up)
 
