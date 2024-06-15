@@ -69,8 +69,8 @@ async def edit_media(client, message):
         LOGGER.error(e)
         msg = f'<b>Status:</b> Get Message Failed\n'
         msg += f'<b>Reason:</b> {escape(str(e))}'
-        await editMessage(message, msg)
-        await auto_delete_message(client, [message, message.reply_to_message], 20)
+        err_message = await sendMessage(message, msg)
+        await auto_delete_message(client, [message, message.reply_to_message, err_message], 20)
         return
     if hestory_messages[0].media in [MessageMediaType.PHOTO, MessageMediaType.VIDEO]:
         message_type = [MessageMediaType.PHOTO, MessageMediaType.VIDEO]
@@ -118,8 +118,8 @@ async def edit_media(client, message):
         LOGGER.error(e)
         msg = f'<b>Status:</b> Send Failed\n'
         msg += f'<b>Reason:</b> {escape(str(e))}'
-        await editMessage(message, msg)
-        await auto_delete_message(client, [message, message.reply_to_message], 20)
+        err_message = await sendMessage(message, msg)
+        await auto_delete_message(client, [message, message.reply_to_message, err_message], 20)
     
 async def conversation_text(client, query, msg):
     chat_id = query.message.chat.id
@@ -234,6 +234,8 @@ async def edit_callback(client, query):
         await update_buttons(query, cmd_message_id)
     elif data[2] == 'run':
         await query.answer()
+        await editMessage(message, 'Sending media, please wait...')
+        await sleep(0.5)
         await edit_media(client, message)
 
 async def edit(client, message):
