@@ -28,6 +28,7 @@ async def get_buttons(from_user, message_id):
     buttons.ibutton('Note', f'editset {user_id} note', position='header')
     buttons.ibutton('📝Caption', f'editset {user_id} caption', position='header')
     buttons.ibutton('📈Count', f'editset {user_id} count', position='header')
+    buttons.ibutton('📩TgChat', f'editset {user_id} target', position='header')
     if msg_dict.get('protect'):
         buttons.ibutton('➰Protect', f'editset {user_id} protect', position='header')
     else:
@@ -58,9 +59,9 @@ async def edit_media(client, message):
         msg += f'<b>备注:</b> {note}\n'
     if caption := msg_dict['caption']:
         msg = caption
-    reply_message_id = msg_dict['reply_message_id']
     chat_id = msg_dict['chat_id']
     count = msg_dict['count']
+    reply_message_id = msg_dict['reply_message_id']
     message_ids = [reply_message_id + i for i in range(30)]
     try:
         hestory_messages = await client.get_messages(chat_id, message_ids)
@@ -83,8 +84,9 @@ async def edit_media(client, message):
             break
     try:
         protect = msg_dict['protect']
+        target_chat = msg_dict['target_chat']
         if len(message_list) == 1:
-            await copyMedia(message_list[0], chat_id, msg, ParseMode.HTML, protect)
+            await copyMedia(message_list[0], target_chat, msg, ParseMode.HTML, protect)
             message_list.extend([message, message.reply_to_message])
             await auto_delete_message(client, message_list, 0.5)
             return
@@ -108,7 +110,7 @@ async def edit_media(client, message):
             if msg:
                 smg[0].caption = msg
             smg[0].parse_mode = ParseMode.HTML
-            await copyMediaGroup(client, chat_id, smg, protect)
+            await copyMediaGroup(client, target_chat, smg, protect)
             await sleep(1)
         message_list.extend([message, message.reply_to_message])
         await auto_delete_message(client, message_list, 0.5)
@@ -213,6 +215,16 @@ async def edit_callback(client, query):
             return
         handler_dict[cmd_message_id]['count'] = int(response_text) if response_text.isdigit() else 1
         await update_buttons(query, cmd_message_id)
+    elif data[2] == 'target':
+        await query.answer()
+        msg = 'Please send the chat id or username of the target chat.\n<b>Timeout:</b> 30s.'
+        response_text = await conversation_text(client, query, msg)
+        if response_text is None:
+            return
+        handler_dict[cmd_message_id]['target_chat'] = (
+            int(response_text) if response_text.isdigit() else response_text
+            )
+        await update_buttons(query, cmd_message_id)
     elif data[2] == 'protect':
         await query.answer()
         if handler_dict[cmd_message_id]['protect']:
@@ -230,6 +242,7 @@ async def edit(client, message):
     handler_dict[message_id] = {
         'chat_id': chat_id,
         'reply_message_id': 0,
+        'target_chat': chat_id,
         'role': None,
         'provider': None,
         'source': None,
