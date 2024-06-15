@@ -1,4 +1,4 @@
-from asyncio import TimeoutError
+from asyncio import TimeoutError, sleep
 from html import escape
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram import filters
@@ -41,7 +41,8 @@ async def update_buttons(query, message_id):
     msg, button = await get_buttons(query.from_user, message_id)
     await editMessage(query.message, msg, button)
 
-async def edit_media(client, message, message_id):
+async def edit_media(client, message):
+    message_id = message.reply_to_message_id
     msg_dict = handler_dict[message_id]
     del handler_dict[message_id]
     msg = ''
@@ -67,8 +68,8 @@ async def edit_media(client, message, message_id):
         LOGGER.error(e)
         msg = f'<b>Status:</b> Get Message Failed\n'
         msg += f'<b>Reason:</b> {escape(str(e))}'
-        error_message = await sendMessage(message, msg)
-        await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
+        await editMessage(message, msg)
+        await auto_delete_message(client, [message, message.reply_to_message], 20)
         return
     if hestory_messages[0].media in [MessageMediaType.PHOTO, MessageMediaType.VIDEO]:
         message_type = [MessageMediaType.PHOTO, MessageMediaType.VIDEO]
@@ -85,7 +86,7 @@ async def edit_media(client, message, message_id):
         if len(message_list) == 1:
             await copyMedia(message_list[0], chat_id, msg, ParseMode.HTML, protect)
             message_list.extend([message, message.reply_to_message])
-            await auto_delete_message(client, message_list, 0)
+            await auto_delete_message(client, message_list, 0.5)
             return
         send_medias = []
         for media_message in message_list:
@@ -103,19 +104,20 @@ async def edit_media(client, message, message_id):
         group_count = (len(send_medias) + 10 - 1) // 10
         group_size = (len(send_medias) + group_count - 1) // group_count
         send_media_groups = [send_medias[i:i + group_size] for i in range(0, len(send_medias), group_size)]
-        for send_media_group in send_media_groups:
+        for smg in send_media_groups:
             if msg:
-                send_media_group[0].caption = msg
-            send_media_group[0].parse_mode = ParseMode.HTML
-            await copyMediaGroup(client, chat_id, send_media_group, protect)
+                smg[0].caption = msg
+            smg[0].parse_mode = ParseMode.HTML
+            await copyMediaGroup(client, chat_id, smg, protect)
+            await sleep(1)
         message_list.extend([message, message.reply_to_message])
         await auto_delete_message(client, message_list, 0)
     except Exception as e:
         LOGGER.error(e)
         msg = f'<b>Status:</b> Send Failed\n'
         msg += f'<b>Reason:</b> {escape(str(e))}'
-        error_message = await sendMessage(message, msg)
-        await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
+        await editMessage(message, msg)
+        await auto_delete_message(client, [message, message.reply_to_message], 20)
     
 async def conversation_text(client, query, msg):
     chat_id = query.message.chat.id
@@ -132,10 +134,10 @@ async def conversation_text(client, query, msg):
         return None
     if response_message:
         response_text = response_message.text.strip()
-        await auto_delete_message(client, [reply_text_message, response_message], 0)
+        await auto_delete_message(client, [reply_text_message, response_message], 0.5)
     else:
         response_text = None
-        await auto_delete_message(client, reply_text_message, 0)
+        await auto_delete_message(client, reply_text_message, 0.5)
     return response_text
 
 @new_thread
@@ -220,9 +222,7 @@ async def edit_callback(client, query):
         await update_buttons(query, cmd_message_id)
     elif data[2] == 'run':
         await query.answer()
-        msg = '🚴Edit...'
-        await editMessage(message, msg)
-        await edit_media(client, message, cmd_message_id)
+        await edit_media(client, message)
 
 async def edit(client, message):
     message_id = message.id
