@@ -121,6 +121,7 @@ async def auto_delete_message(client, messages, delay=20):
     me = await client.get_me()
     chat_id = messages[0].chat.id
     chat_id = messages[0].from_user.id if chat_id == me.id else chat_id
+    LOGGER.info(f"from_user: {messages[0].from_user.id}, me: {me.id}, chat_id: {chat_id}")
     if me.is_bot:
         message_ids = [message.id for message in messages if datetime.now() - message.date < timedelta(hours=48)]
     else:
