@@ -34,7 +34,7 @@ async def get_buttons(from_user, message_id):
         buttons.ibutton('🔒Protect', f'editset {user_id} protect', position='header')
     buttons.ibutton('🔥RUN', f'editset {user_id} run')
     buttons.ibutton('Close', f'editset {user_id} close', position='footer')
-    button = buttons.build_menu(1, 2, 1)
+    button = buttons.build_menu(1, 4, 1)
     return msg, button
 
 async def update_buttons(query, message_id):
@@ -163,6 +163,7 @@ async def edit_callback(client, query):
         if response_text is None:
             return
         response_text = response_text if response_text.upper() != 'NONE' else None
+        handler_dict[cmd_message_id][data[2]] = response_text
         await update_buttons(query, cmd_message_id)
     elif data[2] == 'source':
         await query.answer()
