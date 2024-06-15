@@ -111,9 +111,9 @@ async def edit_media(client, message):
                 smg[0].caption = msg
             smg[0].parse_mode = ParseMode.HTML
             await copyMediaGroup(client, target_chat, smg, protect)
-            await sleep(1)
+            await sleep(0.5)
         message_list.extend([message, message.reply_to_message])
-        await auto_delete_message(client, message_list, 0.5)
+        await auto_delete_message(client, message_list, 0)
     except Exception as e:
         LOGGER.error(e)
         msg = f'<b>Status:</b> Send Failed\n'
