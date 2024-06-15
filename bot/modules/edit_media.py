@@ -60,7 +60,7 @@ async def edit_media(client, message):
     try:
         if len(message_list) == 1:
             await copyMedia(from_message, chat_id, caption, ParseMode.HTML, protect_content)
-            await auto_delete_message(user, [message, from_message], 0)
+            await auto_delete_message(client, [message, from_message], 0)
             return
         send_medias = []
         for media_message in message_list:
@@ -83,7 +83,8 @@ async def edit_media(client, message):
                 send_media_group[0].caption = caption
             send_media_group[0].parse_mode = ParseMode.HTML
             await copyMediaGroup(client, chat_id, send_media_group, protect_content)
-        await auto_delete_message(client, [message, from_message], 0)
+        message_list.append(message)
+        await auto_delete_message(client, message_list, 0)
     except Exception as e:
         LOGGER.error(e)
         reply_message = await sendMessage(message, str(e))
