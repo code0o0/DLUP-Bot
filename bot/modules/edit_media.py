@@ -111,7 +111,7 @@ async def edit_media(client, message):
             await copyMediaGroup(client, chat_id, smg, protect)
             await sleep(1)
         message_list.extend([message, message.reply_to_message])
-        await auto_delete_message(client, message_list, 0)
+        await auto_delete_message(client, message_list, 0.5)
     except Exception as e:
         LOGGER.error(e)
         msg = f'<b>Status:</b> Send Failed\n'
