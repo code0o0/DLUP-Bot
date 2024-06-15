@@ -4,7 +4,7 @@ from pyrogram.enums import ParseMode, MessageMediaType
 from pyrogram.types import InputMediaDocument, InputMediaPhoto, InputMediaVideo, InputMediaAudio
 from html import escape
 
-from bot import bot, LOGGER
+from bot import bot, user, LOGGER
 from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage, copyMedia, copyMediaGroup
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -47,20 +47,20 @@ async def edit_media(client, message):
     else:
         message_list = [from_message]
         message_ids = [from_message.id + i for i in range(1, 30)]
-        if from_message.media in [MessageMediaType.PHOTO, MessageMediaType.VIDEO]:
-            message_type = [MessageMediaType.PHOTO, MessageMediaType.VIDEO]
-        else:
-            message_type = [from_message.media]
+        # if from_message.media in [MessageMediaType.PHOTO, MessageMediaType.VIDEO]:
+        #     message_type = [MessageMediaType.PHOTO, MessageMediaType.VIDEO]
+        # else:
+        #     message_type = [from_message.media]
         hestory_messages = await client.get_messages(chat_id, message_ids)
         for m in hestory_messages:
-            if m.media in message_type:
+            if m.media:
                 message_list.append(m)
             if len(message_list) >= media_number:
                 break
     try:
         if len(message_list) == 1:
             await copyMedia(from_message, chat_id, caption, ParseMode.HTML, protect_content)
-            await auto_delete_message(client, [message, from_message], 0)
+            await auto_delete_message(user, [message, from_message], 0)
             return
         send_medias = []
         for media_message in message_list:
@@ -83,9 +83,11 @@ async def edit_media(client, message):
                 send_media_group[0].caption = caption
             send_media_group[0].parse_mode = ParseMode.HTML
             await copyMediaGroup(client, chat_id, send_media_group, protect_content)
+        await auto_delete_message(client, [message, from_message], 0)
     except Exception as e:
         LOGGER.error(e)
         reply_message = await sendMessage(message, str(e))
         await auto_delete_message(client, [message, reply_message], 20)
+ 
     
 bot.add_handler(MessageHandler(edit_media, filters=command(BotCommands.EditCommand) & CustomFilters.sudo))
