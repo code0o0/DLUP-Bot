@@ -224,8 +224,10 @@ async def edit_callback(client, query):
         await edit_media(client, message, cmd_message_id)
 
 async def edit(client, message):
+    message_id = message.id
+    chat_id = message.chat.id
     handler_dict[message_id] = {
-        'chat_id': 0,
+        'chat_id': chat_id,
         'reply_message_id': 0,
         'role': None,
         'provider': None,
@@ -236,9 +238,6 @@ async def edit(client, message):
         'caption': None,
         'protect': False
     }
-    message_id = message.id
-    chat_id = message.chat.id
-    handler_dict[message_id]['chat_id'] = chat_id
     reply_message = message.reply_to_message
     if reply_message and reply_message.media:
         reply_message_id = reply_message.id
