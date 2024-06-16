@@ -113,7 +113,7 @@ async def edit_media(client, message):
         if msg:
             smg[0].caption = msg
         result = await copyMediaGroup(client, target_chat, smg, protect)
-        if not result:
+        if result:
             break
         await sleep(0.5)
     if result:
