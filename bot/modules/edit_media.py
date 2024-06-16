@@ -46,6 +46,11 @@ async def edit_media(client, message):
     message_id = message.reply_to_message_id
     msg_dict = handler_dict[message_id]
     del handler_dict[message_id]
+    chat_id = msg_dict['chat_id']
+    count = msg_dict['count']
+    reply_message_id = msg_dict['reply_message_id']
+    protect = msg_dict['protect']
+    target_chat = msg_dict['target_chat']
     msg = ''
     if role := msg_dict['role']:
         msg += f'<b>主演:</b> {role}\n'
@@ -63,11 +68,8 @@ async def edit_media(client, message):
             .replace('厂商:', '<b>厂商:</b>').replace('来源:', '<b>来源:</b>')
             .replace('标签:', '<b>标签:</b>').replace('备注:', '<b>备注:</b>')
             )
-    chat_id = msg_dict['chat_id']
-    count = msg_dict['count']
-    reply_message_id = msg_dict['reply_message_id']
-    message_ids = [reply_message_id + i for i in range(30)]
     try:
+        message_ids = [reply_message_id + i for i in range(30)]
         hestory_messages = await client.get_messages(chat_id, message_ids)
     except Exception as e:
         LOGGER.error(e)
@@ -86,14 +88,10 @@ async def edit_media(client, message):
             message_list.append(m)
         if len(message_list) >= count:
             break
-    try:
-        protect = msg_dict['protect']
-        target_chat = msg_dict['target_chat']
-        if len(message_list) == 1:
-            await copyMedia(message_list[0], target_chat, msg, ParseMode.HTML, protect)
-            message_list.extend([message, message.reply_to_message])
-            await auto_delete_message(client, message_list, 0.5)
-            return
+    if len(message_list) == 1:
+        result = await copyMedia(message_list[0], target_chat, msg, ParseMode.HTML, protect)
+        send_media_groups = []
+    else:
         send_medias = []
         for media_message in message_list:
             media = getattr(media_message, media_message.media.value)
@@ -110,21 +108,23 @@ async def edit_media(client, message):
         group_count = (len(send_medias) + 10 - 1) // 10
         group_size = (len(send_medias) + group_count - 1) // group_count
         send_media_groups = [send_medias[i:i + group_size] for i in range(0, len(send_medias), group_size)]
-        for smg in send_media_groups:
-            if msg:
-                smg[0].caption = msg
-            smg[0].parse_mode = ParseMode.HTML
-            await copyMediaGroup(client, target_chat, smg, protect)
-            await sleep(0.5)
-        message_list.extend([message, message.reply_to_message])
-        await auto_delete_message(client, message_list, 0)
-    except Exception as e:
-        LOGGER.error(e)
+    for smg in send_media_groups:
+        smg[0].parse_mode = ParseMode.HTML
+        if msg:
+            smg[0].caption = msg
+        result = await copyMediaGroup(client, target_chat, smg, protect)
+        if not result:
+            break
+        await sleep(0.5)
+    if result:
         msg = f'<b>Status:</b> Send Failed\n'
-        msg += f'<b>Reason:</b> {escape(str(e))}'
+        msg += f'<b>Reason:</b> {escape(result)}'
         err_message = await sendMessage(message, msg)
         await auto_delete_message(client, [message, message.reply_to_message, err_message], 20)
-    
+    else:
+        message_list.extend([message, message.reply_to_message])
+        await auto_delete_message(client, message_list, 0.5)
+
 async def conversation_text(client, query, msg):
     chat_id = query.message.chat.id
     message_id = query.message.id
