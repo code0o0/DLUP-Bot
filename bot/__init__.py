@@ -17,6 +17,7 @@ from logging import (
 import json
 from os import remove, path as ospath, environ
 from pyrogram import Client as tgClient, enums
+from pyrogram import utils as utils
 from qbittorrentapi import Client as qbClient
 from sabnzbdapi import sabnzbdClient
 from socket import setdefaulttimeout
@@ -30,6 +31,10 @@ from uvloop import install
 # from pyrogram import enums
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
+
+# pyrogram Monkeypatch
+utils.MIN_CHANNEL_ID = -1007852516352
+utils.MIN_CHAT_ID = -999999999999
 
 install()
 setdefaulttimeout(600)
