@@ -1,5 +1,4 @@
 from asyncio import sleep
-from pyrogram import utils as utils
 from pyrogram.enums import ParseMode
 from pyrogram.errors import FloodWait
 from re import match as re_match
@@ -10,10 +9,6 @@ from bot import config_dict, LOGGER, status_dict, task_dict_lock, Intervals, bot
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.exceptions import TgLinkException
 from bot.helper.ext_utils.status_utils import get_readable_message
-
-# pyrogram Monkeypatch
-utils.MIN_CHANNEL_ID = -1007852516352
-utils.MIN_CHAT_ID = -999999999999
 
 async def sendMessage(message, text, buttons=None, block=True):
     try:
