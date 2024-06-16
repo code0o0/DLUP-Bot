@@ -56,7 +56,7 @@ async def edit_media(client, message):
     if tag := msg_dict['tag']:
         msg += f'<b>标签:</b> {tag}\n'
     if note := msg_dict['note']:
-        msg += f'<b>备注:</b> {note}\n'
+        msg += f'<b>备注:</b> \n{note}'
     if caption := msg_dict['caption']:
         msg = (
             caption.replace('主演:', '<b>主演:</b>')
