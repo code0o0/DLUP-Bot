@@ -58,7 +58,11 @@ async def edit_media(client, message):
     if note := msg_dict['note']:
         msg += f'<b>备注:</b> {note}\n'
     if caption := msg_dict['caption']:
-        msg = caption
+        msg = (
+            caption.replace('主演:', '<b>主演:</b>')
+            .replace('厂商:', '<b>厂商:</b>').replace('来源:', '<b>来源:</b>')
+            .replace('标签:', '<b>标签:</b>').replace('备注:', '<b>备注:</b>')
+            )
     chat_id = msg_dict['chat_id']
     count = msg_dict['count']
     reply_message_id = msg_dict['reply_message_id']
@@ -180,7 +184,7 @@ async def edit_callback(client, query):
             response_text = None
         elif response_text.startswith('https://t.me/'):
             chat_username = response_text.strip('https://t.me/').strip('https://t.me/c/').split('/')[0]
-            response_text = f'<a href="{response_text}"><u>{chat_username}</u></a>'
+            response_text = f'<a href="{response_text}"><u>@{chat_username}</u></a>'
         elif response_text.startswith(('http://', 'https://')):
             domain = response_text.split('//', 1)[-1].split('/', 1)[0]
             response_text = f'<a href="{response_text}"><u>{domain}</u></a>'
@@ -244,14 +248,14 @@ async def edit(client, message):
     handler_dict[message_id] = {
         'chat_id': chat_id,
         'reply_message_id': 0,
-        'target_chat': chat_id,
         'role': None,
         'provider': None,
         'source': None,
         'tag': None,
-        'count': 1,
         'note': None,
         'caption': None,
+        'count': 1,
+        'target_chat': chat_id,
         'protect': False
     }
     reply_message = message.reply_to_message
