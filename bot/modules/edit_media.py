@@ -183,8 +183,10 @@ async def edit_callback(client, query):
         if response_text.upper() == 'NONE':
             response_text = None
         elif response_text.startswith('https://t.me/'):
-            chat_username = response_text.strip('https://t.me/').strip('https://t.me/c/').split('/')[0]
-            response_text = f'<a href="{response_text}"><u>@{chat_username}</u></a>'
+            chat_id = response_text.strip('https://t.me/').strip('https://t.me/c/').split('/')[0]
+            chat_id = int(chat_id) if chat_id.isdigit() else chat_id
+            chat = await client.get_chat(chat_id)
+            response_text = f'<a href="{response_text}"><u>{chat.title}</u></a>'
         elif response_text.startswith(('http://', 'https://')):
             domain = response_text.split('//', 1)[-1].split('/', 1)[0]
             response_text = f'<a href="{response_text}"><u>{domain}</u></a>'
@@ -273,7 +275,7 @@ async def edit(client, message):
             f"https://t.me/{from_chat.username}" if from_chat.username else f"https://t.me/c/{from_chat.id}"
             )
         handler_dict[message_id]["source"] = (
-            f'<a href="{chat_link}/{from_message_id}"><u>@{from_chat.title}</u></a>'
+            f'<a href="{chat_link}/{from_message_id}"><u>{from_chat.title}</u></a>'
             )
     msg, button = await get_buttons(message.from_user, message_id)
     await sendMessage(message, msg, button)
