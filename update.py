@@ -39,7 +39,7 @@ try:
     if len(BOT_TOKEN) == 0:
         log_error("BOT_TOKEN variable is missing! Exiting now")
         exit(1)
-except Exception:
+except:
     pass
 bot_id = BOT_TOKEN.split(":", 1)[0]
 

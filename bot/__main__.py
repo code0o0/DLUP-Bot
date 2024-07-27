@@ -40,9 +40,11 @@ from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.button_build import ButtonMaker
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.message_utils import auto_delete_message, sendMessage, editMessage, sendFile
-from .modules import authorize, cancel_task, clone, edit_media, exec, file_selector, gd_count, gd_delete, \
-    gd_search, mirror_leech, status, torrent_search, ytdlp, rss, shell, users_settings, bot_settings, help, \
-    info, edit_media, forward_media, force_start
+from .modules import (
+    authorize, cancel_task, clone, edit_media, exec, file_selector, gd_count, gd_delete, gd_search, mirror_leech, \
+    status, torrent_search, ytdlp, rss, shell, users_settings, bot_settings, help, info, edit_media, forward_media, \
+    force_start
+)
 
 
 async def stats(_, message):
@@ -256,7 +258,7 @@ async def restart_notification():
                 chat_id=chat_id, message_id=msg_id, text="Restarted Successfully!"
             )
             await auto_delete_message(bot, [message, message.reply_to_message], delay=20)
-        except Exception:
+        except:
             pass
         await remove(".restartmsg")
 
