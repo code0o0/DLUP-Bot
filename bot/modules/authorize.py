@@ -171,5 +171,18 @@ async def authorize(client, message):
     await sendMessage(message, msg, button)
 
 
-bot.add_handler(MessageHandler(authorize, filters=filters.command(BotCommands.AuthorizeCommand) & CustomFilters.sudo))
-bot.add_handler(CallbackQueryHandler(auth_callback, filters=filters.regex("^authset") & CustomFilters.sudo))
+bot.add_handler(
+    MessageHandler(
+        authorize,
+        filters=filters.command(BotCommands.AuthorizeCommand, case_sensitive=True)
+        & CustomFilters.sudo,
+    )
+)
+
+bot.add_handler(
+    CallbackQueryHandler(
+        auth_callback,
+        filters=filters.regex("^authset")
+        & CustomFilters.sudo,
+    )
+)

@@ -15,7 +15,6 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
-https://github.com/KurimuzonAkuma/pyrogram/archive/dev.zip
 httpx
 lxml
 myjdapi
@@ -23,6 +22,7 @@ natsort
 pillow
 psutil
 pycryptodome
+pyrofork
 python-dotenv
 python-magic
 qbittorrent-api
