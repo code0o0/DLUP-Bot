@@ -121,7 +121,7 @@ async def conversation_text(client, query, msg):
     user_id = query.from_user.id
     try:
         reply_text_message = await client.send_message(chat_id, msg)
-        response_message = client.listen(
+        response_message = await client.listen(
         chat_id=chat_id,
         user_id=user_id,
         filters=filters.regex(r'^[^/]'),

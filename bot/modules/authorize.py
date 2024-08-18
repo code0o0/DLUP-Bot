@@ -74,7 +74,7 @@ async def update_buttons(query, key=None, text=None):
 async def set_auth(client, query, key):
     tgclient = user or bot
     try:
-        response_message = client.listen(
+        response_message = await client.listen(
         chat_id=query.message.chat.id,
         user_id=query.from_user.id,
         filters=filters.regex(r'^[^/]'),
