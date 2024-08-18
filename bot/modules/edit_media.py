@@ -6,7 +6,6 @@ from pyrogram.errors import ListenerTimeout, ListenerStopped
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import InputMediaDocument, InputMediaPhoto, InputMediaVideo, InputMediaAudio
 from bot import bot, OWNER_ID, LOGGER
-from bot.helper.ext_utils.bot_utils import new_thread
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -152,7 +151,6 @@ async def conversation_text(client, query, msg):
         await auto_delete_message(client, reply_text_message, 0.5)
     return response_text
 
-@new_thread
 async def edit_callback(client, query):
     user_id = query.from_user.id
     message = query.message

@@ -7,7 +7,7 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManager
-from bot.helper.ext_utils.bot_utils import new_thread, update_user_ldata
+from bot.helper.ext_utils.bot_utils import update_user_ldata
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, deleteMessage, auto_delete_message
 
 
@@ -143,7 +143,6 @@ async def set_auth(client, query, key):
         await set_auth(client, query, key)
         await auto_delete_message(client, [response_message, reply_message], 0)
 
-@new_thread
 async def auth_callback(client, query):
     user_id = query.from_user.id
     message = query.message
@@ -172,7 +171,6 @@ async def auth_callback(client, query):
 async def authorize(client, message):
     msg, button = await get_buttons(message.from_user)
     await sendMessage(message, msg, button)
-
 
 bot.add_handler(
     MessageHandler(
