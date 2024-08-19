@@ -142,12 +142,11 @@ async def conversation_text(client, query, msg):
         await auto_delete_message(client, reply_text_message, 20)
         return None
     except ListenerStopped:
-        return None
+        response_text = None
     if response_message:
         response_text = response_message.text.strip()
         await auto_delete_message(client, [reply_text_message, response_message], 0.5)
     else:
-        response_text = None
         await auto_delete_message(client, reply_text_message, 0.5)
     return response_text
 
@@ -172,7 +171,7 @@ async def edit_callback(client, query):
         await query.answer()
         msg = f'Please send {data[2]} strings starting with #, separated by spaces between the two strings.\n<b>Timeout:</b> 30s.'
         response_text = await conversation_text(client, query, msg)
-        if response_text is None:
+        if not response_text:
             return
         response_text = response_text if response_text.upper() != 'NONE' else None
         handler_dict[cmd_message_id][data[2]] = response_text
@@ -182,7 +181,7 @@ async def edit_callback(client, query):
         msg = 'Please send the source of the media.\n<b>Timeout:</b> 30s.\n'
         msg += '<b>Note:</b> Please send a text or tg channel link.'
         response_text = await conversation_text(client, query, msg)
-        if response_text is None:
+        if not response_text:
             return
         if response_text.upper() == 'NONE':
             response_text = None
@@ -200,7 +199,7 @@ async def edit_callback(client, query):
         await query.answer()
         msg = 'Please send the note for the media.\n<b>Timeout:</b> 30s.'
         response_text = await conversation_text(client, query, msg)
-        if response_text is None:
+        if not response_text:
             return
         if response_text.upper() == 'NONE':
             response_text = None
@@ -211,7 +210,7 @@ async def edit_callback(client, query):
         msg = 'Please send the caption for the media.\n<b>Timeout:</b> 30s.\n'
         msg += '<b>Note:</b> Caption will overwrite other descriptive information.'
         response_text = await conversation_text(client, query, msg)
-        if response_text is None:
+        if not response_text:
             return
         if response_text.upper() == 'NONE':
             response_text = None
@@ -221,7 +220,7 @@ async def edit_callback(client, query):
         await query.answer()
         msg = 'Please send the number of media you want to edit.\n<b>Limit:</b> 30.\n<b>Timeout:</b> 30s.'
         response_text = await conversation_text(client, query, msg)
-        if response_text is None:
+        if not response_text:
             return
         handler_dict[cmd_message_id]['count'] = int(response_text) if response_text.isdigit() else 1
         await update_buttons(query, cmd_message_id)
@@ -229,7 +228,7 @@ async def edit_callback(client, query):
         await query.answer()
         msg = 'Please send the chat id or username of the target chat.\n<b>Timeout:</b> 30s.'
         response_text = await conversation_text(client, query, msg)
-        if response_text is None:
+        if not response_text:
             return
         handler_dict[cmd_message_id]['target_chat'] = (
             int(response_text) if response_text.isdigit() else response_text

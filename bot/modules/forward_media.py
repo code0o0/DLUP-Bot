@@ -132,13 +132,12 @@ async def conversation_text(client, query, msg):
         await auto_delete_message(client, reply_text_message, 20)
         return None
     except ListenerStopped:
-        return None
+        response_text = None
     if response_message:
         response_text = response_message.text
-        await auto_delete_message(client, [reply_text_message, response_message], 0)
+        await auto_delete_message(client, [reply_text_message, response_message], 0.5)
     else:
-        response_text = None
-        await auto_delete_message(client, reply_text_message, 0)
+        await auto_delete_message(client, reply_text_message, 0.5)
     return response_text
 
 async def forward_callback(client, query):
@@ -162,7 +161,7 @@ async def forward_callback(client, query):
         await query.answer()
         msg = 'Please send the chat ID or Username you want to forward to.\n<b>Timeout:</b> 20s.'
         response_text = await conversation_text(client, query, msg)
-        if response_text is None:
+        if not response_text:
             return
         elif response_text.lstrip('-').isdigit():
             handler_dict[cmd_message_id]['forward_chat'] = int(response_text)
@@ -173,7 +172,7 @@ async def forward_callback(client, query):
         await query.answer()
         msg = 'Please send the number of messages you want to forward.\n<b>Limit:</b> 200.\n<b>Timeout:</b> 20s.'
         response_text = await conversation_text(client, query, msg)
-        if response_text is None:
+        if not response_text:
             return
         handler_dict[cmd_message_id]['forward_number'] = int(response_text) if response_text.isdigit() else 1
         await update_buttons(query, cmd_message_id)
@@ -189,7 +188,7 @@ async def forward_callback(client, query):
         msg = 'Please send the copy right.\n<b>Timeout:</b> 20s.'
         msg += '\n<b>Note:</b> Please send a text or tg channel link.'
         response_text = await conversation_text(client, query, msg)
-        if response_text is None:
+        if not response_text:
             return
         elif response_text.startswith('https://t.me/'):
             chat_username = response_text.strip('https://t.me/').strip('https://t.me/c/').split('/')[0]
