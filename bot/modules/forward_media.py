@@ -132,11 +132,12 @@ async def conversation_text(client, query, msg):
         await auto_delete_message(client, reply_text_message, 20)
         return None
     except ListenerStopped:
-        response_text = None
+        response_message = None
     if response_message:
         response_text = response_message.text
         await auto_delete_message(client, [reply_text_message, response_message], 0.5)
     else:
+        response_text = None
         await auto_delete_message(client, reply_text_message, 0.5)
     return response_text
 
