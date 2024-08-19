@@ -908,7 +908,8 @@ async def send_users_settings(_, message):
 bot.add_handler(
     MessageHandler(
         send_users_settings,
-        filters=filters.command(BotCommands.UsersCommand, case_sensitive=True) & CustomFilters.sudo,
+        filters=filters.command(BotCommands.UsersCommand, case_sensitive=True)
+        & CustomFilters.sudo,
     )
 )
 bot.add_handler(

@@ -82,8 +82,9 @@ def get_content_buttons(content_dict, edit_type="", page_type=""):
             value = "None"
         elif len(value) > 15:
             value = value[:3] + "…" + value[-3:]
-        msg += f'<b>{index+1}.</b> <u>{key}</u> is <b>{value}</b>\n' if index >=9 else f'<b>{index+1}.</b>   <u>{key}</u> is <b>{value}</b>\n'
-        buttons.ibutton(index+1, f"botset {edit_type} {key}", position="header")
+        index = 18*START + index +1
+        msg += f'<b>{index}.</b> <u>{key}</u> is <b>{value}</b>\n' if index >=10 else f'<b>{index}.</b>   <u>{key}</u> is <b>{value}</b>\n'
+        buttons.ibutton(index, f"botset {edit_type} {key}", position="header")
     pages = (len(content_dict) - 1) // 18 + 1
     if pages == 1:
         pass
