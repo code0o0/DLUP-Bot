@@ -13,7 +13,7 @@ from psutil import (
 )
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
-from pyrogram.types import BotCommand
+from pyrogram.types import BotCommand, LinkPreviewOptions
 from signal import signal, SIGINT
 from sys import executable
 from time import time
@@ -28,7 +28,7 @@ from bot import (
     scheduler,
     sabnzbd_client,
 )
-from .helper.ext_utils.bot_utils import cmd_exec, sync_to_async, create_help_buttons
+from .helper.ext_utils.bot_utils import cmd_exec, sync_to_async, create_help_buttons, new_task
 from .helper.ext_utils.db_handler import DbManager
 from .helper.ext_utils.files_utils import clean_all, exit_clean_up
 from .helper.ext_utils.jdownloader_booter import jdownloader
@@ -47,6 +47,7 @@ from .modules import (
 )
 
 
+@new_task
 async def stats(_, message):
     if await aiopath.exists(".git"):
         last_commit = await cmd_exec(
@@ -79,10 +80,11 @@ async def stats(_, message):
     await sendMessage(message, stats)
 
 
+@new_task
 async def start(client, message):
     buttons = ButtonMaker()
     buttons.ubutton("Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
-    buttons.ubutton("Owner", "https://t.me/anas_tayyar")
+    buttons.ubutton("Code Owner", "https://t.me/anas_tayyar")
     reply_markup = buttons.build_menu(2)
     if await CustomFilters.authorized(client, message):
         start_string = f"""
@@ -97,7 +99,7 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
             reply_markup,
         )
 
-
+@new_task
 async def restart(_, message):
     Intervals["stopAll"] = True
     restart_message = await sendMessage(message, "Restarting...")
@@ -132,6 +134,7 @@ async def restart(_, message):
     osexecl(executable, executable, "-m", "bot")
 
 
+@new_task
 async def ping(_, message):
     start_time = int(round(time() * 1000))
     reply = await sendMessage(message, "Starting Ping")
@@ -139,6 +142,7 @@ async def ping(_, message):
     await editMessage(reply, f"{end_time - start_time} ms")
 
 
+@new_task
 async def log(_, message):
     await sendFile(message, "log.txt")
 
@@ -210,6 +214,7 @@ BotCommandsList = [
 ]
 
 
+@new_task
 async def bot_help(_, message):
     await sendMessage(message, help_string)
 
@@ -232,7 +237,7 @@ async def restart_notification():
                 await bot.send_message(
                     chat_id=cid,
                     text=msg,
-                    disable_web_page_preview=True,
+                    link_preview_options=LinkPreviewOptions(is_disabled=True),
                     disable_notification=True,
                 )
         except Exception as e:

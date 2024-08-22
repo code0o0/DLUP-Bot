@@ -2,6 +2,7 @@ from sys import exit
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aria2p import API as ariaAPI, Client as ariaClient
 from asyncio import Lock, get_event_loop
+from convopyro import Conversation
 from dotenv import load_dotenv, dotenv_values
 from logging import (
     getLogger,
@@ -27,8 +28,7 @@ from tzlocal import get_localzone
 from uvloop import install
 from concurrent.futures import ThreadPoolExecutor
 
-# from pyromod import Client as tgClient
-# from pyrogram import enums
+
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
 
@@ -451,10 +451,10 @@ app = tgClient(
     TELEGRAM_API,
     TELEGRAM_HASH,
     bot_token=BOT_TOKEN,
-    workers=99999,
     parse_mode=enums.ParseMode.HTML,
     max_concurrent_transmissions=10,
 )
+Conversation(app)
 bot = app.start()
 bot_name = bot.me.username
 

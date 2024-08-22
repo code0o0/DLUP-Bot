@@ -1,11 +1,11 @@
-from asyncio import sleep
+from asyncio import sleep, TimeoutError
 from html import escape
 from pyrogram import filters
 from pyrogram.enums import ParseMode, MessageMediaType
-from pyrogram.errors import ListenerTimeout, ListenerStopped
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import InputMediaDocument, InputMediaPhoto, InputMediaVideo, InputMediaAudio
 from bot import bot, OWNER_ID, LOGGER
+from bot.helper.ext_utils.bot_utils import new_task
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -125,24 +125,22 @@ async def edit_media(client, message):
         message_list.extend([message, message.reply_to_message])
         await auto_delete_message(client, message_list, 0.5)
 
-async def conversation_text(client, query, msg):
-    chat_id = query.message.chat.id
+async def conversation_handler(client, query, msg):
     user_id = query.from_user.id
+    chat_id = query.message.chat.id
+    message_id = query.message.id
     try:
         reply_text_message = await client.send_message(chat_id, msg)
-        response_message = await client.listen(
-        chat_id=chat_id,
-        user_id=user_id,
-        filters=filters.regex(r'^[^/]'),
-        timeout=30,
-    )
-    except ListenerTimeout:
+        response_message = await client.listen.Message(
+            filters=filters.regex(r'^[^/]') & filters.user(user_id) & filters.chat(chat_id),
+            id=f'{message_id}', 
+            timeout=30,
+        )
+    except TimeoutError:
         msg = 'Timeout, the conversation has been closed!'
         await editMessage(reply_text_message, msg)
-        await auto_delete_message(client, reply_text_message, 20)
-        return None
-    except ListenerStopped:
-        response_message = None
+        await auto_delete_message(client, reply_text_message, 10)
+        return
     if response_message:
         response_text = response_message.text.strip()
         await auto_delete_message(client, [reply_text_message, response_message], 0.5)
@@ -151,6 +149,7 @@ async def conversation_text(client, query, msg):
         await auto_delete_message(client, reply_text_message, 0.5)
     return response_text
 
+@new_task
 async def edit_callback(client, query):
     user_id = query.from_user.id
     message = query.message
@@ -159,7 +158,7 @@ async def edit_callback(client, query):
     if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer('You are not allowed to do this', show_alert=True)
         return
-    await client.stop_listening(chat_id=message.chat.id, user_id=user_id)
+    await client.listen.Cancel(f'{message.id}')
     if cmd_message_id not in handler_dict:
         await query.answer('This message has expired', show_alert=True)
         await auto_delete_message(client, [message, message.reply_to_message], 0)
@@ -171,7 +170,7 @@ async def edit_callback(client, query):
     elif data[2] in ['role', 'provider', 'tag']:
         await query.answer()
         msg = f'Please send {data[2]} strings starting with #, separated by spaces between the two strings.\n<b>Timeout:</b> 30s.'
-        response_text = await conversation_text(client, query, msg)
+        response_text = await conversation_handler(client, query, msg)
         if not response_text:
             return
         response_text = response_text if response_text.upper() != 'NONE' else None
@@ -181,7 +180,7 @@ async def edit_callback(client, query):
         await query.answer()
         msg = 'Please send the source of the media.\n<b>Timeout:</b> 30s.\n'
         msg += '<b>Note:</b> Please send a text or tg channel link.'
-        response_text = await conversation_text(client, query, msg)
+        response_text = await conversation_handler(client, query, msg)
         if not response_text:
             return
         if response_text.upper() == 'NONE':
@@ -199,7 +198,7 @@ async def edit_callback(client, query):
     elif data[2] == 'note':
         await query.answer()
         msg = 'Please send the note for the media.\n<b>Timeout:</b> 30s.'
-        response_text = await conversation_text(client, query, msg)
+        response_text = await conversation_handler(client, query, msg)
         if not response_text:
             return
         if response_text.upper() == 'NONE':
@@ -210,7 +209,7 @@ async def edit_callback(client, query):
         await query.answer()
         msg = 'Please send the caption for the media.\n<b>Timeout:</b> 30s.\n'
         msg += '<b>Note:</b> Caption will overwrite other descriptive information.'
-        response_text = await conversation_text(client, query, msg)
+        response_text = await conversation_handler(client, query, msg)
         if not response_text:
             return
         if response_text.upper() == 'NONE':
@@ -220,7 +219,7 @@ async def edit_callback(client, query):
     elif data[2] == 'count':
         await query.answer()
         msg = 'Please send the number of media you want to edit.\n<b>Limit:</b> 30.\n<b>Timeout:</b> 30s.'
-        response_text = await conversation_text(client, query, msg)
+        response_text = await conversation_handler(client, query, msg)
         if not response_text:
             return
         handler_dict[cmd_message_id]['count'] = int(response_text) if response_text.isdigit() else 1
@@ -228,7 +227,7 @@ async def edit_callback(client, query):
     elif data[2] == 'target':
         await query.answer()
         msg = 'Please send the chat id or username of the target chat.\n<b>Timeout:</b> 30s.'
-        response_text = await conversation_text(client, query, msg)
+        response_text = await conversation_handler(client, query, msg)
         if not response_text:
             return
         handler_dict[cmd_message_id]['target_chat'] = (
@@ -248,6 +247,7 @@ async def edit_callback(client, query):
         await sleep(0.5)
         await edit_media(client, message)
 
+@new_task
 async def edit(client, message):
     message_id = message.id
     chat_id = message.chat.id

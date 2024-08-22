@@ -5,6 +5,7 @@ apscheduler
 aria2p
 asyncio
 cloudscraper
+convopyro
 databases[aiosqlite]
 dnspython
 feedparser
@@ -21,14 +22,13 @@ natsort
 pillow
 psutil
 pycryptodome
-pyrofork
+pyrotgfork[fast]
 python-dotenv
 python-magic
 qbittorrent-api
 requests
 telegraph
 tenacity
-tgcrypto
 urllib3
 uvloop
 xattr

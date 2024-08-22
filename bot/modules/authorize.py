@@ -1,13 +1,13 @@
+from asyncio import TimeoutError
 import json
 from pyrogram import filters
-from pyrogram.errors import ListenerTimeout, ListenerStopped
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from bot import user_data, bot, user, OWNER_ID, LOGGER
+from bot import user_data, bot, user, OWNER_ID
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManager
-from bot.helper.ext_utils.bot_utils import update_user_ldata
+from bot.helper.ext_utils.bot_utils import update_user_ldata, new_task
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, deleteMessage, auto_delete_message
 
 
@@ -71,20 +71,21 @@ async def update_buttons(query, key=None, text=None):
     msg, button = await get_buttons(query.from_user, key, text)
     await editMessage(query.message, msg, button)
 
+@new_task
 async def set_auth(client, query, key):
+    user_id = query.from_user.id
+    chat_id = query.message.chat.id
+    message_id = query.message.id
     tgclient = user or bot
     try:
-        response_message = await client.listen(
-        chat_id=query.message.chat.id,
-        user_id=query.from_user.id,
-        filters=filters.regex(r'^[^/]'),
-        timeout=30,
-    )
-    except ListenerTimeout:
+        response_message = await client.listen.Message(
+            filters=filters.regex(r'^[^/]') & filters.user(user_id) & filters.chat(chat_id),
+            id=f'{message_id}', 
+            timeout=30,
+        )
+    except TimeoutError:
         msg = 'Timeout, the conversation has been closed!'
         await update_buttons(query, 'authset', text=msg)
-        return
-    except ListenerStopped:
         return
     if response_message:
         value = response_message.text
@@ -143,15 +144,15 @@ async def set_auth(client, query, key):
         await set_auth(client, query, key)
         await auto_delete_message(client, [response_message, reply_message], 0)
 
+@new_task
 async def auth_callback(client, query):
     user_id = query.from_user.id
     message = query.message
     data = query.data.split()
-    message_id = message.id
     if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer('You are not allowed to do this', show_alert=True)
         return
-    await client.stop_listening(chat_id=message.chat.id, user_id=user_id)
+    await client.listen.Cancel(f'{message.id}')
     if data[2] == 'close':
         await query.answer()
         await auto_delete_message(client, [message, message.reply_to_message], 0)
@@ -168,6 +169,7 @@ async def auth_callback(client, query):
         await query.answer()
         await update_buttons(query, data[2])
 
+@new_task
 async def authorize(client, message):
     msg, button = await get_buttons(message.from_user)
     await sendMessage(message, msg, button)

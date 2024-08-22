@@ -6,17 +6,16 @@ from asyncio import (
     create_subprocess_shell,
     gather,
     wait_for,
+    TimeoutError
 )
 from dotenv import load_dotenv
 from io import BytesIO
 from os import environ, getcwd
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from pyrogram.errors import ListenerTimeout, ListenerStopped
 
 from bot import (
     config_dict,
-    user_data,
     DATABASE_URL,
     MAX_SPLIT_SIZE,
     DRIVES_IDS,
@@ -38,10 +37,12 @@ from bot import (
     nzb_options,
     get_nzb_options,
     get_qb_options,
+    OWNER_ID
 )
 from bot.helper.ext_utils.bot_utils import (
     setInterval,
     sync_to_async,
+    new_task,
     retry_function,
 )
 from bot.helper.ext_utils.db_handler import DbManager
@@ -501,19 +502,31 @@ async def update_private_file(message, pre_message):
     if await aiopath.exists("accounts.zip"):
         await remove("accounts.zip")
 
-
-async def event_handler(client, query, document=False):
+async def conversation_handler(client, query, document=False, key=None):
     event_filter = filters.text | filters.document if document else filters.text
-    return await client.listen(
-        chat_id=query.message.chat.id,
-        user_id=query.from_user.id,
-        filters=event_filter,
-        timeout=60,
-    )
+    message = query.message
+    user_id = query.from_user.id
+    chat_id = query.message.chat.id
+    message_id = message.id
+    try:
+        response_message = await client.listen.Message(
+            filters=event_filter & filters.user(user_id) & filters.chat(chat_id),
+            id=f'{message_id}',
+            timeout=30,
+        )
+    except TimeoutError:
+        await update_buttons(message, key)
+        return
+    return response_message
 
+@new_task
 async def edit_bot_settings(client, query):
     message = query.message
-    await client.stop_listening(chat_id=message.chat.id, user_id=query.from_user.id)
+    from_user = query.from_user
+    user_id = from_user.id
+    if user_id != OWNER_ID:
+        await query.answer("Not Yours!", show_alert=True)
+    await client.listen.Cancel(f'{message.id}')
     data = query.data.split()
     if data[1] == "close":
         await query.answer()
@@ -717,57 +730,32 @@ async def edit_bot_settings(client, query):
     elif data[1] == "private":
         await query.answer()
         await update_buttons(message, data[1])
-        try:
-            event = await event_handler(client, query, True)
-        except ListenerTimeout:
-            await update_buttons(message)
-        except ListenerStopped:
-            pass
-        else:
+        event = await conversation_handler(client, query, True)
+        if event:
             await update_private_file(event, message)
     elif data[1] == "botvar":
         await query.answer()
         await update_buttons(message, data[2], data[1])
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
-            await update_buttons(message, "var")
-        except ListenerStopped:
-            pass
-        else:
+        event = await conversation_handler(client, query, key="var")
+        if event:
             await edit_variable(event, message, data[2])
     elif data[1] == "ariavar":
         await query.answer()
         await update_buttons(message, data[2], data[1])
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
-            await update_buttons(message, "aria")
-        except ListenerStopped:
-            pass
-        else:
+        event = await conversation_handler(client, query, key="aria")
+        if event:
             await edit_aria(event, message, data[2])
     elif data[1] == "qbitvar":
         await query.answer()
         await update_buttons(message, data[2], data[1])
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
-            await update_buttons(message, "qbit")
-        except ListenerStopped:
-            pass
-        else:
+        event = await conversation_handler(client, query, key="qbit")
+        if event:
             await edit_qbit(event, message, data[2])
     elif data[1] == "nzbvar":
         await query.answer()
         await update_buttons(message, data[2], data[1])
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
-            await update_buttons(message, "nzb")
-        except ListenerStopped:
-            pass
-        else:
+        event = await conversation_handler(client, query, key="nzb")
+        if event:
             await edit_nzb(event, message, data[2])
     elif data[1] == "emptyserkey":
         await query.answer()
@@ -785,13 +773,8 @@ async def edit_bot_settings(client, query):
         index = 0 if data[2] == "newser" else int(data[1].replace("nzbsevar", ""))
         await query.answer()
         await update_buttons(message, data[2], data[1])
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
-            await update_buttons(message, data[1])
-        except ListenerStopped:
-            pass
-        else:
+        event = await conversation_handler(client, query, key=data[1])
+        if event:
             await edit_nzb_server(event, message, data[2], index)
     elif data[1] == "start":
         await query.answer()
@@ -822,8 +805,8 @@ async def edit_bot_settings(client, query):
         await deleteMessage(message.reply_to_message)
         await deleteMessage(message)
 
+@new_task
 async def bot_settings(client, message):
-    await client.stop_listening(chat_id=message.chat.id, user_id=message.from_user.id)
     msg, button = await get_buttons()
     globals()["START"] = 0
     await sendMessage(message, msg, button)

@@ -1,22 +1,22 @@
 from aiofiles.os import remove, path as aiopath, makedirs
+from asyncio import TimeoutError
 from html import escape
 from io import BytesIO
 from os import getcwd
-from asyncio import gather
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from pyrogram.errors import ListenerTimeout, ListenerStopped
 
 from bot import (
     bot,
     IS_PREMIUM_USER,
     user_data,
     config_dict,
+    OWNER_ID,
     DATABASE_URL,
     MAX_SPLIT_SIZE,
     GLOBAL_EXTENSION_FILTER,
 )
-from bot.helper.ext_utils.bot_utils import update_user_ldata, getSizeBytes
+from bot.helper.ext_utils.bot_utils import update_user_ldata, new_task, getSizeBytes
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.media_utils import createThumb
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -195,13 +195,11 @@ async def update_user_settings(query):
     msg, button = await get_user_settings(query.from_user)
     await editMessage(query.message, msg, button)
 
-
+@new_task
 async def user_settings(client, message):
-    await client.stop_listening(chat_id=message.chat.id, user_id=message.from_user.id)
     from_user = message.from_user
     msg, button = await get_user_settings(from_user)
     await sendMessage(message, msg, button)
-
 
 async def set_thumb(message):
     user_id = message.from_user.id
@@ -210,7 +208,6 @@ async def set_thumb(message):
     await deleteMessage(message)
     if DATABASE_URL:
         await DbManager().update_user_doc(user_id, "thumb", des_dir)
-
 
 async def add_rclone(message):
     user_id = message.from_user.id
@@ -223,7 +220,6 @@ async def add_rclone(message):
     if DATABASE_URL:
         await DbManager().update_user_doc(user_id, "rclone_config", des_dir)
 
-
 async def add_token_pickle(message):
     user_id = message.from_user.id
     tpath = f"{getcwd()}/tokens/"
@@ -234,7 +230,6 @@ async def add_token_pickle(message):
     await deleteMessage(message)
     if DATABASE_URL:
         await DbManager().update_user_doc(user_id, "token_pickle", des_dir)
-
 
 async def delete_path(message):
     user_id = message.from_user.id
@@ -248,7 +243,6 @@ async def delete_path(message):
     await deleteMessage(message)
     if DATABASE_URL:
         await DbManager().update_user_doc(user_id, "upload_paths", new_value)
-
 
 async def set_option(message, option):
     user_id = message.from_user.id
@@ -283,22 +277,28 @@ async def set_option(message, option):
     if DATABASE_URL:
         await DbManager().update_user_data(user_id)
 
-
-async def event_handler(client, query, photo=False, document=False):
+async def conversation_handler(client, query, photo=False, document=False):
     if photo:
         event_filter = filters.photo
     elif document:
         event_filter = filters.document
     else:
-        event_filter = filters.text
-    return await client.listen(
-        chat_id=query.message.chat.id,
-        user_id=query.from_user.id,
-        filters=event_filter,
-        timeout=60,
-    )
+        event_filter = filters.regex(r'^[^/]')
+    user_id = query.from_user.id
+    chat_id = query.message.chat.id
+    message_id = query.message.id
+    try:
+        response_message = await client.listen.Message(
+            filters=event_filter & filters.user(user_id) & filters.chat(chat_id),
+            id=f'{message_id}',
+            timeout=30,
+        )
+    except TimeoutError:
+        await update_user_settings(query)
+        return
+    return response_message
 
-
+@new_task
 async def edit_user_settings(client, query):
     from_user = query.from_user
     user_id = from_user.id
@@ -309,10 +309,10 @@ async def edit_user_settings(client, query):
     rclone_conf = f"rclone/{user_id}.conf"
     token_pickle = f"tokens/{user_id}.pickle"
     user_dict = user_data.get(user_id, {})
-    await client.stop_listening(chat_id=message.chat.id, user_id=query.from_user.id)
-    if user_id != int(data[1]):
+    if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer("Not Yours!", show_alert=True)
-    elif data[2] in [
+    await client.listen.Cancel(f'{message.id}')
+    if data[2] in [
         "as_doc",
         "equal_splits",
         "media_group",
@@ -543,14 +543,10 @@ Stop Duplicate is <b>{sd_msg}</b>"""
             "Send a photo to save it as custom thumbnail. Timeout: 60 sec",
             buttons.build_menu(8, 2, 2),
         )
-        try:
-            event = await event_handler(client, query, True)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query, True)
+        if event:
+            await set_thumb(event)
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_thumb(event), update_user_settings(query))
     elif data[2] == "yto":
         await query.answer()
         buttons = ButtonMaker()
@@ -567,14 +563,10 @@ Example: format:bv*+mergeall[vcodec=none]|nocheckcertificate:True
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options.
         """
         await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await set_option(event, "yt_opt")
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_option(event, "yt_opt"), update_user_settings(query))
     elif data[2] == "lss":
         await query.answer()
         buttons = ButtonMaker()
@@ -587,14 +579,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             f"Send Leech split size in bytes. IS_PREMIUM_USER: {IS_PREMIUM_USER}. Timeout: 60 sec",
             buttons.build_menu(8, 2, 2),
         )
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await set_option(event, "split_size")
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_option(event, "split_size"), update_user_settings(query))
     elif data[2] == "rcc":
         await query.answer()
         buttons = ButtonMaker()
@@ -605,14 +593,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await editMessage(
             message, "Send rclone.conf. Timeout: 60 sec", buttons.build_menu(8, 2, 2)
         )
-        try:
-            event = await event_handler(client, query, document=True)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query, document=True)
+        if event:
+            await add_rclone(event)
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(add_rclone(event), update_user_settings(query))
     elif data[2] == "rcp":
         await query.answer()
         buttons = ButtonMaker()
@@ -622,14 +606,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = "Send Rclone Path. Timeout: 60 sec"
         await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await set_option(event, "rclone_path")
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_option(event, "rclone_path"), update_user_settings(query))
     elif data[2] == "token":
         await query.answer()
         buttons = ButtonMaker()
@@ -640,14 +620,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await editMessage(
             message, "Send token.pickle. Timeout: 60 sec", buttons.build_menu(8, 2, 2)
         )
-        try:
-            event = await event_handler(client, query, document=True)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query, document=True)
+        if event:
+            await add_token_pickle(event)
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(add_token_pickle(event), update_user_settings(query))
     elif data[2] == "gdid":
         await query.answer()
         buttons = ButtonMaker()
@@ -657,14 +633,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = "Send Gdrive ID. Timeout: 60 sec"
         await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await set_option(event, "gdrive_id")
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_option(event, "gdrive_id"), update_user_settings(query))
     elif data[2] == "index":
         await query.answer()
         buttons = ButtonMaker()
@@ -674,14 +646,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = "Send Index URL. Timeout: 60 sec"
         await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await set_option(event, "index_url")
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_option(event, "index_url"), update_user_settings(query))
     elif data[2] == "leech_prefix":
         await query.answer()
         buttons = ButtonMaker()
@@ -698,14 +666,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             "Send Leech Filename Prefix. You can add HTML tags. Timeout: 60 sec",
             buttons.build_menu(8, 2, 2),
         )
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await set_option(event, "lprefix")
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_option(event, "lprefix"), update_user_settings(query))
     elif data[2] == "ldest":
         await query.answer()
         buttons = ButtonMaker()
@@ -722,14 +686,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
              "Send leech destination ID/USERNAME/PM. Timeout: 60 sec",
             buttons.build_menu(8, 2, 2),
         )
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await set_option(event, "leech_dest")
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_option(event, "leech_dest"), update_user_settings(query))
     elif data[2] == "ex_ex":
         await query.answer()
         buttons = ButtonMaker()
@@ -748,14 +708,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             "Send exluded extenions seperated by space without dot at beginning. Timeout: 60 sec",
             buttons.build_menu(8, 2, 2),
         )
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await set_option(event, "excluded_extensions")
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_option(event, "excluded_extensions"), update_user_settings(query))
     elif data[2] == "name_substitute":
         await query.answer()
         buttons = ButtonMaker()
@@ -781,14 +737,10 @@ Example-2: \(text\) | \[test\] : test | \\text\\ : text : s
             emsg,
             buttons.build_menu(1),
         )
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await set_option(event, "name_sub")
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_option(event, "name_sub"), update_user_settings(query))
     elif data[2] in ["gd", "rc"]:
         await query.answer()
         du = "rc" if data[2] == "gd" else "gd"
@@ -820,14 +772,10 @@ Example-2: \(text\) | \[test\] : test | \\text\\ : text : s
             "Send path name(no space in name) which you will use it as a shortcut and the path/id seperated by space. You can add multiple names and paths separated by new line. Timeout: 60 sec",
             buttons.build_menu(1),
         )
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await set_option(event, "upload_paths")
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(set_option(event, "upload_paths"), update_user_settings(query))
     elif data[2] == "rm_path":
         await query.answer()
         buttons = ButtonMaker()
@@ -838,14 +786,10 @@ Example-2: \(text\) | \[test\] : test | \\text\\ : text : s
             "Send paths names which you want to delete, separated by space. Timeout: 60 sec",
             buttons.build_menu(1),
         )
-        try:
-            event = await event_handler(client, query)
-        except ListenerTimeout:
+        event = await conversation_handler(client, query)
+        if event:
+            await delete_path(event)
             await update_user_settings(query)
-        except ListenerStopped:
-            pass
-        else:
-            await gather(delete_path(event), update_user_settings(query))
     elif data[2] == "show_path":
         await query.answer()
         buttons = ButtonMaker()
@@ -884,7 +828,7 @@ Example-2: \(text\) | \[test\] : test | \\text\\ : text : s
         await deleteMessage(message.reply_to_message)
         await deleteMessage(message)
 
-
+@new_task
 async def send_users_settings(_, message):
     if user_data:
         msg = ""
@@ -919,6 +863,4 @@ bot.add_handler(
         & CustomFilters.authorized,
     )
 )
-bot.add_handler(
-    CallbackQueryHandler(edit_user_settings, filters=filters.regex("^userset"))
-)
+bot.add_handler(CallbackQueryHandler(edit_user_settings, filters=filters.regex("^userset")))
