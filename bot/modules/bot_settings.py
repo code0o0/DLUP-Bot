@@ -522,10 +522,6 @@ async def conversation_handler(client, query, document=False, key=None):
 @new_task
 async def edit_bot_settings(client, query):
     message = query.message
-    from_user = query.from_user
-    user_id = from_user.id
-    if user_id != OWNER_ID:
-        await query.answer("Not Yours!", show_alert=True)
     await client.listen.Cancel(f'{message.id}')
     data = query.data.split()
     if data[1] == "close":

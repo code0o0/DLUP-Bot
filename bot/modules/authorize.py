@@ -71,7 +71,7 @@ async def update_buttons(query, key=None, text=None):
     msg, button = await get_buttons(query.from_user, key, text)
     await editMessage(query.message, msg, button)
 
-@new_task
+
 async def set_auth(client, query, key):
     user_id = query.from_user.id
     chat_id = query.message.chat.id
