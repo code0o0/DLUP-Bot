@@ -115,22 +115,50 @@ if cur.fetchone():
         config_dict = json.loads(row[2])
         for key, value in config_dict.items():
             environ[key] = str(value)
-    pf_dict = json.loads(row[3]) if row else {}
-    for key, value in pf_dict.items():
-        if ospath.exists("sabnzbd/SABnzbd.ini.bak"):
-            remove("sabnzbd/SABnzbd.ini.bak")
-        with open(key, "wb+") as f:
-            f.write(value)
-        if key == "cfg.zip":
-            run(["rm", "-rf", "/JDownloader/cfg"])
-            run(["7z", "x", "cfg.zip", "-o/JDownloader"])
-            remove("cfg.zip")
-    aria2_options = json.loads(row[4]) if row else {}
-    qbit_options = json.loads(row[5]) if row else {}
+    aria2_options = json.loads(row[3]) if row else {}
+    qbit_options = json.loads(row[4]) if row else {}
 else:
     deploy_config = dict(dotenv_values("config.env"))
+
+cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='files'")
+if cur.fetchone():
+    cur.execute("SELECT * FROM files")
+    rows = cur.fetchall()
+    for row in rows:
+        path = row[0]
+        pf_bin = json.loads(row[1])
+        dir = path.split("/")[-1]
+        if not ospath.exists(dir):
+            run(["mkdir", dir])
+        with open(path, "wb+") as f:
+            f.write(pf_bin)
 cur.close()
 conn.close()
+
+if not ospath.exists("Thumbnails"):
+    run(["mkdir", "Thumbnails"])
+if not ospath.exists("rclone"):
+    run(["mkdir", "rclone"])
+if not ospath.exists("tokens"):
+    run(["mkdir", "tokens"])
+if ospath.exists("sabnzbd/SABnzbd.ini.bak"):
+    remove("sabnzbd/SABnzbd.ini.bak")
+if ospath.exists("cfg.zip"):
+    run(["rm", "-rf", "/JDownloader/cfg"])
+    run(["7z", "x", "cfg.zip", "-o/JDownloader"])
+    remove("cfg.zip")
+if ospath.exists("accounts.zip"):
+    if ospath.exists("accounts"):
+        run(["rm", "-rf", "accounts"])
+    run(["7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"])
+    run(["chmod", "-R", "777", "accounts"])
+    remove("accounts.zip")
+if not ospath.exists(".netrc"):
+    run(["touch", ".netrc"])
+if not ospath.exists(f'{CONFIG_DIR}/dht.dat'):
+    run(["touch", f"{CONFIG_DIR}/dht.dat"])
+if not ospath.exists(f'{CONFIG_DIR}/dht6.dat'):
+    run(["touch", f"{CONFIG_DIR}/dht6.dat"])
 
 # REQUIRED CONFIG
 OWNER_ID = environ.get("OWNER_ID", "")
@@ -234,6 +262,8 @@ USE_SERVICE_ACCOUNTS = environ.get("USE_SERVICE_ACCOUNTS", "")
 USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == "true"
 NAME_SUBSTITUTE = environ.get("NAME_SUBSTITUTE", "")
 NAME_SUBSTITUTE = "" if len(NAME_SUBSTITUTE) == 0 else NAME_SUBSTITUTE
+if not ospath.exists("accounts"):
+    USE_SERVICE_ACCOUNTS = False
 
 # GDrive Tools
 GDRIVE_ID = environ.get("GDRIVE_ID", "")
@@ -407,25 +437,11 @@ if BASE_URL:
         shell=True,
     )
 
-if ospath.exists("accounts.zip"):
-    if ospath.exists("accounts"):
-        run(["rm", "-rf", "accounts"])
-    run(["7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"])
-    run(["chmod", "-R", "777", "accounts"])
-    remove("accounts.zip")
-if not ospath.exists("accounts"):
-    config_dict["USE_SERVICE_ACCOUNTS"] = False
-
-if not ospath.exists(".netrc"):
-    run(["touch", ".netrc"])
 run(
     "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria-nox-nzb.sh && ./aria-nox-nzb.sh",
     shell=True,
 )
-if not ospath.exists(f'{CONFIG_DIR}/dht.dat'):
-    run(["touch", f"{CONFIG_DIR}/dht.dat"])
-if not ospath.exists(f'{CONFIG_DIR}/dht6.dat'):
-    run(["touch", f"{CONFIG_DIR}/dht6.dat"])
+
 
 qbittorrent_client = qbClient(
     host="localhost",

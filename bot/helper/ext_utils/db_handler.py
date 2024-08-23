@@ -23,7 +23,7 @@ class DbManager:
     
     async def db_init(self):
         query1 = "CREATE TABLE IF NOT EXISTS settings (_id TEXT, deploy_config TEXT, \
-                config_dict TEXT, pf_dict TEXT DEFAULT '{}', aria2_options TEXT, qbit_options TEXT)"
+                config_dict TEXT, aria2_options TEXT, qbit_options TEXT)"
         query2 = "CREATE TABLE IF NOT EXISTS users (_id INTEGER, user_dict TEXT)"
         query3 = "CREATE TABLE IF NOT EXISTS files (_id TEXT, pf_bin BLOB, user_id INTEGER)"
         query4 = "CREATE TABLE IF NOT EXISTS rss (_id INTEGER, user_rss TEXT)"
@@ -61,20 +61,6 @@ class DbManager:
                     row = json.loads(row[1])
                     user_data[uid] = row
                 LOGGER.info("Users data has been imported from Database")
-        async with self.__db.transaction():
-            if not await aiopath.exists("Thumbnails"):
-                await makedirs("Thumbnails")
-            if not await aiopath.exists("rclone"):
-                await makedirs("rclone")
-            if not await aiopath.exists("tokens"):
-                await makedirs("tokens")
-            if await self.__db.fetch_one(query='SELECT * from files'):
-                async for row in self.__db.iterate(query='SELECT * from files'):
-                    path = row[0]
-                    pf_bin = json.loads(row[1])
-                    async with aiopen(path, "wb") as pf:
-                        await pf.write(pf_bin)
-                LOGGER.info("Files data has been imported from Database")
         async with self.__db.transaction():
             if await self.__db.fetch_one(query='SELECT * from rss'):
                 async for row in self.__db.iterate(query='SELECT * from rss'):
@@ -121,24 +107,7 @@ class DbManager:
         await self.update_qbittorrent()
     
     async def update_private_file(self, path):
-        if await aiopath.exists(path):
-            async with aiopen(path, "rb+") as pf:
-                pf_bin = await pf.read()
-        else:
-            pf_bin = ""
-        async with self.__db.transaction():
-            row = await self.__db.fetch_one(query='SELECT * FROM settings WHERE _id = :id', values={'id': bot_id})
-            _pf_dict = json.loads(row[3]) if row else {}
-            if pf_bin:
-                _pf_dict.update({path: pf_bin})
-            elif _pf_dict.get(path):
-                del _pf_dict[path]
-            else:
-                return
-            _pf_dict = json.dumps(_pf_dict)
-            query = 'UPDATE settings SET pf_dict = :pf_dict  WHERE _id = :id'
-            values = {'id': bot_id, 'pf_dict': _pf_dict}
-            await self.__db.execute(query=query, values=values)
+        await self.update_user_doc(0, path=path)
         if path == "config.env":
             await self.update_deploy_config()
     
