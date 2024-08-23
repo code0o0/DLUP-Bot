@@ -107,7 +107,7 @@ class DbManager:
         await self.update_qbittorrent()
     
     async def update_private_file(self, path):
-        await self.update_user_doc(0, path=path)
+        await self.update_user_doc(0, "", path)
         if path == "config.env":
             await self.update_deploy_config()
     
