@@ -32,7 +32,7 @@ async def get_buttons(from_user, message_id):
     buttons.ibutton('🔗CopyRight', f'forwardset {user_id} copyright', position='header')
     buttons.ibutton('🔥RUN', f'forwardset {user_id} run')
     buttons.ibutton('Close', f'forwardset {user_id} close', position='footer')
-    button = buttons.build_menu(1, 2, 1)
+    button = buttons.build_menu(h_cols=2)
     return msg, button
 
 async def update_buttons(query, message_id):

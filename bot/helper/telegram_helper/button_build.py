@@ -5,6 +5,7 @@ class ButtonMaker:
     def __init__(self):
         self._button = []
         self._header_button = []
+        self._body_button = []
         self._footer_button = []
 
     def ubutton(self, key, link, position=None):
@@ -12,6 +13,8 @@ class ButtonMaker:
             self._button.append(InlineKeyboardButton(text=key, url=link))
         elif position == "header":
             self._header_button.append(InlineKeyboardButton(text=key, url=link))
+        elif position == "body":
+            self._body_button.append(InlineKeyboardButton(text=key, url=link))
         elif position == "footer":
             self._footer_button.append(InlineKeyboardButton(text=key, url=link))
 
@@ -19,21 +22,18 @@ class ButtonMaker:
         if not position:
             self._button.append(InlineKeyboardButton(text=key, callback_data=data))
         elif position == "header":
-            self._header_button.append(
-                InlineKeyboardButton(text=key, callback_data=data)
-            )
+            self._header_button.append(InlineKeyboardButton(text=key, callback_data=data))
+        elif position == "body":
+            self._body_button.append(InlineKeyboardButton(text=key, callback_data=data))
         elif position == "footer":
-            self._footer_button.append(
-                InlineKeyboardButton(text=key, callback_data=data)
-            )
+            self._footer_button.append(InlineKeyboardButton(text=key, callback_data=data))
 
-    def build_menu(self, b_cols=1, h_cols=8, f_cols=8):
+    def build_menu(self, d_cols=1, h_cols=8, b_cols=8, f_cols=8):
         menu = [
-            self._button[i : i + b_cols] for i in range(0, len(self._button), b_cols)
+            self._button[i : i + d_cols] for i in range(0, len(self._button), d_cols)
         ]
         if self._header_button:
-            h_cnt = len(self._header_button)
-            if h_cnt > h_cols:
+            if len(self._header_button) > h_cols:
                 header_buttons = [
                     self._header_button[i : i + h_cols]
                     for i in range(0, len(self._header_button), h_cols)
@@ -41,6 +41,14 @@ class ButtonMaker:
                 menu = header_buttons + menu
             else:
                 menu.insert(0, self._header_button)
+        if self._body_button:
+            if len(self._body_button) > b_cols:
+                [
+                    menu.append(self._body_button[i : i + b_cols])
+                    for i in range(0, len(self._body_button), b_cols)
+                ]
+            else:
+                menu.append(self._body_button)
         if self._footer_button:
             if len(self._footer_button) > f_cols:
                 [
@@ -54,4 +62,5 @@ class ButtonMaker:
     def reset(self):
         self._button = []
         self._header_button = []
+        self._body_button = []
         self._footer_button = []

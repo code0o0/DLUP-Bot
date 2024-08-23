@@ -134,7 +134,7 @@ async def get_user_settings(from_user):
         sd_msg = "Disabled"
 
     upload_paths = "Added" if user_dict.get("upload_paths", False) else "None"
-    buttons.ibutton("Upload Paths", f"userset {user_id} upload_paths")
+    buttons.ibutton("Upload Paths", f"userset {user_id} upload_paths", position="header")
 
     default_upload = (
         user_dict.get("default_upload", "") or config_dict["DEFAULT_UPLOAD"]
@@ -188,7 +188,7 @@ Name substitution is <b>{ns_msg}</b>
 Excluded Extensions is <code>{ex_ex}</code>
 YT-DLP Options is <b><code>{escape(ytopt)}</code></b>"""
 
-    return text, buttons.build_menu(8, 2, 2)
+    return text, buttons.build_menu(2)
 
 
 async def update_user_settings(query):
@@ -471,7 +471,7 @@ Leech Destination is <code>{leech_dest}</code>
 Leech by <b>{leech_method}</b> session
 Mixed Leech is <b>{mixed_leech}</b>
 """
-        await editMessage(message, text, buttons.build_menu(8, 2, 2))
+        await editMessage(message, text, buttons.build_menu(2))
     elif data[2] == "rclone":
         await query.answer()
         buttons = ButtonMaker()
@@ -489,7 +489,7 @@ Mixed Leech is <b>{mixed_leech}</b>
         text = f"""<u>Rclone Settings for {name}</u>
 Rclone Config <b>{rccmsg}</b>
 Rclone Path is <code>{rccpath}</code>"""
-        await editMessage(message, text, buttons.build_menu(8, 2, 2))
+        await editMessage(message, text, buttons.build_menu(2))
     elif data[2] == "gdrive":
         await query.answer()
         buttons = ButtonMaker()
@@ -525,7 +525,7 @@ Gdrive Token <b>{tokenmsg}</b>
 Gdrive ID is <code>{gdrive_id}</code>
 Index URL is <code>{index}</code>
 Stop Duplicate is <b>{sd_msg}</b>"""
-        await editMessage(message, text, buttons.build_menu(8, 2, 2))
+        await editMessage(message, text, buttons.build_menu(2))
     elif data[2] == "vthumb":
         await query.answer()
         await sendFile(message, thumb_path, name)
@@ -541,7 +541,7 @@ Stop Duplicate is <b>{sd_msg}</b>"""
         await editMessage(
             message,
             "Send a photo to save it as custom thumbnail. Timeout: 60 sec",
-            buttons.build_menu(8, 2, 2),
+            buttons.build_menu(2),
         )
         event = await conversation_handler(client, query, True)
         if event:
@@ -562,7 +562,7 @@ Format: key:value|key:value|key:value.
 Example: format:bv*+mergeall[vcodec=none]|nocheckcertificate:True
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options.
         """
-        await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
+        await editMessage(message, rmsg, buttons.build_menu(2))
         event = await conversation_handler(client, query)
         if event:
             await set_option(event, "yt_opt")
@@ -577,7 +577,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await editMessage(
             message,
             f"Send Leech split size in bytes. IS_PREMIUM_USER: {IS_PREMIUM_USER}. Timeout: 60 sec",
-            buttons.build_menu(8, 2, 2),
+            buttons.build_menu(2),
         )
         event = await conversation_handler(client, query)
         if event:
@@ -591,7 +591,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         buttons.ibutton("Back", f"userset {user_id} rclone")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
-            message, "Send rclone.conf. Timeout: 60 sec", buttons.build_menu(8, 2, 2)
+            message, "Send rclone.conf. Timeout: 60 sec", buttons.build_menu(2)
         )
         event = await conversation_handler(client, query, document=True)
         if event:
@@ -605,7 +605,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         buttons.ibutton("Back", f"userset {user_id} rclone")
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = "Send Rclone Path. Timeout: 60 sec"
-        await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
+        await editMessage(message, rmsg, buttons.build_menu(2))
         event = await conversation_handler(client, query)
         if event:
             await set_option(event, "rclone_path")
@@ -618,7 +618,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         buttons.ibutton("Back", f"userset {user_id} gdrive")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
-            message, "Send token.pickle. Timeout: 60 sec", buttons.build_menu(8, 2, 2)
+            message, "Send token.pickle. Timeout: 60 sec", buttons.build_menu(2)
         )
         event = await conversation_handler(client, query, document=True)
         if event:
@@ -632,7 +632,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         buttons.ibutton("Back", f"userset {user_id} gdrive")
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = "Send Gdrive ID. Timeout: 60 sec"
-        await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
+        await editMessage(message, rmsg, buttons.build_menu(2))
         event = await conversation_handler(client, query)
         if event:
             await set_option(event, "gdrive_id")
@@ -645,7 +645,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         buttons.ibutton("Back", f"userset {user_id} gdrive")
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = "Send Index URL. Timeout: 60 sec"
-        await editMessage(message, rmsg, buttons.build_menu(8, 2, 2))
+        await editMessage(message, rmsg, buttons.build_menu(2))
         event = await conversation_handler(client, query)
         if event:
             await set_option(event, "index_url")
@@ -664,7 +664,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await editMessage(
             message,
             "Send Leech Filename Prefix. You can add HTML tags. Timeout: 60 sec",
-            buttons.build_menu(8, 2, 2),
+            buttons.build_menu(2),
         )
         event = await conversation_handler(client, query)
         if event:
@@ -684,7 +684,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await editMessage(
             message,
              "Send leech destination ID/USERNAME/PM. Timeout: 60 sec",
-            buttons.build_menu(8, 2, 2),
+            buttons.build_menu(2),
         )
         event = await conversation_handler(client, query)
         if event:
@@ -706,7 +706,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await editMessage(
             message,
             "Send exluded extenions seperated by space without dot at beginning. Timeout: 60 sec",
-            buttons.build_menu(8, 2, 2),
+            buttons.build_menu(2),
         )
         event = await conversation_handler(client, query)
         if event:

@@ -35,7 +35,7 @@ async def get_buttons(from_user, message_id):
         buttons.ibutton('🔰Protect', f'editset {user_id} protect', position='header')
     buttons.ibutton('🔥RUN', f'editset {user_id} run')
     buttons.ibutton('Close', f'editset {user_id} close', position='footer')
-    button = buttons.build_menu(1, 3, 1)
+    button = buttons.build_menu(h_cols=3)
     return msg, button
 
 async def update_buttons(query, message_id):

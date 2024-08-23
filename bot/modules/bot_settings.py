@@ -84,7 +84,7 @@ def get_content_buttons(content_dict, edit_type="", page_type=""):
         elif len(value) > 15:
             value = value[:3] + "…" + value[-3:]
         index = 18*START + index +1
-        msg += f'<b>{index}.</b> <u>{key}</u> is <b>{value}</b>\n' if index >=10 else f'<b>{index}.</b>   <u>{key}</u> is <b>{value}</b>\n'
+        msg += f'<b>{index}.</b> <b>{key}</b> is <u>{value}</u>\n'
         buttons.ibutton(index, f"botset {edit_type} {key}", position="header")
     pages = (len(content_dict) - 1) // 18 + 1
     if pages == 1:
@@ -176,22 +176,22 @@ async def get_buttons(key=None, edit_type=None):
         msg += "<b>Timeout:</b> 60 sec"
     elif key == "aria":
         buttons, msg = get_content_buttons(aria2_options, "ariavar", "aria")
-        buttons.ibutton("Add new key", "botset ariavar newkey", position="footer")
+        buttons.ibutton("Add new key", "botset ariavar newkey", position="body")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "qbit":
         buttons, msg = get_content_buttons(qbit_options, "qbitvar", "qbit")
         if qbit_options["web_ui_address"] != "*":
-            buttons.ibutton("Start WebUI", "botset qbwebui", position="footer")
+            buttons.ibutton("Start WebUI", "botset qbwebui", position="body")
         else:
-            buttons.ibutton("Stop WebUI", "botset qbwebui", position="footer")
-        buttons.ibutton("Sync Qbittorrent", "botset syncqbit", position="footer")
+            buttons.ibutton("Stop WebUI", "botset qbwebui", position="body")
+        buttons.ibutton("Sync Qbittorrent", "botset syncqbit", position="body")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "nzb":
         buttons, msg = get_content_buttons(nzb_options, "nzbvar", "nzb")
-        buttons.ibutton("Servers", "botset nzbserver", position="footer")
-        buttons.ibutton("Sync Sabnzbd", "botset syncnzb", position="footer")
+        buttons.ibutton("Servers", "botset nzbserver", position="body")
+        buttons.ibutton("Sync Sabnzbd", "botset syncnzb", position="body")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "nzbserver":
@@ -201,7 +201,7 @@ async def get_buttons(key=None, edit_type=None):
         else:
             msg = "No servers found!"
         msg += "<pre>🔔<b>NOTE:</b> Click on the button below to select an option.</pre>"
-        buttons.ibutton("Add New", "botset nzbsevar newser", position="footer")
+        buttons.ibutton("Add New", "botset nzbsevar newser", position="body")
         buttons.ibutton("Back", "botset nzb", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key.startswith("nzbser"):
@@ -209,10 +209,10 @@ async def get_buttons(key=None, edit_type=None):
         index = int(key.replace("nzbser", ""))
         content_dict = config_dict["USENET_SERVERS"][index]
         buttons, msg = get_content_buttons(content_dict, f"nzbsevar{index}", "nzbser")
-        buttons.ibutton("Remove Server", f"botset remser {index}", position="footer")
+        buttons.ibutton("Remove Server", f"botset remser {index}", position="body")
         buttons.ibutton("Back", "botset nzbserver", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
-    button = buttons.build_menu(2, 6, 2)
+    button = buttons.build_menu(2, 6, 2, 2)
     return msg, button
 
 
