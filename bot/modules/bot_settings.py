@@ -353,7 +353,7 @@ async def edit_nzb(message, pre_message, key):
     value = message.text
     # if value.isdigit():
     #     value = int(value)
-    elif value.startswith("[") and value.endswith("]"):
+    if value.startswith("[") and value.endswith("]"):
         value = ",".join(eval(value))
     res = await sabnzbd_client.set_config("misc", key, value)
     nzb_options[key] = res["config"]["misc"][key]
