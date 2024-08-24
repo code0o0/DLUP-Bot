@@ -650,9 +650,12 @@ async def edit_bot_settings(client, query):
         if DATABASE_URL:
             await DbManager().update_aria2(data[2], value)
     elif data[1] == "resetnzb":
-        await query.answer()
         res = await sabnzbd_client.set_config_default(data[2])
-        nzb_options[data[2]] = res["config"]["misc"][data[2]]
+        if not res['Status']:
+            await query.answer("Failed to reset value!", show_alert=True)
+            return
+        await query.answer("Value has been reset to default!")
+        nzb_options[data[2]] = (await sabnzbd_client.get_config("misc", data[2]))["config"]["misc"][data[2]]
         await update_buttons(message, "nzb")
         if DATABASE_URL:
             await DbManager().update_nzb_config()
