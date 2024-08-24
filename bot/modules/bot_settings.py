@@ -356,12 +356,7 @@ async def edit_nzb(message, pre_message, key):
     elif value.startswith("[") and value.endswith("]"):
         value = ",".join(eval(value))
     res = await sabnzbd_client.set_config("misc", key, value)
-    if res["config"]["misc"][key] != value:
-        await sabnzbd_client.restart_repair()
-
-
-        
-    nzb_options[key] = (await sabnzbd_client.get_config())["config"]["misc"][key]
+    nzb_options[key] = res["config"]["misc"][key]
     await update_buttons(pre_message, "nzb")
     await deleteMessage(message)
     if DATABASE_URL:
@@ -665,6 +660,7 @@ async def edit_bot_settings(client, query):
             "Syncronization Started. It takes up to 2 sec!", show_alert=True
         )
         await get_nzb_options()
+        await update_buttons(message, "nzb")
         if DATABASE_URL:
             await DbManager().update_nzb_config()
     elif data[1] == "syncqbit":
