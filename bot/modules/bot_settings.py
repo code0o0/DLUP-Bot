@@ -8,7 +8,6 @@ from asyncio import (
     wait_for,
     TimeoutError
 )
-import configparser
 from dotenv import load_dotenv
 from io import BytesIO
 from os import environ, getcwd
@@ -357,12 +356,15 @@ async def edit_nzb(message, pre_message, key):
     elif value.startswith("[") and value.endswith("]"):
         value = ",".join(eval(value))
     if key == "inet_exposure":
-        config = configparser.ConfigParser()
-        config.read("sabnzbd/SABnzbd.ini")
-        config["misc"]["inet_exposure"] = value
+        with open('sabnzbd/SABnzbd.ini', 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+        with open('sabnzbd/SABnzbd.ini', 'w', encoding='utf-8') as file:
+            for line in lines:
+                if line.startswith("inet_exposure"):
+                    file.write(f"{key} = {value}\n")
+                else:
+                    file.write(line)
         nzb_options[key] = value
-        with open("sabnzbd/SABnzbd.ini", "w") as configfile:
-            config.write(configfile)
         await sabnzbd_client.restart()
     else:
         res = await sabnzbd_client.set_config("misc", key, value)
