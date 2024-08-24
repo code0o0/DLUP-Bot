@@ -653,7 +653,12 @@ async def edit_bot_settings(client, query):
         if not res['status']:
             await query.answer(f"Failed to reset {data[2]}!", show_alert=True)
             return
-        await query.answer(f"{data[2]} has been reset to default!", show_alert=True)
+        elif data[2] == "api_key":
+            await query.answer("SABnzbd will restart to apply changes, please wait!",
+                                show_alert=True)
+            await sabnzbd_client.restart()
+        else:
+            await query.answer(f"{data[2]} has been reset to default!", show_alert=True)
         nzb_options[data[2]] = (await sabnzbd_client.get_config())["config"]["misc"][data[2]]
         await update_buttons(message, "nzb")
         if DATABASE_URL:
