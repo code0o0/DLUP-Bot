@@ -356,7 +356,9 @@ async def edit_nzb(message, pre_message, key):
     elif value.startswith("[") and value.endswith("]"):
         value = ",".join(eval(value))
     res = await sabnzbd_client.set_config("misc", key, value)
-    nzb_options[key] = res["config"]["misc"][key]
+    if res["config"]["misc"][key] != value:
+        await sabnzbd_client.restart()
+    nzb_options[key] = value
     await update_buttons(pre_message, "nzb")
     await deleteMessage(message)
     if DATABASE_URL:
