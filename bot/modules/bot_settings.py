@@ -358,7 +358,10 @@ async def edit_nzb(message, pre_message, key):
     res = await sabnzbd_client.set_config("misc", key, value)
     if res["config"]["misc"][key] != value:
         await sabnzbd_client.restart_repair()
-    nzb_options[key] = await sabnzbd_client.get_config("misc", key)
+
+
+        
+    nzb_options[key] = (await sabnzbd_client.get_config())["config"]["misc"][key]
     await update_buttons(pre_message, "nzb")
     await deleteMessage(message)
     if DATABASE_URL:
