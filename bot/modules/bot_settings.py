@@ -207,9 +207,10 @@ async def get_buttons(key=None, edit_type=None):
     elif key.startswith("nzbser"):
         msg = ""
         index = int(key.replace("nzbser", ""))
-        content_dict = config_dict["USENET_SERVERS"][index]
-        buttons, msg = get_content_buttons(content_dict, f"nzbsevar{index}", "nzbser")
-        buttons.ibutton("Remove Server", f"botset remser {index}", position="body")
+        if len(config_dict["USENET_SERVERS"]) > index:
+            content_dict = config_dict["USENET_SERVERS"][index]
+            buttons, msg = get_content_buttons(content_dict, f"nzbsevar{index}", "nzbser")
+            buttons.ibutton("Remove Server", f"botset remser {index}", position="body")
         buttons.ibutton("Back", "botset nzbserver", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     button = buttons.build_menu(2, 6, 2, 2)
