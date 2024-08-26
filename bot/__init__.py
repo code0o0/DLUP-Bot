@@ -53,10 +53,13 @@ basicConfig(
 )
 LOGGER = getLogger(__name__)
 
-LOCAL_DIR = '/usr/src/app/storage'
+LOCAL_DIR = '/usr/src/app/Storage'
 CONFIG_DIR = '/usr/src/app/config'
 DATABASE_URL = f'{CONFIG_DIR}/data.db'
 DOWNLOAD_DIR = '/usr/src/app/downloads'
+for dir in [LOCAL_DIR, CONFIG_DIR, DOWNLOAD_DIR, "Thumbnails", "rclone", "tokens"]:
+    if not ospath.exists(dir):
+        run(["mkdir", "-p", dir])
 
 try:
     load_dotenv('config.env', override=True)
@@ -78,6 +81,7 @@ user_data = {}
 aria2_options = {}
 qbit_options = {}
 nzb_options = {}
+rclone_options = {}
 queued_dl = {}
 queued_up = {}
 non_queued_dl = set()
@@ -115,22 +119,46 @@ if cur.fetchone():
         config_dict = json.loads(row[2])
         for key, value in config_dict.items():
             environ[key] = str(value)
-    pf_dict = json.loads(row[3]) if row else {}
-    for key, value in pf_dict.items():
-        if ospath.exists("sabnzbd/SABnzbd.ini.bak"):
-            remove("sabnzbd/SABnzbd.ini.bak")
-        with open(key, "wb+") as f:
-            f.write(value)
-        if key == "cfg.zip":
-            run(["rm", "-rf", "/JDownloader/cfg"])
-            run(["7z", "x", "cfg.zip", "-o/JDownloader"])
-            remove("cfg.zip")
-    aria2_options = json.loads(row[4]) if row else {}
-    qbit_options = json.loads(row[5]) if row else {}
+    aria2_options = json.loads(row[3]) if row else {}
+    qbit_options = json.loads(row[4]) if row else {}
+    rclone_options = json.loads(row[5]) if row else {}
 else:
     deploy_config = dict(dotenv_values("config.env"))
+
+cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='files'")
+if cur.fetchone():
+    cur.execute("SELECT * FROM files")
+    rows = cur.fetchall()
+    for row in rows:
+        path = row[0]
+        pf_bin = json.loads(row[1])
+        with open(path, "wb+") as f:
+            f.write(pf_bin)
 cur.close()
 conn.close()
+
+if ospath.exists("sabnzbd/SABnzbd.ini.bak"):
+    remove("sabnzbd/SABnzbd.ini.bak")
+if ospath.exists("cfg.zip"):
+    run(["rm", "-rf", "/JDownloader/cfg"])
+    run(["7z", "x", "cfg.zip", "-o/JDownloader"])
+    remove("cfg.zip")
+if ospath.exists("accounts.zip"):
+    if ospath.exists("accounts"):
+        run(["rm", "-rf", "accounts"])
+    run(["7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"])
+    run(["chmod", "-R", "777", "accounts"])
+    remove("accounts.zip")
+if not ospath.exists(".netrc"):
+    run(["touch", ".netrc"])
+if not ospath.exists(f'{CONFIG_DIR}/dht.dat'):
+    run(["touch", f"{CONFIG_DIR}/dht.dat"])
+if not ospath.exists(f'{CONFIG_DIR}/dht6.dat'):
+    run(["touch", f"{CONFIG_DIR}/dht6.dat"])
+run(
+    "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria-nox-nzb.sh && ./aria-nox-nzb.sh",
+    shell=True,
+)
 
 # REQUIRED CONFIG
 OWNER_ID = environ.get("OWNER_ID", "")
@@ -199,6 +227,11 @@ BASE_URL = environ.get("BASE_URL", "").rstrip("/")
 if len(BASE_URL) == 0:
     log_warning("BASE_URL not provided!")
     BASE_URL = ""
+else:
+    Popen(
+        f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent",
+        shell=True,
+    )
 WEB_PINCODE = environ.get("WEB_PINCODE", "")
 WEB_PINCODE = WEB_PINCODE.lower() == "true"
 INCOMPLETE_TASK_NOTIFIER = environ.get("INCOMPLETE_TASK_NOTIFIER", "")
@@ -234,6 +267,8 @@ USE_SERVICE_ACCOUNTS = environ.get("USE_SERVICE_ACCOUNTS", "")
 USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == "true"
 NAME_SUBSTITUTE = environ.get("NAME_SUBSTITUTE", "")
 NAME_SUBSTITUTE = "" if len(NAME_SUBSTITUTE) == 0 else NAME_SUBSTITUTE
+if not ospath.exists("accounts"):
+    USE_SERVICE_ACCOUNTS = False
 
 # GDrive Tools
 GDRIVE_ID = environ.get("GDRIVE_ID", "")
@@ -246,25 +281,21 @@ IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == "true"
 INDEX_URL = environ.get("INDEX_URL", "").rstrip("/")
 if len(INDEX_URL) == 0:
     INDEX_URL = ""
-
-# Rclone
-RCLONE_PATH = environ.get("RCLONE_PATH", "")
-if len(RCLONE_PATH) == 0:
-    RCLONE_PATH = ""
-RCLONE_FLAGS = environ.get("RCLONE_FLAGS", "")
-if len(RCLONE_FLAGS) == 0:
-    RCLONE_FLAGS = ""
-RCLONE_SERVE_URL = environ.get("RCLONE_SERVE_URL", "").rstrip("/")
-if len(RCLONE_SERVE_URL) == 0:
-    RCLONE_SERVE_URL = ""
-RCLONE_SERVE_PORT = environ.get("RCLONE_SERVE_PORT", "")
-RCLONE_SERVE_PORT = 20002 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
-RCLONE_SERVE_USER = environ.get("RCLONE_SERVE_USER", "")
-if len(RCLONE_SERVE_USER) == 0:
-    RCLONE_SERVE_USER = ""
-RCLONE_SERVE_PASS = environ.get("RCLONE_SERVE_PASS", "")
-if len(RCLONE_SERVE_PASS) == 0:
-    RCLONE_SERVE_PASS = ""
+if GDRIVE_ID:
+    DRIVES_NAMES.append("Main")
+    DRIVES_IDS.append(GDRIVE_ID)
+    INDEX_URLS.append(INDEX_URL)
+if ospath.exists("list_drives.txt"):
+    with open("list_drives.txt", "r+") as f:
+        lines = f.readlines()
+        for line in lines:
+            temp = line.strip().split()
+            DRIVES_IDS.append(temp[1])
+            DRIVES_NAMES.append(temp[0].replace("_", " "))
+            if len(temp) > 2:
+                INDEX_URLS.append(temp[2])
+            else:
+                INDEX_URLS.append("")
 
 # Leech
 MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
@@ -354,12 +385,6 @@ config_dict = {
     'STOP_DUPLICATE': STOP_DUPLICATE,
     'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
     'INDEX_URL': INDEX_URL,
-    'RCLONE_PATH': RCLONE_PATH,
-    'RCLONE_FLAGS': RCLONE_FLAGS,
-    'RCLONE_SERVE_URL': RCLONE_SERVE_URL,
-    'RCLONE_SERVE_PORT': RCLONE_SERVE_PORT,
-    'RCLONE_SERVE_USER': RCLONE_SERVE_USER,
-    'RCLONE_SERVE_PASS': RCLONE_SERVE_PASS,
     'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
     'AS_DOCUMENT': AS_DOCUMENT,
     'EQUAL_SPLITS': EQUAL_SPLITS,
@@ -384,49 +409,6 @@ config_dict = {
     "DOWNLOAD_DIR": DOWNLOAD_DIR,
 }
 
-if GDRIVE_ID:
-    DRIVES_NAMES.append("Main")
-    DRIVES_IDS.append(GDRIVE_ID)
-    INDEX_URLS.append(INDEX_URL)
-
-if ospath.exists("list_drives.txt"):
-    with open("list_drives.txt", "r+") as f:
-        lines = f.readlines()
-        for line in lines:
-            temp = line.strip().split()
-            DRIVES_IDS.append(temp[1])
-            DRIVES_NAMES.append(temp[0].replace("_", " "))
-            if len(temp) > 2:
-                INDEX_URLS.append(temp[2])
-            else:
-                INDEX_URLS.append("")
-
-if BASE_URL:
-    Popen(
-        f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent",
-        shell=True,
-    )
-
-if ospath.exists("accounts.zip"):
-    if ospath.exists("accounts"):
-        run(["rm", "-rf", "accounts"])
-    run(["7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"])
-    run(["chmod", "-R", "777", "accounts"])
-    remove("accounts.zip")
-if not ospath.exists("accounts"):
-    config_dict["USE_SERVICE_ACCOUNTS"] = False
-
-if not ospath.exists(".netrc"):
-    run(["touch", ".netrc"])
-run(
-    "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria-nox-nzb.sh && ./aria-nox-nzb.sh",
-    shell=True,
-)
-if not ospath.exists(f'{CONFIG_DIR}/dht.dat'):
-    run(["touch", f"{CONFIG_DIR}/dht.dat"])
-if not ospath.exists(f'{CONFIG_DIR}/dht6.dat'):
-    run(["touch", f"{CONFIG_DIR}/dht6.dat"])
-
 qbittorrent_client = qbClient(
     host="localhost",
     port=8090,
@@ -445,6 +427,8 @@ sabnzbd_client = sabnzbdClient(
     port="8070",
 )
 
+aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
+
 log_info("Creating client from BOT_TOKEN")
 app = tgClient(
     "bot",
@@ -461,20 +445,19 @@ bot_name = bot.me.username
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
 
 
-def get_qb_options():
-    global qbit_options
-    if not qbit_options:
-        qbit_options = dict(qbittorrent_client.app_preferences())
+def get_qb_options(sync=False):
+    if not qbit_options or sync:
+        qbit_options.update(dict(qbittorrent_client.app_preferences()))
         del qbit_options["listen_port"]
         for k in list(qbit_options.keys()):
             if k.startswith("rss"):
                 del qbit_options[k]
-        qbittorrent_client.app_set_preferences({"web_ui_password": "mltbmltb"})
+        if qbit_options.get("web_ui_password") != "mltbmltb":
+            qbittorrent_client.app_set_preferences({"web_ui_password": "mltbmltb"})
     else:
-        qbit_options["web_ui_password"] = "mltbmltb"
         qb_opt = {**qbit_options}
         qbittorrent_client.app_set_preferences(qb_opt)
-get_qb_options()
+
 
 aria2c_edit_opts = ['max-overall-download-limit', 'max-overall-upload-limit', 'max-download-limit', 'max-upload-limit',
                     'split', 'min-split-size', 'max-connection-per-server', 'disk-cache', 'file-allocation', 'user-agent',
@@ -483,16 +466,25 @@ aria2c_edit_opts = ['max-overall-download-limit', 'max-overall-upload-limit', 'm
 aria2c_global = ["bt-max-open-files", "download-result", "keep-unfinished-download-result", "log", "log-level",
                  "max-concurrent-downloads", "max-download-result", "max-overall-download-limit", "save-session",
                  "max-overall-upload-limit", "optimize-concurrent-downloads", "save-cookies", "server-stat-of"]
-aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
-if not aria2_options:
-    aria2_all_options = aria2.client.get_global_option()
-    aria2_options = {key: aria2_all_options[key] for key in aria2c_edit_opts}
-else:
-    a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
-    aria2.set_global_options(a2c_glo)
-
+def get_aria2_options():
+    if not aria2_options:
+        aria2_all_options = aria2.client.get_global_option()
+        aria2_options.update({key: aria2_all_options[key] for key in aria2c_edit_opts})
+    else:
+        a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
+        aria2.set_global_options(a2c_glo)
 
 async def get_nzb_options():
-    global nzb_options
-    nzb_options = (await sabnzbd_client.get_config())["config"]["misc"]
+    nzb_options.update((await sabnzbd_client.get_config())["config"]["misc"])
+
+if not rclone_options:
+    rclone_options = {
+        "SERVE_ADRESS": "",
+        "SERVE_PORT": 20002,
+        "SERVE_USER": "admin",
+        "SERVE_PASS": "password0",
+    }
+
+get_qb_options()
+get_aria2_options()
 bot_loop.run_until_complete(get_nzb_options())

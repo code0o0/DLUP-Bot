@@ -14,6 +14,7 @@ from bot import (
     config_dict,
     aria2_options,
     qbit_options,
+    rclone_options
 )
 
 
@@ -23,7 +24,7 @@ class DbManager:
     
     async def db_init(self):
         query1 = "CREATE TABLE IF NOT EXISTS settings (_id TEXT, deploy_config TEXT, \
-                config_dict TEXT, pf_dict TEXT DEFAULT '{}', aria2_options TEXT, qbit_options TEXT)"
+            config_dict TEXT, aria2_options TEXT, qbit_options TEXT, rclone_options TEXT )"
         query2 = "CREATE TABLE IF NOT EXISTS users (_id INTEGER, user_dict TEXT)"
         query3 = "CREATE TABLE IF NOT EXISTS files (_id TEXT, pf_bin BLOB, user_id INTEGER)"
         query4 = "CREATE TABLE IF NOT EXISTS rss (_id INTEGER, user_rss TEXT)"
@@ -41,13 +42,16 @@ class DbManager:
         _config_dict = json.dumps(config_dict)
         _aria2_options = json.dumps(aria2_options)
         _qbit_options = json.dumps(qbit_options)
+        _rclone_options = json.dumps(rclone_options)
         async with self.__db.transaction():
             row = await self.__db.fetch_one(query='SELECT * FROM settings WHERE _id = :id', values={'id': bot_id})
             if not row:
-                query = 'INSERT INTO settings (_id, deploy_config, config_dict, aria2_options, qbit_options) \
-                    VALUES (:id, :deploy_config, :config_dict, :aria2_options, :qbit_options)'
+                query = 'INSERT INTO settings (_id, deploy_config, config_dict, aria2_options, qbit_options, \
+                        rclone_options) VALUES (:id, :deploy_config, :config_dict, :aria2_options, :qbit_options, \
+                        :rclone_options)'
                 values = {'id': bot_id, 'deploy_config': _deploy_config, 'config_dict': _config_dict,
-                          'aria2_options': _aria2_options, 'qbit_options': _qbit_options}
+                          'aria2_options': _aria2_options, 'qbit_options': _qbit_options, 
+                          'rclone_options': _rclone_options}
                 await self.__db.execute(query=query, values=values)
             else:
                 query = 'UPDATE settings SET deploy_config = :deploy_config, config_dict = :config_dict WHERE _id = :id'
@@ -61,20 +65,6 @@ class DbManager:
                     row = json.loads(row[1])
                     user_data[uid] = row
                 LOGGER.info("Users data has been imported from Database")
-        async with self.__db.transaction():
-            if not await aiopath.exists("Thumbnails"):
-                await makedirs("Thumbnails")
-            if not await aiopath.exists("rclone"):
-                await makedirs("rclone")
-            if not await aiopath.exists("tokens"):
-                await makedirs("tokens")
-            if await self.__db.fetch_one(query='SELECT * from files'):
-                async for row in self.__db.iterate(query='SELECT * from files'):
-                    path = row[0]
-                    pf_bin = json.loads(row[1])
-                    async with aiopen(path, "wb") as pf:
-                        await pf.write(pf_bin)
-                LOGGER.info("Files data has been imported from Database")
         async with self.__db.transaction():
             if await self.__db.fetch_one(query='SELECT * from rss'):
                 async for row in self.__db.iterate(query='SELECT * from rss'):
@@ -94,57 +84,32 @@ class DbManager:
     async def update_config(self, dict_):
         _config_dict = json.dumps(config_dict)
         async with self.__db.transaction():
-            # row = await self.__db.fetch_one(query='SELECT * FROM settings WHERE _id = :id', values={'id': bot_id})
-            # query = 'INSERT INTO settings (_id, config_dict) VALUES (:id, :config_dict)'
-            # values = {'id': bot_id, 'config_dict': _config_dict}
-            # await self.__db.execute(query=query, values=values)
             query = 'UPDATE settings SET config_dict = :config_dict  WHERE _id = :id'
             values = {'id': bot_id, 'config_dict': _config_dict}
             await self.__db.execute(query=query, values=values)
         LOGGER.info("Config data has been updated in Database.")
     
-    async def update_aria2(self, key, value):
+    async def update_aria2(self):
         _aria2_options = json.dumps(aria2_options)
         async with self.__db.transaction():
             query = 'UPDATE settings SET aria2_options = :aria2_options  WHERE _id = :id'
             values = {'id': bot_id, 'aria2_options': _aria2_options}
             await self.__db.execute(query=query, values=values)
     
-    async def update_qbittorrent(self, key=None, value=None):
+    async def update_qbittorrent(self):
         _qbit_options = json.dumps(qbit_options)
         async with self.__db.transaction():
             query = 'UPDATE settings SET qbit_options = :qbit_options  WHERE _id = :id'
             values = {'id': bot_id, 'qbit_options': _qbit_options}
             await self.__db.execute(query=query, values=values)
     
-    async def save_qbit_settings(self):
-        await self.update_qbittorrent()
-    
-    async def update_private_file(self, path):
-        if await aiopath.exists(path):
-            async with aiopen(path, "rb+") as pf:
-                pf_bin = await pf.read()
-        else:
-            pf_bin = ""
+    async def update_rclone_config(self):
+        _rclone_options = json.dumps(rclone_options)
         async with self.__db.transaction():
-            row = await self.__db.fetch_one(query='SELECT * FROM settings WHERE _id = :id', values={'id': bot_id})
-            _pf_dict = json.loads(row[3]) if row else {}
-            if pf_bin:
-                _pf_dict.update({path: pf_bin})
-            elif _pf_dict.get(path):
-                del _pf_dict[path]
-            else:
-                return
-            _pf_dict = json.dumps(_pf_dict)
-            query = 'UPDATE settings SET pf_dict = :pf_dict  WHERE _id = :id'
-            values = {'id': bot_id, 'pf_dict': _pf_dict}
+            query = 'UPDATE settings SET rclone_options = :rclone_options  WHERE _id = :id'
+            values = {'id': bot_id, 'rclone_options': _rclone_options}
             await self.__db.execute(query=query, values=values)
-        if path == "config.env":
-            await self.update_deploy_config()
     
-    async def update_nzb_config(self):
-        await self.update_private_file("sabnzbd/SABnzbd.ini")
-
     async def update_user_data(self, user_id):
         data = user_data.get(user_id, {})
         async with self.__db.transaction():
@@ -164,7 +129,7 @@ class DbManager:
                 values = {'id': user_id, 'user_dict': _data}
                 await self.__db.execute(query=query, values=values)
     
-    async def update_user_doc(self, user_id, key, path=""):
+    async def update_user_doc(self, user_id, path=""):
         if path:
             async with aiopen(path, "rb+") as doc:
                 doc_bin = await doc.read()
@@ -183,7 +148,12 @@ class DbManager:
                     query = 'UPDATE files SET pf_bin = :pf_bin  WHERE _id = :id'
                     values = {'id': path, 'pf_bin': doc_bin}
                     await self.__db.execute(query=query, values=values)
-        await self.update_user_data(user_id)
+        if path == "config.env":
+            await self.update_deploy_config()
+        # await self.update_user_data(user_id)
+    
+    async def update_nzb_config(self):
+        await self.update_user_doc(0, "sabnzbd/SABnzbd.ini")
     
     async def rss_update_all(self):
         async with self.__db.transaction():

@@ -106,6 +106,10 @@ async def get_buttons(key=None, edit_type=None):
         buttons.ibutton("Private Files", "botset private")
         buttons.ibutton("Qbit Settings", "botset qbit")
         buttons.ibutton("Aria2c Settings", "botset aria")
+        buttons.ibutton("Rclone Settings", "botset rclone")
+
+
+
         buttons.ibutton("Sabnzbd Settings", "botset nzb")
         buttons.ibutton("JDownloader Sync", "botset syncjd")
         buttons.ibutton("Close", "botset close", position="footer")
@@ -146,7 +150,7 @@ async def get_buttons(key=None, edit_type=None):
             msg += "<b>Timeout:</b> 60 sec"
         elif edit_type.startswith("nzbsevar"):
             index = 0 if key == "newser" else int(edit_type.replace("nzbsevar", ""))
-            buttons.ibutton("Back", f"botset nzbser{index}", position="footer")
+            buttons.ibutton("Back", f"botset nzbserver", position="footer")
             buttons.ibutton("Close", "botset close", position="footer")
             if key != "newser":
                 buttons.ibutton("Empty", f"botset emptyserkey {index} {key}")
@@ -159,11 +163,10 @@ async def get_buttons(key=None, edit_type=None):
                     "USER_SESSION_STRING", "CMD_SUFFIX", "UPSTREAM_REPO", "UPSTREAM_BRANCH", "BASE_URL_PORT",
                     "BASE_URL", "WEB_PINCODE", "INCOMPLETE_TASK_NOTIFIER", "YT_DLP_OPTIONS", "TORRENT_TIMEOUT",
                     "USENET_SERVERS", "DEFAULT_UPLOAD", "EXTENSION_FILTER", "USE_SERVICE_ACCOUNTS", "NAME_SUBSTITUTE",
-                    "GDRIVE_ID", "STOP_DUPLICATE", "IS_TEAM_DRIVE", "INDEX_URL", "RCLONE_PATH", "RCLONE_FLAGS",
-                    "RCLONE_SERVE_URL", "RCLONE_SERVE_PORT", "RCLONE_SERVE_USER", "RCLONE_SERVE_PASS", "LEECH_SPLIT_SIZE",
-                    "AS_DOCUMENT", "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX",
-                    "LEECH_DUMP_CHAT", "MIXED_LEECH", "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", 
-                    "RSS_CHAT", "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
+                    "GDRIVE_ID", "STOP_DUPLICATE", "IS_TEAM_DRIVE", "INDEX_URL", "LEECH_SPLIT_SIZE", "AS_DOCUMENT", 
+                    "EQUAL_SPLITS", "MEDIA_GROUP", "USER_TRANSMISSION", "LEECH_FILENAME_PREFIX","LEECH_DUMP_CHAT", 
+                    "MIXED_LEECH", "JD_EMAIL", "JD_PASS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", "RSS_DELAY", 
+                    "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"]
         content_dict = {k: config_dict[k] for k in var_list}
         buttons, msg = get_content_buttons(content_dict, "botvar", "var")
         buttons.ibutton("Back", "botset back", position="footer")
@@ -171,7 +174,7 @@ async def get_buttons(key=None, edit_type=None):
     elif key == "private":
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
-        msg = "Send private file: config.env, token.pickle, rclone.conf, accounts.zip, list_drives.txt, cookies.txt, .netrc or any other private file!\n"
+        msg = "Send private file: config.env, token.pickle, accounts.zip, list_drives.txt, cookies.txt, .netrc or any other private file!\n"
         msg += "<b>Note:</b> To delete private file send only the file name as text message.Changing .netrc will not take effect for aria2c until restart.\n"
         msg += "<b>Timeout:</b> 60 sec"
     elif key == "aria":
@@ -192,6 +195,10 @@ async def get_buttons(key=None, edit_type=None):
         buttons, msg = get_content_buttons(nzb_options, "nzbvar", "nzb")
         buttons.ibutton("Servers", "botset nzbserver", position="body")
         buttons.ibutton("Sync Sabnzbd", "botset syncnzb", position="body")
+        if nzb_options["inet_exposure"] == 0:
+            buttons.ibutton("Start WebUI", "botset nzbwebui", position="body")
+        else:
+            buttons.ibutton("Stop WebUI", "botset nzbwebui", position="body")
         buttons.ibutton("Back", "botset back", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
     elif key == "nzbserver":
@@ -212,7 +219,7 @@ async def get_buttons(key=None, edit_type=None):
         buttons.ibutton("Remove Server", f"botset remser {index}", position="body")
         buttons.ibutton("Back", "botset nzbserver", position="footer")
         buttons.ibutton("Close", "botset close", position="footer")
-    button = buttons.build_menu(2, 6, 2, 2)
+    button = buttons.build_menu(2, 6, 4, 2)
     return msg, button
 
 
@@ -291,13 +298,6 @@ async def edit_variable(message, pre_message, key):
         await initiate_search_tools()
     elif key in ["QUEUE_ALL", "QUEUE_DOWNLOAD", "QUEUE_UPLOAD"]:
         await start_from_queued()
-    elif key in [
-        "RCLONE_SERVE_URL",
-        "RCLONE_SERVE_PORT",
-        "RCLONE_SERVE_USER",
-        "RCLONE_SERVE_PASS",
-    ]:
-        await rclone_serve_booter()
     elif key in ["JD_EMAIL", "JD_PASS"]:
         jdownloader.initiate()
     elif key == "RSS_DELAY":
@@ -330,7 +330,7 @@ async def edit_aria(message, pre_message, key):
     await update_buttons(pre_message, "aria")
     await deleteMessage(message)
     if DATABASE_URL:
-        await DbManager().update_aria2(key, value)
+        await DbManager().update_aria2()
 
 async def edit_qbit(message, pre_message, key):
     value = message.text
@@ -347,7 +347,7 @@ async def edit_qbit(message, pre_message, key):
     await update_buttons(pre_message, "qbit")
     await deleteMessage(message)
     if DATABASE_URL:
-        await DbManager().update_qbittorrent(key, value)
+        await DbManager().update_qbittorrent()
 
 async def edit_nzb(message, pre_message, key):
     value = message.text
@@ -355,8 +355,20 @@ async def edit_nzb(message, pre_message, key):
         value = int(value)
     elif value.startswith("[") and value.endswith("]"):
         value = ",".join(eval(value))
-    res = await sabnzbd_client.set_config("misc", key, value)
-    nzb_options[key] = res["config"]["misc"][key]
+    if key == "inet_exposure":
+        with open('sabnzbd/SABnzbd.ini', 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+        with open('sabnzbd/SABnzbd.ini', 'w', encoding='utf-8') as file:
+            for line in lines:
+                if line.startswith("inet_exposure"):
+                    file.write(f"{key} = {value}\n")
+                else:
+                    file.write(line)
+        nzb_options[key] = value
+        await sabnzbd_client.restart()
+    else:
+        res = await sabnzbd_client.set_config("misc", key, value)
+        nzb_options[key] = res["config"]["misc"][key]
     await update_buttons(pre_message, "nzb")
     await deleteMessage(message)
     if DATABASE_URL:
@@ -423,7 +435,7 @@ async def sync_jdownloader():
     await (
         await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
     ).wait()
-    await DbManager().update_private_file("cfg.zip")
+    await DbManager().update_user_doc(0, "cfg.zip")
 
 async def update_private_file(message, pre_message):
     if not message.media and (file_name := message.text):
@@ -494,11 +506,9 @@ async def update_private_file(message, pre_message):
             await sendMessage(message, msg, buttons.build_menu(2))
         else:
             await deleteMessage(message)
-    if file_name == "rclone.conf":
-        await rclone_serve_booter()
     await update_buttons(pre_message)
     if DATABASE_URL:
-        await DbManager().update_private_file(file_name)
+        await DbManager().update_user_doc(0, file_name)
     if await aiopath.exists("accounts.zip"):
         await remove("accounts.zip")
 
@@ -621,13 +631,6 @@ async def edit_bot_settings(client, query):
             await initiate_search_tools()
         elif data[2] in ["QUEUE_ALL", "QUEUE_DOWNLOAD", "QUEUE_UPLOAD"]:
             await start_from_queued()
-        elif data[2] in [
-            "RCLONE_SERVE_URL",
-            "RCLONE_SERVE_PORT",
-            "RCLONE_SERVE_USER",
-            "RCLONE_SERVE_PASS",
-        ]:
-            await rclone_serve_booter()
     elif data[1] == "resetaria":
         aria2_defaults = await sync_to_async(aria2.client.get_global_option)
         if aria2_defaults[data[2]] == aria2_options[data[2]]:
@@ -647,11 +650,14 @@ async def edit_bot_settings(client, query):
                 except Exception as e:
                     LOGGER.error(e)
         if DATABASE_URL:
-            await DbManager().update_aria2(data[2], value)
+            await DbManager().update_aria2()
     elif data[1] == "resetnzb":
-        await query.answer()
         res = await sabnzbd_client.set_config_default(data[2])
-        nzb_options[data[2]] = res["config"]["misc"][data[2]]
+        if not res['status']:
+            await query.answer(f"Failed to reset {data[2]}!", show_alert=True)
+            return
+        await query.answer(f"{data[2]} has been reset to default!", show_alert=True)
+        nzb_options[data[2]] = (await sabnzbd_client.get_config())["config"]["misc"][data[2]]
         await update_buttons(message, "nzb")
         if DATABASE_URL:
             await DbManager().update_nzb_config()
@@ -660,28 +666,49 @@ async def edit_bot_settings(client, query):
             "Syncronization Started. It takes up to 2 sec!", show_alert=True
         )
         await get_nzb_options()
+        await update_buttons(message, "nzb")
         if DATABASE_URL:
             await DbManager().update_nzb_config()
+    elif data[1] == "nzbwebui":
+        if nzb_options["inet_exposure"] == 0:
+            nzb_options["inet_exposure"] = 4
+            await query.answer("WebUI Started", show_alert=True)
+        else:
+            nzb_options["inet_exposure"] = 0
+            await query.answer("WebUI Stopped!", show_alert=True)
+        with open('sabnzbd/SABnzbd.ini', 'r', encoding='utf-8') as file:
+                lines = file.readlines()
+        with open('sabnzbd/SABnzbd.ini', 'w', encoding='utf-8') as file:
+            for line in lines:
+                if line.startswith("inet_exposure"):
+                    file.write(f"inet_exposure = {nzb_options['inet_exposure']}\n")
+                else:
+                    file.write(line)
+        await sabnzbd_client.restart()
+        if DATABASE_URL:
+            await DbManager().update_nzb_config()
+        await update_buttons(message, "nzb")
     elif data[1] == "syncqbit":
         await query.answer(
             "Syncronization Started. It takes up to 2 sec!", show_alert=True
         )
-        await get_qb_options()
+        await get_qb_options(True)
+        await update_buttons(message, "qbit")
         if DATABASE_URL:
-            await DbManager().save_qbit_settings()
+            await DbManager().update_qbittorrent()
     elif data[1] == "qbwebui":
         if qbit_options["web_ui_address"] == "*":
             qbit_options["web_ui_address"] = "127.0.0.1"
             await query.answer("WebUI Stopped", show_alert=True)
             await sync_to_async(qbittorrent_client.app_set_preferences, {"web_ui_address": "127.0.0.1"})
             if DATABASE_URL:
-                await DbManager().update_qbittorrent("web_ui_address", "127.0.0.1")
+                await DbManager().update_qbittorrent()
         else:
             qbit_options["web_ui_address"] = "*"
             await query.answer("WebUI Started!", show_alert=True)
             await sync_to_async(qbittorrent_client.app_set_preferences, {"web_ui_address": "*"})
             if DATABASE_URL:
-                await DbManager().update_qbittorrent("web_ui_address", "*")
+                await DbManager().update_qbittorrent()
         await update_buttons(message, "qbit")
     elif data[1] == "emptyaria":
         await query.answer()
@@ -697,14 +724,14 @@ async def edit_bot_settings(client, query):
                 except Exception as e:
                     LOGGER.error(e)
         if DATABASE_URL:
-            await DbManager().update_aria2(data[2], "")
+            await DbManager().update_aria2()
     elif data[1] == "emptyqbit":
         await query.answer()
         await sync_to_async(qbittorrent_client.app_set_preferences, {data[2]: value})
         qbit_options[data[2]] = ""
         await update_buttons(message, "qbit")
         if DATABASE_URL:
-            await DbManager().update_qbittorrent(data[2], "")
+            await DbManager().update_qbittorrent()
     elif data[1] == "emptynzb":
         await query.answer()
         res = await sabnzbd_client.set_config("misc", data[2], "")
@@ -920,24 +947,6 @@ async def load_config():
     INDEX_URL = environ.get("INDEX_URL", "").rstrip("/")
     if len(INDEX_URL) == 0:
         INDEX_URL = ""
-    # Rclone
-    RCLONE_PATH = environ.get("RCLONE_PATH", "")
-    if len(RCLONE_PATH) == 0:
-        RCLONE_PATH = ""
-    RCLONE_FLAGS = environ.get("RCLONE_FLAGS", "")
-    if len(RCLONE_FLAGS) == 0:
-        RCLONE_FLAGS = ""
-    RCLONE_SERVE_URL = environ.get("RCLONE_SERVE_URL", "").rstrip("/")
-    if len(RCLONE_SERVE_URL) == 0:
-        RCLONE_SERVE_URL = ""
-    RCLONE_SERVE_PORT = environ.get("RCLONE_SERVE_PORT", "")
-    RCLONE_SERVE_PORT = 20002 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
-    RCLONE_SERVE_USER = environ.get("RCLONE_SERVE_USER", "")
-    if len(RCLONE_SERVE_USER) == 0:
-        RCLONE_SERVE_USER = ""
-    RCLONE_SERVE_PASS = environ.get("RCLONE_SERVE_PASS", "")
-    if len(RCLONE_SERVE_PASS) == 0:
-        RCLONE_SERVE_PASS = ""
     # Leech
     MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
     LEECH_SPLIT_SIZE = environ.get("LEECH_SPLIT_SIZE", "")
@@ -1033,12 +1042,6 @@ async def load_config():
             'STOP_DUPLICATE': STOP_DUPLICATE,
             'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
             'INDEX_URL': INDEX_URL,
-            'RCLONE_PATH': RCLONE_PATH,
-            'RCLONE_FLAGS': RCLONE_FLAGS,
-            'RCLONE_SERVE_URL': RCLONE_SERVE_URL,
-            'RCLONE_SERVE_PORT': RCLONE_SERVE_PORT,
-            'RCLONE_SERVE_USER': RCLONE_SERVE_USER,
-            'RCLONE_SERVE_PASS': RCLONE_SERVE_PASS,
             'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
             'AS_DOCUMENT': AS_DOCUMENT,
             'EQUAL_SPLITS': EQUAL_SPLITS,
@@ -1060,7 +1063,7 @@ async def load_config():
     )
     if DATABASE_URL:
         await DbManager().update_config(config_dict)
-    await gather(initiate_search_tools(), start_from_queued(), rclone_serve_booter())
+    await gather(initiate_search_tools(), start_from_queued())
     addJob()
 
 

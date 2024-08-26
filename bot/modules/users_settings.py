@@ -207,7 +207,7 @@ async def set_thumb(message):
     update_user_ldata(user_id, "thumb", des_dir)
     await deleteMessage(message)
     if DATABASE_URL:
-        await DbManager().update_user_doc(user_id, "thumb", des_dir)
+        await DbManager().update_user_doc(user_id, des_dir)
 
 async def add_rclone(message):
     user_id = message.from_user.id
@@ -218,7 +218,7 @@ async def add_rclone(message):
     update_user_ldata(user_id, "rclone_config", f"rclone/{user_id}.conf")
     await deleteMessage(message)
     if DATABASE_URL:
-        await DbManager().update_user_doc(user_id, "rclone_config", des_dir)
+        await DbManager().update_user_doc(user_id, des_dir)
 
 async def add_token_pickle(message):
     user_id = message.from_user.id
@@ -229,7 +229,7 @@ async def add_token_pickle(message):
     update_user_ldata(user_id, "token_pickle", f"tokens/{user_id}.pickle")
     await deleteMessage(message)
     if DATABASE_URL:
-        await DbManager().update_user_doc(user_id, "token_pickle", des_dir)
+        await DbManager().update_user_doc(user_id, des_dir)
 
 async def delete_path(message):
     user_id = message.from_user.id
@@ -242,7 +242,7 @@ async def delete_path(message):
     update_user_ldata(user_id, "upload_paths", new_value)
     await deleteMessage(message)
     if DATABASE_URL:
-        await DbManager().update_user_doc(user_id, "upload_paths", new_value)
+        await DbManager().update_user_doc(user_id, new_value)
 
 async def set_option(message, option):
     user_id = message.from_user.id
