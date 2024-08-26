@@ -5,11 +5,10 @@ from dotenv import dotenv_values
 import json
 
 from bot import (
-    DATABASE_URL,
     user_data,
     rss_dict,
     LOGGER,
-    bot_id,
+    BOT_ID,
     deploy_config,
     config_dict,
     aria2_options,
@@ -19,7 +18,8 @@ from bot import (
 
 class DbManager:
     def __init__(self):
-        self.__db = Database(f'sqlite+aiosqlite:///{DATABASE_URL}')
+        database_url = config_dict.get("DATABASE_URL")
+        self.__db = Database(f'sqlite+aiosqlite:///{database_url}')
     
     async def db_init(self):
         query1 = "CREATE TABLE IF NOT EXISTS settings (_id TEXT, deploy_config TEXT, \
@@ -42,16 +42,16 @@ class DbManager:
         _aria2_options = json.dumps(aria2_options)
         _qbit_options = json.dumps(qbit_options)
         async with self.__db.transaction():
-            row = await self.__db.fetch_one(query='SELECT * FROM settings WHERE _id = :id', values={'id': bot_id})
+            row = await self.__db.fetch_one(query='SELECT * FROM settings WHERE _id = :id', values={'id': BOT_ID})
             if not row:
                 query = 'INSERT INTO settings (_id, deploy_config, config_dict, aria2_options, qbit_options) \
                     VALUES (:id, :deploy_config, :config_dict, :aria2_options, :qbit_options)'
-                values = {'id': bot_id, 'deploy_config': _deploy_config, 'config_dict': _config_dict,
+                values = {'id': BOT_ID, 'deploy_config': _deploy_config, 'config_dict': _config_dict,
                           'aria2_options': _aria2_options, 'qbit_options': _qbit_options}
                 await self.__db.execute(query=query, values=values)
             else:
                 query = 'UPDATE settings SET deploy_config = :deploy_config, config_dict = :config_dict WHERE _id = :id'
-                values = {'id': bot_id, 'deploy_config': _deploy_config, 'config_dict': _config_dict}
+                values = {'id': BOT_ID, 'deploy_config': _deploy_config, 'config_dict': _config_dict}
                 await self.__db.execute(query=query, values=values)
         async with self.__db.transaction():
             if await self.__db.fetch_one(query='SELECT * from users'):
@@ -74,18 +74,18 @@ class DbManager:
         _deploy_config = json.dumps(current_config)
         async with self.__db.transaction():
             query = 'UPDATE settings SET deploy_config = :deploy_config  WHERE _id = :id'
-            values = {'id': bot_id, 'deploy_config': _deploy_config}
+            values = {'id': BOT_ID, 'deploy_config': _deploy_config}
             await self.__db.execute(query=query, values=values)
 
     async def update_config(self, dict_):
         _config_dict = json.dumps(config_dict)
         async with self.__db.transaction():
-            # row = await self.__db.fetch_one(query='SELECT * FROM settings WHERE _id = :id', values={'id': bot_id})
+            # row = await self.__db.fetch_one(query='SELECT * FROM settings WHERE _id = :id', values={'id': BOT_ID})
             # query = 'INSERT INTO settings (_id, config_dict) VALUES (:id, :config_dict)'
-            # values = {'id': bot_id, 'config_dict': _config_dict}
+            # values = {'id': BOT_ID, 'config_dict': _config_dict}
             # await self.__db.execute(query=query, values=values)
             query = 'UPDATE settings SET config_dict = :config_dict  WHERE _id = :id'
-            values = {'id': bot_id, 'config_dict': _config_dict}
+            values = {'id': BOT_ID, 'config_dict': _config_dict}
             await self.__db.execute(query=query, values=values)
         LOGGER.info("Config data has been updated in Database.")
     
@@ -93,14 +93,14 @@ class DbManager:
         _aria2_options = json.dumps(aria2_options)
         async with self.__db.transaction():
             query = 'UPDATE settings SET aria2_options = :aria2_options  WHERE _id = :id'
-            values = {'id': bot_id, 'aria2_options': _aria2_options}
+            values = {'id': BOT_ID, 'aria2_options': _aria2_options}
             await self.__db.execute(query=query, values=values)
     
     async def update_qbittorrent(self, key=None, value=None):
         _qbit_options = json.dumps(qbit_options)
         async with self.__db.transaction():
             query = 'UPDATE settings SET qbit_options = :qbit_options  WHERE _id = :id'
-            values = {'id': bot_id, 'qbit_options': _qbit_options}
+            values = {'id': BOT_ID, 'qbit_options': _qbit_options}
             await self.__db.execute(query=query, values=values)
     
     async def save_qbit_settings(self):
@@ -207,3 +207,5 @@ class DbManager:
     async def trunc_table(self, name):
         async with self.__db.transaction():
             await self.__db.execute(query=f'DELETE FROM {name}')
+
+database = DbManager()

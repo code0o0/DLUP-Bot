@@ -4,13 +4,13 @@ from pyrogram.enums import ChatType
 from html import escape
 
 from bot import bot, user, user_data, OWNER_ID, LOGGER
-from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage
+from bot.helper.telegram_helper.message_utils import auto_delete_message, send_message
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import new_task
+from bot.helper.ext_utils.bot_utils import handler_new_task
 
 
-@new_task
+@handler_new_task
 async def info(client, message):
     msg = ''
     operator_user = message.from_user or message.sender_chat
@@ -109,7 +109,7 @@ async def info(client, message):
             msg += f'<pre>DC-ID: DC-{dc_id}</pre>\n'
             msg += f'<pre>Distance: {distance}</pre>\n'
     
-    reply_message = await sendMessage(message, msg)
+    reply_message = await send_message(message, msg)
     await auto_delete_message(client, [message, reply_message], 20)
 
 bot.add_handler(MessageHandler(info, filters=command(BotCommands.InfoCommand) & CustomFilters.authorized))

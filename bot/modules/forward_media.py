@@ -7,12 +7,12 @@ from pyrogram.enums import ParseMode, MessageMediaType
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import InputMediaDocument, InputMediaPhoto, InputMediaVideo, InputMediaAudio
 from bot import bot, OWNER_ID, LOGGER, user
-from bot.helper.ext_utils.bot_utils import new_task
+from bot.helper.ext_utils.bot_utils import handler_new_task
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (auto_delete_message, sendMessage, editMessage,
-                                                      copyMedia, copyMediaGroup)
+from bot.helper.telegram_helper.message_utils import (auto_delete_message, send_message, edit_message,
+                                                      copy_media, copy_media_group)
 
 handler_dict = {}
 
@@ -23,21 +23,21 @@ async def get_buttons(from_user, message_id):
     msg = '<b>Forward Media</b>\n'
     for key, value in msg_dict.items():
         msg += f'<u>{key}</u> is <b>{value}</b>\n'
-    buttons.ibutton('📲Forward Chat', f'forwardset {user_id} forward_chat', position='header')
-    buttons.ibutton('📝Forward Number', f'forwardset {user_id} forward_number', position='header')
+    buttons.data_button('📲Forward Chat', f'forwardset {user_id} forward_chat', position='header')
+    buttons.data_button('📝Forward Number', f'forwardset {user_id} forward_number', position='header')
     if msg_dict.get('protect_content'):
-        buttons.ibutton('🔓Protect Content', f'forwardset {user_id} protect_content', position='header')
+        buttons.data_button('🔓Protect Content', f'forwardset {user_id} protect_content', position='header')
     else:
-        buttons.ibutton('🔒Protect Content', f'forwardset {user_id} protect_content', position='header')
-    buttons.ibutton('🔗CopyRight', f'forwardset {user_id} copyright', position='header')
-    buttons.ibutton('🔥RUN', f'forwardset {user_id} run')
-    buttons.ibutton('Close', f'forwardset {user_id} close', position='footer')
+        buttons.data_button('🔒Protect Content', f'forwardset {user_id} protect_content', position='header')
+    buttons.data_button('🔗CopyRight', f'forwardset {user_id} copyright', position='header')
+    buttons.data_button('🔥RUN', f'forwardset {user_id} run')
+    buttons.data_button('Close', f'forwardset {user_id} close', position='footer')
     button = buttons.build_menu(h_cols=2)
     return msg, button
 
 async def update_buttons(query, message_id):
     msg, button = await get_buttons(query.from_user, message_id)
-    await editMessage(query.message, msg, button)
+    await edit_message(query.message, msg, button)
 
 async def forward_message(client, message, message_id):
     msg_dict = handler_dict[message_id]
@@ -61,13 +61,13 @@ async def forward_message(client, message, message_id):
             LOGGER.error(e) 
             msg += f'<pre>Status: Parse Failed</pre>\n'
             msg += f'<b>Reason:</b> {escape(str(e))}'
-            error_message = await sendMessage(message, msg)
+            error_message = await send_message(message, msg)
             await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
             return
     if not message_list:
         msg += f'<pre>Status: Parse Failed</pre>\n'
         msg += f'<b>Reason:</b> No message found!'
-        error_message = await sendMessage(message, msg)
+        error_message = await send_message(message, msg)
         await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
         return
     media_messages = {}
@@ -85,7 +85,7 @@ async def forward_message(client, message, message_id):
         if copyright:
             caption += f'\n<b>©CopyRight👉</b> {copyright}'
         if len(msges) == 1:
-            result = await copyMedia(msges[0], forward_chat, caption, ParseMode.HTML, protect_content)
+            result = await copy_media(msges[0], forward_chat, caption, ParseMode.HTML, protect_content)
         else:
             send_medias = []
             for msge in msges:
@@ -103,16 +103,16 @@ async def forward_message(client, message, message_id):
             if caption:
                 send_medias[0].caption = caption
             send_medias[0].parse_mode = ParseMode.HTML
-            result = await copyMediaGroup(tgclient, forward_chat, send_medias, protect_content)
+            result = await copy_media_group(tgclient, forward_chat, send_medias, protect_content)
         if result:
             msg += f'<pre>Status: Send Failed</pre>\n'
             msg += f'<b>Reason:</b> {escape(result)}'
-            error_message = await sendMessage(message, msg)
+            error_message = await send_message(message, msg)
             await auto_delete_message(client, [message, message.reply_to_message, error_message], 20)
             return
         await sleep(1 + random.random())
     msg += f'<pre>Status: Success</pre>\n'
-    success_message = await sendMessage(message, msg)
+    success_message = await send_message(message, msg)
     await auto_delete_message(client, [message, message.reply_to_message, success_message], 20)
     
 async def conversation_handler(client, query, msg):
@@ -128,7 +128,7 @@ async def conversation_handler(client, query, msg):
         )
     except TimeoutError:
         msg = 'Timeout, the conversation has been closed!'
-        await editMessage(reply_text_message, msg)
+        await edit_message(reply_text_message, msg)
         await auto_delete_message(client, reply_text_message, 10)
         return None
     if response_message:
@@ -139,7 +139,7 @@ async def conversation_handler(client, query, msg):
         await auto_delete_message(client, reply_text_message, 0.5)
     return response_text
 
-@new_task
+@handler_new_task
 async def forward_callback(client, query):
     user_id = query.from_user.id
     message = query.message
@@ -201,10 +201,10 @@ async def forward_callback(client, query):
     elif data[2] == 'run':
         await query.answer()
         msg = '🚴Forwarding...'
-        await editMessage(message, msg)
+        await edit_message(message, msg)
         await forward_message(client, message, cmd_message_id)
 
-@new_task
+@handler_new_task
 async def forward(client, message):
     command = message.command
     message_id = message.id
@@ -229,14 +229,14 @@ async def forward(client, message):
     else:
         msg = 'Please send <i>/forward</i> <u>https://t.me/channel_name/message_id</u> or '
         msg += 'forward a media message from the channel to the bot and reply to it with <i>/forward</i>'
-        reply_message = await sendMessage(message, msg)
+        reply_message = await send_message(message, msg)
         await auto_delete_message(client, [message, reply_message], 20)
         return
     handler_dict[message_id]['from_chat'] = from_chat_id
     handler_dict[message_id]['from_message_id'] = from_message_id
     handler_dict[message_id]['forward_chat'] = f'@{message.chat.username}' if message.chat.username else message.chat.id
     msg, button = await get_buttons(message.from_user, message_id)
-    await sendMessage(message, msg, button)
+    await send_message(message, msg, button)
 
 
 bot.add_handler(MessageHandler(forward, filters=filters.command(BotCommands.ForwardCommand) & CustomFilters.sudo))

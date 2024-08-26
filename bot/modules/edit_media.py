@@ -5,12 +5,12 @@ from pyrogram.enums import ParseMode, MessageMediaType
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import InputMediaDocument, InputMediaPhoto, InputMediaVideo, InputMediaAudio
 from bot import bot, OWNER_ID, LOGGER
-from bot.helper.ext_utils.bot_utils import new_task
+from bot.helper.ext_utils.bot_utils import handler_new_task
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (auto_delete_message, sendMessage, editMessage,
-                                                      copyMedia, copyMediaGroup)
+from bot.helper.telegram_helper.message_utils import (auto_delete_message, send_message, edit_message,
+                                                      copy_media, copy_media_group)
 
 handler_dict = {}
 
@@ -21,26 +21,26 @@ async def get_buttons(from_user, message_id):
     msg = '<b>Edit Media</b>\n'
     for key, value in msg_dict.items():
         msg += f'<u>{key}</u> is <b>{value}</b>\n'
-    buttons.ibutton('Role', f'editset {user_id} role', position='header')
-    buttons.ibutton('Provider', f'editset {user_id} provider', position='header')
-    buttons.ibutton('Source', f'editset {user_id} source', position='header')
-    buttons.ibutton('Tag', f'editset {user_id} tag', position='header')
-    buttons.ibutton('Note', f'editset {user_id} note', position='header')
-    buttons.ibutton('📝Caption', f'editset {user_id} caption', position='header')
-    buttons.ibutton('📈Count', f'editset {user_id} count', position='header')
-    buttons.ibutton('📩TgChat', f'editset {user_id} target', position='header')
+    buttons.data_button('Role', f'editset {user_id} role', position='header')
+    buttons.data_button('Provider', f'editset {user_id} provider', position='header')
+    buttons.data_button('Source', f'editset {user_id} source', position='header')
+    buttons.data_button('Tag', f'editset {user_id} tag', position='header')
+    buttons.data_button('Note', f'editset {user_id} note', position='header')
+    buttons.data_button('📝Caption', f'editset {user_id} caption', position='header')
+    buttons.data_button('📈Count', f'editset {user_id} count', position='header')
+    buttons.data_button('📩TgChat', f'editset {user_id} target', position='header')
     if msg_dict.get('protect'):
-        buttons.ibutton('➰Protect', f'editset {user_id} protect', position='header')
+        buttons.data_button('➰Protect', f'editset {user_id} protect', position='header')
     else:
-        buttons.ibutton('🔰Protect', f'editset {user_id} protect', position='header')
-    buttons.ibutton('🔥RUN', f'editset {user_id} run')
-    buttons.ibutton('Close', f'editset {user_id} close', position='footer')
+        buttons.data_button('🔰Protect', f'editset {user_id} protect', position='header')
+    buttons.data_button('🔥RUN', f'editset {user_id} run')
+    buttons.data_button('Close', f'editset {user_id} close', position='footer')
     button = buttons.build_menu(h_cols=3)
     return msg, button
 
 async def update_buttons(query, message_id):
     msg, button = await get_buttons(query.from_user, message_id)
-    await editMessage(query.message, msg, button)
+    await edit_message(query.message, msg, button)
 
 async def edit_media(client, message):
     message_id = message.reply_to_message_id
@@ -75,7 +75,7 @@ async def edit_media(client, message):
         LOGGER.error(e)
         msg = f'<b>Status:</b> Get Message Failed\n'
         msg += f'<b>Reason:</b> {escape(str(e))}'
-        err_message = await sendMessage(message, msg)
+        err_message = await send_message(message, msg)
         await auto_delete_message(client, [message, message.reply_to_message, err_message], 20)
         return
     if hestory_messages[0].media in [MessageMediaType.PHOTO, MessageMediaType.VIDEO]:
@@ -89,7 +89,7 @@ async def edit_media(client, message):
         if len(message_list) >= count:
             break
     if len(message_list) == 1:
-        result = await copyMedia(message_list[0], target_chat, msg, ParseMode.HTML, protect)
+        result = await copy_media(message_list[0], target_chat, msg, ParseMode.HTML, protect)
         send_media_groups = []
     else:
         send_medias = []
@@ -112,14 +112,14 @@ async def edit_media(client, message):
         smg[0].parse_mode = ParseMode.HTML
         if msg:
             smg[0].caption = msg
-        result = await copyMediaGroup(client, target_chat, smg, protect)
+        result = await copy_media_group(client, target_chat, smg, protect)
         if result:
             break
         await sleep(0.5)
     if result:
         msg = f'<b>Status:</b> Send Failed\n'
         msg += f'<b>Reason:</b> {escape(result)}'
-        err_message = await sendMessage(message, msg)
+        err_message = await send_message(message, msg)
         await auto_delete_message(client, [message, message.reply_to_message, err_message], 20)
     else:
         message_list.extend([message, message.reply_to_message])
@@ -138,7 +138,7 @@ async def conversation_handler(client, query, msg):
         )
     except TimeoutError:
         msg = 'Timeout, the conversation has been closed!'
-        await editMessage(reply_text_message, msg)
+        await edit_message(reply_text_message, msg)
         await auto_delete_message(client, reply_text_message, 10)
         return
     if response_message:
@@ -149,7 +149,7 @@ async def conversation_handler(client, query, msg):
         await auto_delete_message(client, reply_text_message, 0.5)
     return response_text
 
-@new_task
+@handler_new_task
 async def edit_callback(client, query):
     user_id = query.from_user.id
     message = query.message
@@ -243,11 +243,11 @@ async def edit_callback(client, query):
         await update_buttons(query, cmd_message_id)
     elif data[2] == 'run':
         await query.answer()
-        await editMessage(message, 'Sending media, please wait...')
+        await edit_message(message, 'Sending media, please wait...')
         await sleep(0.5)
         await edit_media(client, message)
 
-@new_task
+@handler_new_task
 async def edit(client, message):
     message_id = message.id
     chat_id = message.chat.id
@@ -270,7 +270,7 @@ async def edit(client, message):
         handler_dict[message_id]['reply_message_id'] = reply_message_id
     else:
         msg = 'Please reply to the media message you want to edit!'
-        reply_message = await sendMessage(message, msg)
+        reply_message = await send_message(message, msg)
         await auto_delete_message(client, [message, reply_message], 20)
         return
     if from_chat := reply_message.forward_from_chat:
@@ -282,7 +282,7 @@ async def edit(client, message):
             f'<a href="{chat_link}/{from_message_id}"><u>{from_chat.title}</u></a>'
             )
     msg, button = await get_buttons(message.from_user, message_id)
-    await sendMessage(message, msg, button)
+    await send_message(message, msg, button)
 
 
 bot.add_handler(MessageHandler(edit, filters=filters.command(BotCommands.EditCommand) & CustomFilters.sudo))

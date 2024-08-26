@@ -42,14 +42,14 @@ try:
         exit(1)
 except:
     pass
-bot_id = BOT_TOKEN.split(":", 1)[0]
+BOT_ID = BOT_TOKEN.split(":", 1)[0]
 
 DATABASE_URL = '/usr/src/app/config/data.db'
 conn = connect(DATABASE_URL)
 cur = conn.cursor()
 cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'")
 if cur.fetchone():
-    cur.execute("SELECT * FROM settings WHERE _id = ?", (bot_id,))
+    cur.execute("SELECT * FROM settings WHERE _id = ?", (BOT_ID,))
     row = cur.fetchone()
     old_config = json.loads(row[1]) if row else None
     config_dict = json.loads(row[2]) if row else None
