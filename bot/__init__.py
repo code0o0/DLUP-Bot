@@ -1,7 +1,7 @@
 from sys import exit
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aria2p import API as ariaAPI, Client as ariaClient
-from asyncio import Lock, get_event_loop
+from asyncio import Lock, get_running_loop, new_event_loop, set_event_loop
 from convopyro import Conversation
 from dotenv import load_dotenv, dotenv_values
 from logging import (
@@ -16,10 +16,11 @@ from logging import (
     ERROR,
 )
 import json
+from shutil import rmtree
 from os import remove, path as ospath, environ
-from pyrogram import Client as tgClient, enums
-from qbittorrentapi import Client as qbClient
-from sabnzbdapi import sabnzbdClient
+from pyrogram import Client as TgClient, enums
+from qbittorrentapi import Client as QbClient
+from sabnzbdapi import SabnzbdClient
 from socket import setdefaulttimeout
 from sqlite3 import connect
 from subprocess import Popen, run
@@ -42,7 +43,13 @@ getLogger("pyrogram").setLevel(ERROR)
 getLogger("httpx").setLevel(ERROR)
 
 botStartTime = time()
-bot_loop = get_event_loop()
+
+try:
+    bot_loop = get_running_loop()
+except RuntimeError:
+    bot_loop = new_event_loop()
+    set_event_loop(bot_loop)
+
 THREADPOOL = ThreadPoolExecutor(max_workers=99999)
 bot_loop.set_default_executor(THREADPOOL)
 
@@ -69,14 +76,14 @@ try:
 except:
     pass
 
-Intervals = {"status": {}, "qb": "", "jd": "", "nzb": "", "stopAll": False}
+intervals = {"status": {}, "qb": "", "jd": "", "nzb": "", "stopAll": False}
 QbTorrents = {}
 jd_downloads = {}
 nzb_jobs = {}
-DRIVES_NAMES = []
-DRIVES_IDS = []
-INDEX_URLS = []
-GLOBAL_EXTENSION_FILTER = ["aria2", "!qB"]
+drives_names = []
+drives_ids = []
+index_urls = []
+global_extension_filter = ["aria2", "!qB"]
 user_data = {}
 aria2_options = {}
 qbit_options = {}
@@ -103,13 +110,13 @@ BOT_TOKEN = environ.get("BOT_TOKEN", "")
 if len(BOT_TOKEN) == 0:
     log_error("BOT_TOKEN variable is missing! Exiting now")
     exit(1)
-bot_id = BOT_TOKEN.split(":", 1)[0]
+BOT_ID = BOT_TOKEN.split(":", 1)[0]
 
 conn = connect(DATABASE_URL)
 cur = conn.cursor()
 cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'")
 if cur.fetchone():
-    cur.execute("SELECT * FROM settings WHERE _id = ?", (bot_id,))
+    cur.execute("SELECT * FROM settings WHERE _id = ?", (BOT_ID,))
     row = cur.fetchone()
     current_config = dict(dotenv_values("config.env"))
     deploy_config = json.loads(row[1]) if row else None
@@ -140,12 +147,12 @@ conn.close()
 if ospath.exists("sabnzbd/SABnzbd.ini.bak"):
     remove("sabnzbd/SABnzbd.ini.bak")
 if ospath.exists("cfg.zip"):
-    run(["rm", "-rf", "/JDownloader/cfg"])
+    rmtree("/JDownloader/cfg")
     run(["7z", "x", "cfg.zip", "-o/JDownloader"])
     remove("cfg.zip")
 if ospath.exists("accounts.zip"):
     if ospath.exists("accounts"):
-        run(["rm", "-rf", "accounts"])
+        rmtree("accounts")
     run(["7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"])
     run(["chmod", "-R", "777", "accounts"])
     remove("accounts.zip")
@@ -196,7 +203,7 @@ USER_SESSION_STRING = environ.get("USER_SESSION_STRING", "")
 if len(USER_SESSION_STRING) != 0:
     log_info("Creating client from USER_SESSION_STRING")
     try:
-        user = tgClient(
+        user = TgClient(
             "user",
             TELEGRAM_API,
             TELEGRAM_HASH,
@@ -262,7 +269,7 @@ if len(EXTENSION_FILTER) > 0:
     fx = EXTENSION_FILTER.split()
     for x in fx:
         x = x.lstrip(".")
-        GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
+        global_extension_filter.append(x.strip().lower())
 USE_SERVICE_ACCOUNTS = environ.get("USE_SERVICE_ACCOUNTS", "")
 USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == "true"
 NAME_SUBSTITUTE = environ.get("NAME_SUBSTITUTE", "")
@@ -282,20 +289,20 @@ INDEX_URL = environ.get("INDEX_URL", "").rstrip("/")
 if len(INDEX_URL) == 0:
     INDEX_URL = ""
 if GDRIVE_ID:
-    DRIVES_NAMES.append("Main")
-    DRIVES_IDS.append(GDRIVE_ID)
-    INDEX_URLS.append(INDEX_URL)
+    drives_names.append("Main")
+    drives_ids.append(GDRIVE_ID)
+    index_urls.append(INDEX_URL)
 if ospath.exists("list_drives.txt"):
     with open("list_drives.txt", "r+") as f:
         lines = f.readlines()
         for line in lines:
             temp = line.strip().split()
-            DRIVES_IDS.append(temp[1])
-            DRIVES_NAMES.append(temp[0].replace("_", " "))
+            drives_ids.append(temp[1])
+            drives_names.append(temp[0].replace("_", " "))
             if len(temp) > 2:
-                INDEX_URLS.append(temp[2])
+                index_urls.append(temp[2])
             else:
-                INDEX_URLS.append("")
+                index_urls.append("")
 
 # Leech
 MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
@@ -409,7 +416,7 @@ config_dict = {
     "DOWNLOAD_DIR": DOWNLOAD_DIR,
 }
 
-qbittorrent_client = qbClient(
+qbittorrent_client = QbClient(
     host="localhost",
     port=8090,
     VERIFY_WEBUI_CERTIFICATE=False,
@@ -421,7 +428,7 @@ qbittorrent_client = qbClient(
     },
 )
 
-sabnzbd_client = sabnzbdClient(
+sabnzbd_client = SabnzbdClient(
     host="http://localhost",
     api_key="mltb",
     port="8070",
@@ -430,7 +437,7 @@ sabnzbd_client = sabnzbdClient(
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
 
 log_info("Creating client from BOT_TOKEN")
-app = tgClient(
+app = TgClient(
     "bot",
     TELEGRAM_API,
     TELEGRAM_HASH,
