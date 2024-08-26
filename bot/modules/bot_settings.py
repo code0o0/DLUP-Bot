@@ -673,14 +673,14 @@ async def edit_bot_settings(client, query):
             "Syncronization Started. It takes up to 2 sec!", show_alert=True
         )
         await get_nzb_options()
-        await update_buttons(message, "nzb")
+        # await update_buttons(message, "nzb")
         if config_dict["DATABASE_URL"]:
             await database.update_nzb_config()
     elif data[1] == "syncqbit":
         await query.answer(
             "Syncronization Started. It takes up to 2 sec!", show_alert=True
         )
-        await get_qb_options()
+        await sync_to_async(get_qb_options)
         if config_dict["DATABASE_URL"]:
             await database.save_qbit_settings()
     elif data[1] == "qbwebui":
