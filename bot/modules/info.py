@@ -7,10 +7,10 @@ from bot import bot, user, user_data, OWNER_ID, LOGGER
 from bot.helper.telegram_helper.message_utils import auto_delete_message, send_message
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import handler_new_task
+from bot.helper.ext_utils.bot_utils import new_task
 
 
-@handler_new_task
+@new_task
 async def info(client, message):
     msg = ''
     operator_user = message.from_user or message.sender_chat

@@ -2,7 +2,6 @@ from sys import exit
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aria2p import API as ariaAPI, Client as ariaClient
 from asyncio import Lock, get_running_loop, new_event_loop, set_event_loop
-from convopyro import Conversation
 from dotenv import load_dotenv, dotenv_values
 from logging import (
     getLogger,
@@ -27,7 +26,6 @@ from subprocess import Popen, run
 from time import time
 from tzlocal import get_localzone
 from uvloop import install
-from concurrent.futures import ThreadPoolExecutor
 
 
 # from faulthandler import enable as faulthandler_enable
@@ -49,9 +47,6 @@ try:
 except RuntimeError:
     bot_loop = new_event_loop()
     set_event_loop(bot_loop)
-
-THREADPOOL = ThreadPoolExecutor(max_workers=99999)
-bot_loop.set_default_executor(THREADPOOL)
 
 basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -478,7 +473,6 @@ app = TgClient(
     parse_mode=enums.ParseMode.HTML,
     max_concurrent_transmissions=10,
 )
-Conversation(app)
 bot = app.start()
 bot_name = bot.me.username
 
