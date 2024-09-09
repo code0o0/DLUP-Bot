@@ -293,7 +293,6 @@ async def conversation_handler(client, query, photo=False, document=False):
         response_message = await client.listen(
             chat_id=message.chat.id,
             user_id=from_user.id,
-            message_id=message.id,
             filters=event_filter,
             timeout=30,
             )
@@ -320,7 +319,6 @@ async def edit_user_settings(client, query):
     await client.stop_listening(
         chat_id=message.chat.id,
         user_id=user_id,
-        message_id=message.id
         )
     if data[2] in [
         "as_doc",

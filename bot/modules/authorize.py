@@ -79,7 +79,6 @@ async def set_auth(client, query, key):
         response_message = await client.listen(
             chat_id=message.chat.id,
             user_id=from_user.id,
-            message_id=message.id,
             filters=filters.regex(r'^[^/]'),
             timeout=30,
     )
@@ -158,7 +157,6 @@ async def auth_callback(client, query):
     await client.stop_listening(
         chat_id=message.chat.id,
         user_id=user_id,
-        message_id=message.id
         )
     if data[2] == 'close':
         await query.answer()

@@ -519,7 +519,6 @@ async def conversation_handler(client, query, document=False, key=None):
         response_message = await client.listen(
             chat_id=message.chat.id,
             user_id=from_user.id,
-            message_id=message.id,
             filters=filters.text | filters.document if document else filters.text,
             timeout=30,
             )
@@ -536,7 +535,6 @@ async def edit_bot_settings(client, query):
     await client.stop_listening(
         chat_id=message.chat.id,
         user_id=query.from_user.id,
-        message_id=message.id
         )
     data = query.data.split()
     if data[1] == "close":
