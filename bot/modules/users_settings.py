@@ -191,7 +191,7 @@ Name substitution is <b>{ns_msg}</b>
 Excluded Extensions is <code>{ex_ex}</code>
 YT-DLP Options is <b><code>{escape(ytopt)}</code></b>"""
 
-    return text, buttons.build_menu(2)
+    return text, buttons.build_menu(2, 2)
 
 
 async def update_user_settings(query):
