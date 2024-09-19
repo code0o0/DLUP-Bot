@@ -135,6 +135,10 @@ def direct_link_generator(link):
             "gibibox.com",
             "goaibox.com",
             "terasharelink.com",
+            "teraboxlink.com",
+            "freeterabox.com",
+            "1024terabox.com",
+            "teraboxshare.com"
         ]
     ):
         return terabox(link)
@@ -572,6 +576,8 @@ def terabox(url, video_quality="HD Video", save_dir="HD_Video"):
         "https://ytshorts.savetube.me/api/v1/terabox-downloader",
         f"https://teraboxvideodownloader.nepcoderdevs.workers.dev/?url={terabox_url}",
         f"https://terabox.udayscriptsx.workers.dev/?url={terabox_url}",
+        f"https://mavimods.serv00.net/Mavialt.php?url={terabox_url}",
+        f"https://mavimods.serv00.net/Mavitera.php?url={terabox_url}",
     ]
 
     headers = {

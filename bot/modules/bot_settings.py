@@ -5,14 +5,14 @@ from asyncio import (
     create_subprocess_exec,
     create_subprocess_shell,
     gather,
-    wait_for,
-    TimeoutError
+    wait_for
 )
 from configparser import ConfigParser
 from dotenv import load_dotenv
 from io import BytesIO
 from os import environ, getcwd
 from pyrogram import filters
+from pyrogram.errors import ListenerTimeout, ListenerStopped
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from bot import (
@@ -45,8 +45,8 @@ from bot import (
 from ..helper.ext_utils.bot_utils import (
     SetInterval,
     sync_to_async,
-    handler_new_task,
     retry_function,
+    new_task,
 )
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.jdownloader_booter import jdownloader
@@ -547,26 +547,30 @@ async def update_private_file(message, pre_message):
         await remove("accounts.zip")
 
 async def conversation_handler(client, query, document=False, edit_type=None, key=None):
-    event_filter = filters.text | filters.document if document else filters.text
     message = query.message
-    user_id = query.from_user.id
-    chat_id = query.message.chat.id
-    message_id = message.id
+    from_user = query.from_user
     try:
-        response_message = await client.listen.Message(
-            filters=event_filter & filters.user(user_id) & filters.chat(chat_id),
-            id=f'{message_id}',
+        response_message = await client.listen(
+            chat_id=message.chat.id,
+            user_id=from_user.id,
+            message_id=message.id,
+            filters=filters.text | filters.document if document else filters.text,
             timeout=30,
         )
-    except TimeoutError:
+    except ListenerTimeout:
         await update_buttons(message, edit_type, key)
+        return
+    except ListenerStopped:
         return
     return response_message
 
-@handler_new_task
+@new_task
 async def edit_bot_settings(client, query):
     message = query.message
-    await client.listen.Cancel(f'{message.id}')
+    await client.stop_listening(
+        chat_id=message.chat.id,
+        user_id=query.from_user.id,
+        )
     data = query.data.split()
     if data[1] == "close":
         await query.answer()
@@ -779,7 +783,7 @@ async def edit_bot_settings(client, query):
         await delete_message(message.reply_to_message)
         await delete_message(message)
 
-@handler_new_task
+@new_task
 async def bot_settings(client, message):
     msg, button = await get_buttons()
     globals()["start"] = 0

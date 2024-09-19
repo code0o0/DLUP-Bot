@@ -1,13 +1,14 @@
-from asyncio import sleep, TimeoutError
+from asyncio import sleep
 from html import escape
 import random
 
 from pyrogram import filters
+from pyrogram.errors import ListenerTimeout, ListenerStopped
 from pyrogram.enums import ParseMode, MessageMediaType
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import InputMediaDocument, InputMediaPhoto, InputMediaVideo, InputMediaAudio
 from bot import bot, OWNER_ID, LOGGER, user
-from bot.helper.ext_utils.bot_utils import handler_new_task
+from bot.helper.ext_utils.bot_utils import new_task
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -114,32 +115,31 @@ async def forward_message(client, message, message_id):
     msg += f'<pre>Status: Success</pre>\n'
     success_message = await send_message(message, msg)
     await auto_delete_message(client, [message, message.reply_to_message, success_message], 20)
-    
+
 async def conversation_handler(client, query, msg):
-    chat_id = query.message.chat.id
-    user_id = query.from_user.id
-    message_id = query.message.id
+    message = query.message
+    from_user = query.from_user
     try:
-        reply_text_message = await client.send_message(chat_id, msg)
-        response_message = await client.listen.Message(
-            filters=filters.regex(r'^[^/]') & filters.user(user_id) & filters.chat(chat_id),
-            id=f'{message_id}', 
+        reply_text_message = await client.send_message(message.chat.id, msg)
+        response_message = await client.listen(
+            chat_id=message.chat.id,
+            user_id=from_user.id,
+            filters=filters.regex(r'^[^/]'),
             timeout=30,
-        )
-    except TimeoutError:
+            )
+    except ListenerTimeout:
         msg = 'Timeout, the conversation has been closed!'
         await edit_message(reply_text_message, msg)
         await auto_delete_message(client, reply_text_message, 10)
-        return None
-    if response_message:
-        response_text = response_message.text
-        await auto_delete_message(client, [reply_text_message, response_message], 0.5)
-    else:
-        response_text = None
+        return
+    except ListenerStopped:
         await auto_delete_message(client, reply_text_message, 0.5)
+        return
+    response_text = response_message.text.strip()
+    await auto_delete_message(client, [reply_text_message, response_message], 0.5)
     return response_text
 
-@handler_new_task
+@new_task
 async def forward_callback(client, query):
     user_id = query.from_user.id
     message = query.message
@@ -148,7 +148,10 @@ async def forward_callback(client, query):
     if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer('You are not allowed to do this', show_alert=True)
         return
-    await client.listen.Cancel(f'{message.id}')
+    await client.stop_listening(
+        chat_id=message.chat.id,
+        user_id=user_id,
+        )
     if cmd_message_id not in handler_dict:
         await query.answer('This message has expired', show_alert=True)
         await auto_delete_message(client, [message, message.reply_to_message], 0)
@@ -204,7 +207,7 @@ async def forward_callback(client, query):
         await edit_message(message, msg)
         await forward_message(client, message, cmd_message_id)
 
-@handler_new_task
+@new_task
 async def forward(client, message):
     command = message.command
     message_id = message.id

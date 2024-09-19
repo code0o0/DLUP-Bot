@@ -1,9 +1,9 @@
 from aiofiles.os import remove, path as aiopath, makedirs
-from asyncio import TimeoutError
 from html import escape
 from io import BytesIO
 from os import getcwd
 from pyrogram import filters
+from pyrogram.errors import ListenerTimeout, ListenerStopped
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from bot import (
@@ -17,7 +17,7 @@ from bot import (
 )
 from ..helper.ext_utils.bot_utils import (
     update_user_ldata,
-    handler_new_task,
+    new_task,
     get_size_bytes,
 )
 from ..helper.ext_utils.db_handler import database
@@ -191,13 +191,13 @@ Name substitution is <b>{ns_msg}</b>
 Excluded Extensions is <code>{ex_ex}</code>
 YT-DLP Options is <b><code>{escape(ytopt)}</code></b>"""
 
-    return text, buttons.build_menu(2)
+    return text, buttons.build_menu(2, 2)
 
 async def update_user_settings(query):
     msg, button = await get_user_settings(query.from_user)
     await edit_message(query.message, msg, button)
 
-@handler_new_task
+@new_task
 async def user_settings(client, message):
     from_user = message.from_user
     msg, button = await get_user_settings(from_user)
@@ -286,21 +286,23 @@ async def conversation_handler(client, query, photo=False, document=False):
         event_filter = filters.document
     else:
         event_filter = filters.regex(r'^[^/]')
-    user_id = query.from_user.id
-    chat_id = query.message.chat.id
-    message_id = query.message.id
+    message = query.message
+    from_user = query.from_user
     try:
-        response_message = await client.listen.Message(
-            filters=event_filter & filters.user(user_id) & filters.chat(chat_id),
-            id=f'{message_id}',
+        response_message = await client.listen(
+            chat_id=message.chat.id,
+            user_id=from_user.id,
+            filters=event_filter,
             timeout=30,
-        )
-    except TimeoutError:
+            )
+    except ListenerTimeout:
         await update_user_settings(query)
+        return
+    except ListenerStopped:
         return
     return response_message
 
-@handler_new_task
+@new_task
 async def edit_user_settings(client, query):
     from_user = query.from_user
     user_id = from_user.id
@@ -313,7 +315,10 @@ async def edit_user_settings(client, query):
     user_dict = user_data.get(user_id, {})
     if user_id != int(data[1]) and user_id != OWNER_ID:
         await query.answer("Not Yours!", show_alert=True)
-    await client.listen.Cancel(f'{message.id}')
+    await client.stop_listening(
+        chat_id=message.chat.id,
+        user_id=user_id,
+        )
     if data[2] in [
         "as_doc",
         "equal_splits",
@@ -832,7 +837,7 @@ Example-2: \(text\) | \[test\] : test | \\text\\ : text : s
         await delete_message(message.reply_to_message)
         await delete_message(message)
 
-@handler_new_task
+@new_task
 async def send_users_settings(_, message):
     if user_data:
         msg = ""
