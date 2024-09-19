@@ -81,7 +81,7 @@ class DbManager:
             values = {'id': BOT_ID, 'deploy_config': _deploy_config}
             await self.__db.execute(query=query, values=values)
 
-    async def update_config(self, dict_):
+    async def update_config(self):
         _config_dict = json.dumps(config_dict)
         async with self.__db.transaction():
             query = 'UPDATE settings SET config_dict = :config_dict  WHERE _id = :id'
@@ -103,7 +103,7 @@ class DbManager:
             values = {'id': BOT_ID, 'qbit_options': _qbit_options}
             await self.__db.execute(query=query, values=values)
     
-    async def update_rclone_config(self):
+    async def update_rclone(self):
         _rclone_options = json.dumps(rclone_options)
         async with self.__db.transaction():
             query = 'UPDATE settings SET rclone_options = :rclone_options  WHERE _id = :id'
@@ -130,7 +130,7 @@ class DbManager:
                 await self.__db.execute(query=query, values=values)
     
     async def update_user_doc(self, user_id, path=""):
-        if path:
+        if await aiopath.exists(path):
             async with aiopen(path, "rb+") as doc:
                 doc_bin = await doc.read()
         else:

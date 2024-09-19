@@ -34,9 +34,7 @@ async def add_servers():
                 config_dict["USENET_SERVERS"].append(server)
         if config_dict["DATABASE_URL"]:
             tasks.append(
-                database.update_config(
-                    {"USENET_SERVERS": config_dict["USENET_SERVERS"]}
-                )
+                database.update_config()
             )
         if tasks:
             try:

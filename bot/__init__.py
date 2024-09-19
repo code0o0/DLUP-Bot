@@ -60,7 +60,7 @@ basicConfig(
 )
 LOGGER = getLogger(__name__)
 
-LOCAL_DIR = '/usr/src/app/Storage'
+LOCAL_DIR = '/usr/src/app/storage'
 CONFIG_DIR = '/usr/src/app/config'
 DATABASE_URL = f'{CONFIG_DIR}/data.db'
 DOWNLOAD_DIR = '/usr/src/app/downloads'
@@ -230,7 +230,7 @@ if len(UPSTREAM_BRANCH) == 0:
 
 #DOWNLOAD
 BASE_URL_PORT = environ.get("BASE_URL_PORT", "")
-BASE_URL_PORT = 20001 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
+BASE_URL_PORT = 9001 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
 BASE_URL = environ.get("BASE_URL", "").rstrip("/")
 if len(BASE_URL) == 0:
     log_warning("BASE_URL not provided!")
@@ -467,17 +467,17 @@ def get_qb_options(sync=False):
         qbittorrent_client.app_set_preferences(qb_opt)
 
 
-aria2c_edit_opts = ['max-overall-download-limit', 'max-overall-upload-limit', 'max-download-limit', 'max-upload-limit',
-                    'split', 'min-split-size', 'max-connection-per-server', 'disk-cache', 'file-allocation', 'user-agent',
-                    'seed-ratio', 'seed-time', 'bt-max-peers', 'enable-dht', 'enable-dht6', 'bt-enable-lpd',
-                    'enable-peer-exchange']
+aria2c_edit = ['max-overall-download-limit', 'max-overall-upload-limit', 'max-download-limit', 'max-upload-limit',
+               'split', 'min-split-size', 'max-connection-per-server', 'disk-cache', 'file-allocation', 'user-agent',
+               'seed-ratio', 'seed-time', 'bt-max-peers', 'enable-dht', 'enable-dht6', 'bt-enable-lpd',
+               'enable-peer-exchange']
 aria2c_global = ["bt-max-open-files", "download-result", "keep-unfinished-download-result", "log", "log-level",
                  "max-concurrent-downloads", "max-download-result", "max-overall-download-limit", "save-session",
                  "max-overall-upload-limit", "optimize-concurrent-downloads", "save-cookies", "server-stat-of"]
 def get_aria2_options():
     if not aria2_options:
         aria2_all_options = aria2.client.get_global_option()
-        aria2_options.update({key: aria2_all_options[key] for key in aria2c_edit_opts})
+        aria2_options.update({key: aria2_all_options[key] for key in aria2c_edit})
     else:
         a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
         aria2.set_global_options(a2c_glo)
@@ -487,7 +487,7 @@ async def get_nzb_options():
 
 if not rclone_options:
     rclone_options = {
-        "SERVE_ADRESS": "",
+        "SERVE_ADRESS": "0.0.0.0",
         "SERVE_PORT": 20002,
         "SERVE_USER": "admin",
         "SERVE_PASS": "password0",
