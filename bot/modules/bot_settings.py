@@ -119,7 +119,7 @@ async def get_buttons(key=None, edit_type=None):
             if key in ["CMD_SUFFIX", "OWNER_ID", "USER_SESSION_STRING"]:
                 msg += "Restart required for this edit to take effect!\n\n"
             msg += f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{config_dict[key]}'</b>.\n"
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "ariavar":
             buttons.data_button("Back", "botset aria", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
@@ -129,13 +129,13 @@ async def get_buttons(key=None, edit_type=None):
                 msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{aria2_options[key]}'</b>.\n"
             else:
                 msg = "Send a key with value.\nExample: https-proxy-user:value\n"    
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "qbitvar":
             buttons.data_button("Empty String", f"botset emptyqbit {key}")
             buttons.data_button("Back", "botset qbit", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
             msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{qbit_options[key]}'</b>.\n"
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "nzbvar":
             buttons.data_button("Default", f"botset resetnzb {key}")
             buttons.data_button("Empty String", f"botset emptynzb {key}")
@@ -143,7 +143,7 @@ async def get_buttons(key=None, edit_type=None):
             buttons.data_button("Close", "botset close", position="footer")
             msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{nzb_options[key]}'</b>.\n"
             msg += "<b>Note:</b> If the value is list then seperate them by space or ,\nExample: .exe,info or .exe .info\n"
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
         elif edit_type.startswith("nzbsevar"):
             index = 0 if key == "newser" else int(edit_type.replace("nzbsevar", ""))
             buttons.data_button("Back", f"botset nzbserver", position="footer")
@@ -153,7 +153,7 @@ async def get_buttons(key=None, edit_type=None):
                 msg = f"Send a valid value for <b>{key}</b> in server {config_dict['USENET_SERVERS'][index]['name']}.\nCurrent value is <b>'{config_dict['USENET_SERVERS'][index][key]}'</b>.\n"
             else:
                 msg = "Send one server as dictionary {}, like in config.env without [].\n"
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
     elif key == "var":
         var_list = ["STATUS_UPDATE_INTERVAL", "STATUS_LIMIT", "QUEUE_ALL", "QUEUE_DOWNLOAD", "QUEUE_UPLOAD",
                     "USER_SESSION_STRING", "CMD_SUFFIX", "UPSTREAM_REPO", "UPSTREAM_BRANCH", "BASE_URL_PORT",
@@ -173,7 +173,7 @@ async def get_buttons(key=None, edit_type=None):
         buttons.data_button("Close", "botset close", position="footer")
         msg = "Send private file: config.env, token.pickle, rclone.conf, accounts.zip, list_drives.txt, cookies.txt, .netrc or any other private file!\n"
         msg += "<b>Note:</b> To delete private file send only the file name as text message.Changing .netrc will not take effect for aria2c until restart.\n"
-        msg += "<b>Timeout:</b> 60 sec"
+        msg += "<b>Timeout:</b> 30 sec"
     elif key == "aria":
         buttons, msg = get_content_buttons(aria2_options, "ariavar", "aria")
         buttons.data_button("Add new key", "botset ariavar newkey", position="body")
@@ -228,9 +228,6 @@ async def edit_variable(message, pre_message, key):
         value = False
         if key == "INCOMPLETE_TASK_NOTIFIER" and config_dict["DATABASE_URL"]:
             await database.trunc_table("tasks")
-    elif key in ["LEECH_DUMP_CHAT", "RSS_CHAT"]:
-        if value.isdigit() or value.startswith("-"):
-            value = int(value)
     elif key == "STATUS_UPDATE_INTERVAL":
         value = int(value)
         if len(task_dict) != 0 and (st := intervals["status"]):
@@ -601,7 +598,7 @@ async def edit_bot_settings(client, query):
         elif data[2] == "BASE_URL":
             await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
         elif data[2] == "BASE_URL_PORT":
-            value = 20001
+            value = 9001
             if config_dict["BASE_URL"]:
                 await (
                     await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")
@@ -854,7 +851,7 @@ async def load_config():
         UPSTREAM_BRANCH = "master"
     #DOWNLOAD
     BASE_URL_PORT = environ.get("BASE_URL_PORT", "")
-    BASE_URL_PORT = 20001 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
+    BASE_URL_PORT = 9001 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
     await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
     BASE_URL = environ.get("BASE_URL", "").rstrip("/")
     if len(BASE_URL) == 0:
@@ -948,7 +945,7 @@ async def load_config():
     if len(RCLONE_SERVE_URL) == 0:
         RCLONE_SERVE_URL = ""
     RCLONE_SERVE_PORT = environ.get("RCLONE_SERVE_PORT", "")
-    RCLONE_SERVE_PORT = 20002 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
+    RCLONE_SERVE_PORT = 9002 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
     RCLONE_SERVE_USER = environ.get("RCLONE_SERVE_USER", "")
     if len(RCLONE_SERVE_USER) == 0:
         RCLONE_SERVE_USER = ""
@@ -975,10 +972,10 @@ async def load_config():
         LEECH_FILENAME_PREFIX = ""
     LEECH_DUMP_CHAT = environ.get("LEECH_DUMP_CHAT", "")
     LEECH_DUMP_CHAT = "" if len(LEECH_DUMP_CHAT) == 0 else LEECH_DUMP_CHAT
-    if LEECH_DUMP_CHAT.isdigit() or LEECH_DUMP_CHAT.startswith("-"):
-        LEECH_DUMP_CHAT = int(LEECH_DUMP_CHAT)
     MIXED_LEECH = environ.get("MIXED_LEECH", "")
     MIXED_LEECH = MIXED_LEECH.lower() == "true" and IS_PREMIUM_USER
+    THUMBNAIL_LAYOUT = environ.get("THUMBNAIL_LAYOUT", "")
+    THUMBNAIL_LAYOUT = "" if len(THUMBNAIL_LAYOUT) == 0 else THUMBNAIL_LAYOUT
     # Additional
     JD_EMAIL = environ.get("JD_EMAIL", "")
     JD_PASS = environ.get("JD_PASS", "")
@@ -993,8 +990,6 @@ async def load_config():
         STREAMWISH_API = ""
     RSS_CHAT = environ.get("RSS_CHAT", "")
     RSS_CHAT = "" if len(RSS_CHAT) == 0 else RSS_CHAT
-    if RSS_CHAT.isdigit() or RSS_CHAT.startswith("-"):
-        RSS_CHAT = int(RSS_CHAT)
     RSS_DELAY = environ.get("RSS_DELAY", "")
     RSS_DELAY = 600 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
     SEARCH_API_LINK = environ.get("SEARCH_API_LINK", "").rstrip("/")
@@ -1064,6 +1059,7 @@ async def load_config():
             'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
             'LEECH_DUMP_CHAT': LEECH_DUMP_CHAT,
             'MIXED_LEECH': MIXED_LEECH,
+            "THUMBNAIL_LAYOUT": THUMBNAIL_LAYOUT,
             'JD_EMAIL': JD_EMAIL,
             'JD_PASS': JD_PASS,
             'FILELION_API': FILELION_API,

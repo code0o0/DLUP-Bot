@@ -93,6 +93,7 @@ nzb_listener_lock = Lock()
 jd_lock = Lock()
 cpu_eater_lock = Lock()
 subprocess_lock = Lock()
+same_directory_lock = Lock()
 status_dict = {}
 task_dict = {}
 rss_dict = {}
@@ -225,7 +226,7 @@ if len(UPSTREAM_BRANCH) == 0:
 
 #DOWNLOAD
 BASE_URL_PORT = environ.get("BASE_URL_PORT", "")
-BASE_URL_PORT = 20001 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
+BASE_URL_PORT = 9001 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
 BASE_URL = environ.get("BASE_URL", "").rstrip("/")
 if len(BASE_URL) == 0:
     log_warning("BASE_URL not provided!")
@@ -291,7 +292,7 @@ RCLONE_SERVE_URL = environ.get("RCLONE_SERVE_URL", "").rstrip("/")
 if len(RCLONE_SERVE_URL) == 0:
     RCLONE_SERVE_URL = ""
 RCLONE_SERVE_PORT = environ.get("RCLONE_SERVE_PORT", "")
-RCLONE_SERVE_PORT = 20002 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
+RCLONE_SERVE_PORT = 9002 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
 RCLONE_SERVE_USER = environ.get("RCLONE_SERVE_USER", "")
 if len(RCLONE_SERVE_USER) == 0:
     RCLONE_SERVE_USER = ""
@@ -323,10 +324,10 @@ if len(LEECH_FILENAME_PREFIX) == 0:
     LEECH_FILENAME_PREFIX = ""
 LEECH_DUMP_CHAT = environ.get("LEECH_DUMP_CHAT", "")
 LEECH_DUMP_CHAT = "" if len(LEECH_DUMP_CHAT) == 0 else LEECH_DUMP_CHAT
-if LEECH_DUMP_CHAT.isdigit() or LEECH_DUMP_CHAT.startswith("-"):
-    LEECH_DUMP_CHAT = int(LEECH_DUMP_CHAT)
 MIXED_LEECH = environ.get("MIXED_LEECH", "")
 MIXED_LEECH = MIXED_LEECH.lower() == "true" and IS_PREMIUM_USER
+THUMBNAIL_LAYOUT = environ.get("THUMBNAIL_LAYOUT", "")
+THUMBNAIL_LAYOUT = "" if len(THUMBNAIL_LAYOUT) == 0 else THUMBNAIL_LAYOUT
 
 # Additional
 JD_EMAIL = environ.get("JD_EMAIL", "")
@@ -342,8 +343,6 @@ if len(STREAMWISH_API) == 0:
     STREAMWISH_API = ""
 RSS_CHAT = environ.get("RSS_CHAT", "")
 RSS_CHAT = "" if len(RSS_CHAT) == 0 else RSS_CHAT
-if RSS_CHAT.isdigit() or RSS_CHAT.startswith("-"):
-    RSS_CHAT = int(RSS_CHAT)
 RSS_DELAY = environ.get("RSS_DELAY", "")
 RSS_DELAY = 600 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
 SEARCH_API_LINK = environ.get("SEARCH_API_LINK", "").rstrip("/")
@@ -401,6 +400,7 @@ config_dict = {
     'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
     'LEECH_DUMP_CHAT': LEECH_DUMP_CHAT,
     'MIXED_LEECH': MIXED_LEECH,
+    "THUMBNAIL_LAYOUT": THUMBNAIL_LAYOUT,
     'JD_EMAIL': JD_EMAIL,
     'JD_PASS': JD_PASS,
     'FILELION_API': FILELION_API,
@@ -448,7 +448,7 @@ run(
 
 qbittorrent_client = QbClient(
     host="localhost",
-    port=8090,
+    port=9005,
     VERIFY_WEBUI_CERTIFICATE=False,
     REQUESTS_ARGS={"timeout": (30, 60)},
     HTTPADAPTER_ARGS={
@@ -461,7 +461,7 @@ qbittorrent_client = QbClient(
 sabnzbd_client = SabnzbdClient(
     host="http://localhost",
     api_key="mltb",
-    port="8070",
+    port="9004",
 )
 
 log_info("Creating client from BOT_TOKEN")

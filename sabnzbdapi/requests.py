@@ -23,7 +23,7 @@ class SabnzbdClient(JobFunctions):
         self,
         host: str,
         api_key: str,
-        port: str = "8070",
+        port: str = "9004",
         VERIFY_CERTIFICATE: bool = False,
         RETRIES: int = 10,
         HTTPX_REQUETS_ARGS: dict = None,
