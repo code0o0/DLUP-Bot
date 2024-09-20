@@ -129,7 +129,7 @@ if cur.fetchone():
     rows = cur.fetchall()
     for row in rows:
         path = row[0]
-        pf_bin = json.loads(row[1])
+        pf_bin = row[1]
         dir = path.split("/")[-1]
         if not ospath.exists(dir):
             run(["mkdir", dir])
