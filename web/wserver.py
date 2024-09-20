@@ -18,7 +18,7 @@ except RuntimeError:
 
 qbittorrent_client = qbClient(
     host="localhost",
-    port=8090,
+    port=9005,
     VERIFY_WEBUI_CERTIFICATE=False,
     REQUESTS_ARGS={"timeout": (30, 60)},
     HTTPADAPTER_ARGS={"pool_maxsize": 200, "pool_block": True},
@@ -27,7 +27,7 @@ qbittorrent_client = qbClient(
 sabnzbd_client = SabnzbdClient(
     host="http://localhost",
     api_key="mltb",
-    port="8070",
+    port="9004",
 )
 
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))

@@ -3,6 +3,9 @@ substantial modifications and is designed for efficiently mirroring or leeching 
 destinations, including Google Drive, Telegram, or any rclone-supported cloud. It is built using asynchronous
 programming in Python.
 
+- **TELEGRAM CHANNEL:** https://t.me/mltb_official_channel
+- **TELEGRAM GROUP:** https://t.me/mltb_official_support
+
 # Features
 
 ## qBittorrent
@@ -33,13 +36,15 @@ programming in Python.
 - Split size (global, user, and task option)
 - Thumbnail (user and task option)
 - Leech filename prefix (user option)
-- Set upload as a document or as media (global and user option)
+- Set upload as a document or as media (global, user and task option)
 - Upload all files to a specific chat (superGroup/channel/private/topic) (global, user, and task option)
 - Equal split size settings (global and user option)
 - Ability to leech split file parts in a media group (global and user option)
 - Download restricted messages (document or link) by tg private/public/super links (task option)
 - Choose transfer by bot or user session in case you have a premium plan (global, user option and task option)
 - Mix upload between user and bot session with respect to file size (global, user option and task option)
+- Upload with custom layout multiple thubnmail (global, user option and task option)
+- Topics support
 
 ## Google Drive
 
@@ -102,6 +107,7 @@ programming in Python.
 
 - Extract splits with or without password
 - Zip file/folder with or without password
+- Decompress zst files
 - Using 7-zip tool to extract with or without password all supported types:
 
 > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2,MBR,
@@ -142,6 +148,7 @@ programming in Python.
 - Bulk download from telegram txt file or text message contains links seperated by new line (task option)
 - Join splitted files that have splitted before by split(linux pkg) (task option)
 - Sample video Generator (task option)
+- Screenshots Generator (task option)
 - Ability to cancel upload/clone/archive/extract/split/queue (task option)
 - Cancel all buttons for choosing specific tasks status to cancel (global option)
 - Convert videos and audios to specific format with filter (task option)
@@ -257,18 +264,17 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work
   see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account)
   section below. Default is `False`. `Bool`
-- `NAME_SUBSTITUTE`: Add word/letter/sentense/pattern to remove or replace with other words with sensitive case or without. **Notes**: 
+- `NAME_SUBSTITUTE`: Add word/letter/character/sentense/pattern to remove or replace with other words with sensitive case or without. **Notes**:
   1. Seed will get disbaled while using this option
   2. Before any character you must add `\BACKSLASH`, those are the characters: `\^$.|?*+()[]{}-`
-  * Example-1: `text : code : s | mirror : leech | tea :  : s | clone`
-    - text will get replaced by code with sensitive case
-    - mirror will get replaced by leech
-    - tea will get removed with sensitive case
-    - clone will get removed
-  * Example-2: `\(text\) | \[test\] : test | \\text\\ : text : s`
-    - `(text)` will get removed
-    - `[test]` will get replaced by test
-    - `\text\` will get replaced by text with sensitive case
+  * Example: script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb | \\text\\/text/s
+   - script will get replaced by code with sensitive case
+   - mirror will get replaced by leech
+   - tea will get replaced by space with sensitive case
+   - clone will get removed
+   - cpu will get replaced by space
+   - [mltb] will get replaced by mltb
+   - \text\ will get replaced by text with sensitive case
 
 **3. GDrive Tools**
 
@@ -287,7 +293,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `RCLONE_SERVE_URL`: Valid URL where the bot is deployed to use rclone serve. Format of URL should be `http://myip`,
   where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this
   format `http://myip:port` (`http` and not `https`). `Str`
-- `RCLONE_SERVE_PORT`: Which is the **RCLONE_SERVE_URL** Port. Default is `8080`. `Int`
+- `RCLONE_SERVE_PORT`: Which is the **RCLONE_SERVE_URL** Port. Default is `9002`. `Int`
 - `RCLONE_SERVE_USER`: Username for rclone serve authentication. `Str`
 - `RCLONE_SERVE_PASS`: Password for rclone serve authentication. `Str`
 
@@ -313,6 +319,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `MIXED_LEECH`: Upload by user and bot session with respect to file size. Only in superChat. Default is `False`. `Bool`
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
 - `LEECH_DUMP_CHAT`: ID or USERNAME or PM(private message) to where files would be uploaded. `Int`|`Str`. Add `-100` before channel/superGroup id.
+- `THUMBNAIL_LAYOUT`: Thumbnail layout (widthxheight, 2x2, 3x3, 2x4, 4x4, ...) of how many photo arranged for the thumbnail.`Str`
 
 **7. qBittorrent/Aria2c/Sabnzbd**
 
@@ -320,13 +327,13 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `BASE_URL`: Valid BASE URL where the bot is deployed to use torrent web files selection. Format of URL should
   be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so
   write it in this format `http://myip:port` (`http` and not `https`). `Str`
-- `BASE_URL_PORT`: Which is the **BASE_URL** Port. Default is `80`. `Int`
+- `BASE_URL_PORT`: Which is the **BASE_URL** Port. Default is `9001`. `Int`
 - `WEB_PINCODE`: Whether to ask for pincode before selecting files from torrent in web or not. Default
   is `False`. `Bool`.
     - **Qbittorrent NOTE**: If your facing ram issues then set limit for `MaxConnections`,
       decrease `AsyncIOThreadsCount`, set limit of `DiskWriteCacheSize` to `32` and decrease `MemoryWorkingSetLimit`
       from qbittorrent.conf or bsetting command.
-    - Open port 8090 in your vps to access webui from any device. username: mltb, password: mltbmltb
+    - Open port 9005 in your vps to access webui from any device. username: mltb, password: mltbmltb
 
 **8. JDownloader**
 
@@ -342,13 +349,13 @@ quotes, even if it's `Int`, `Bool` or `List`.
 
   - [READ THIS FOR MORE INFORMATION](https://sabnzbd.org/wiki/configuration/4.2/servers)
 
-  - Open port 8070 in your vps to access full web interface from any device. Use it like http://ip:8070/sabnzbd/.
+  - Open port 9004 in your vps to access full web interface from any device. Use it like http://ip:9004/sabnzbd/.
 
 **10. RSS**
 
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `600` second at least. Default is `600` in
   sec. `Int`
-- `RSS_CHAT`: Chat ID/USERNAME where rss links will be sent. If you want message to be sent to the channel then add
+- `RSS_CHAT`: Chat `ID or USERNAME or ID|TOPIC_ID or USERNAME|TOPIC_ID` where rss links will be sent. If you want message to be sent to the channel then add
   channel id. Add `-100` before channel id. `Int`|`Str`
     - **RSS NOTES**: `RSS_CHAT` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR--
       *CHANNEL*. If using channel then bot should be added in both channel and group(linked to channel) and `RSS_CHAT`
@@ -407,7 +414,7 @@ sudo docker build . -t mltb
 - Run the image:
 
 ```
-sudo docker run -p 80:80 -p 8080:8080 mltb
+sudo docker run -p 9001:9001 -p 9002:9002 mltb
 ```
 
 - To stop the running image:
@@ -424,7 +431,7 @@ sudo docker stop id
 
 #### Build And Run The Docker Image Using docker-compose
 
-**NOTE**: If you want to use ports other than 80 and 8080 for torrent file selection and rclone serve respectively,
+**NOTE**: If you want to use ports other than 9001 and 9002 for torrent file selection and rclone serve respectively,
 change it in [docker-compose.yml](https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/docker-compose.yml)
 also.
 
@@ -468,7 +475,7 @@ sudo docker compose logs --follow
 
 **IMPORTANT NOTES**:
 
-1. Set `BASE_URL_PORT` and `RCLONE_SERVE_PORT` variables to any port you want to use. Default is `80` and `8080`
+1. Set `BASE_URL_PORT` and `RCLONE_SERVE_PORT` variables to any port you want to use. Default is `9001` and `9002`
    respectively.
 
 2. Check the number of processing units of your machine with `nproc` cmd and times it by 4, then

@@ -97,6 +97,7 @@ nzb_listener_lock = Lock()
 jd_lock = Lock()
 cpu_eater_lock = Lock()
 subprocess_lock = Lock()
+same_directory_lock = Lock()
 status_dict = {}
 task_dict = {}
 rss_dict = {}
@@ -324,10 +325,10 @@ if len(LEECH_FILENAME_PREFIX) == 0:
     LEECH_FILENAME_PREFIX = ""
 LEECH_DUMP_CHAT = environ.get("LEECH_DUMP_CHAT", "")
 LEECH_DUMP_CHAT = "" if len(LEECH_DUMP_CHAT) == 0 else LEECH_DUMP_CHAT
-if LEECH_DUMP_CHAT.isdigit() or LEECH_DUMP_CHAT.startswith("-"):
-    LEECH_DUMP_CHAT = int(LEECH_DUMP_CHAT)
 MIXED_LEECH = environ.get("MIXED_LEECH", "")
 MIXED_LEECH = MIXED_LEECH.lower() == "true" and IS_PREMIUM_USER
+THUMBNAIL_LAYOUT = environ.get("THUMBNAIL_LAYOUT", "")
+THUMBNAIL_LAYOUT = "" if len(THUMBNAIL_LAYOUT) == 0 else THUMBNAIL_LAYOUT
 
 # Additional
 JD_EMAIL = environ.get("JD_EMAIL", "")
@@ -343,8 +344,6 @@ if len(STREAMWISH_API) == 0:
     STREAMWISH_API = ""
 RSS_CHAT = environ.get("RSS_CHAT", "")
 RSS_CHAT = "" if len(RSS_CHAT) == 0 else RSS_CHAT
-if RSS_CHAT.isdigit() or RSS_CHAT.startswith("-"):
-    RSS_CHAT = int(RSS_CHAT)
 RSS_DELAY = environ.get("RSS_DELAY", "")
 RSS_DELAY = 600 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
 SEARCH_API_LINK = environ.get("SEARCH_API_LINK", "").rstrip("/")
@@ -396,6 +395,7 @@ config_dict = {
     'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
     'LEECH_DUMP_CHAT': LEECH_DUMP_CHAT,
     'MIXED_LEECH': MIXED_LEECH,
+    "THUMBNAIL_LAYOUT": THUMBNAIL_LAYOUT,
     'JD_EMAIL': JD_EMAIL,
     'JD_PASS': JD_PASS,
     'FILELION_API': FILELION_API,
@@ -414,7 +414,7 @@ config_dict = {
 
 qbittorrent_client = QbClient(
     host="localhost",
-    port=8090,
+    port=9005,
     VERIFY_WEBUI_CERTIFICATE=False,
     REQUESTS_ARGS={"timeout": (30, 60)},
     HTTPADAPTER_ARGS={
@@ -427,7 +427,7 @@ qbittorrent_client = QbClient(
 sabnzbd_client = SabnzbdClient(
     host="http://localhost",
     api_key="mltb",
-    port="8070",
+    port="9004",
 )
 
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
@@ -481,10 +481,10 @@ async def get_nzb_options():
 
 if not rclone_options:
     rclone_options = {
-        "SERVE_ADRESS": "0.0.0.0",
-        "SERVE_PORT": 20002,
-        "SERVE_USER": "admin",
-        "SERVE_PASS": "password0",
+        "serve_adress": "0.0.0.0",
+        "serve_port": 9002,
+        "serve_user": "admin",
+        "serve_pass": "password0",
     }
 
 

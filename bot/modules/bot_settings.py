@@ -129,7 +129,7 @@ async def get_buttons(edit_type=None, key=None):
             buttons.data_button("Close", "botset close", position="footer")
             msg = "Send private file: config.env, token.pickle, rclone.conf, accounts.zip, list_drives.txt, cookies.txt, .netrc or any other private file!\n"
             msg += "<b>Note:</b> To delete private file send only the file name as text message.Changing .netrc will not take effect for aria2c until restart.\n"
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "qbit":
             buttons, msg = get_content_buttons(qbit_options, "qbitvar", "qbit")
             if qbit_options["web_ui_address"] != "*":
@@ -178,7 +178,7 @@ async def get_buttons(edit_type=None, key=None):
             if key in ["CMD_SUFFIX", "OWNER_ID", "USER_SESSION_STRING"]:
                 msg += "Restart required for this edit to take effect!\n\n"
             msg += f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{config_dict[key]}'</b>.\n"
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "ariavar":
             buttons.data_button("Back", "botset back aria", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
@@ -186,23 +186,23 @@ async def get_buttons(edit_type=None, key=None):
                 msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{aria2_options[key]}'</b>.\n"
             else:
                 msg = "Send a key with value.\nExample: https-proxy-user:value\n"    
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "qbitvar":
             buttons.data_button("Back", "botset back qbit", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
             msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{qbit_options[key]}'</b>.\n"
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "rcvar":
             buttons.data_button("Back", "botset back rclone", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
             msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{rclone_options[key]}'</b>.\n"
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "nzbvar" and key != "nzbserver":
             buttons.data_button("Back", "botset back nzb", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
             msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{nzb_options[key]}'</b>.\n"
             msg += "<b>Note:</b> If the value is list then seperate them by space or ,\nExample: .exe,info or .exe .info\n"
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "nzbvar":
             if len(config_dict["USENET_SERVERS"]) > 0:
                 content_dict = {f"nzbser{index}": k["name"] for index, k in enumerate(config_dict["USENET_SERVERS"])}
@@ -224,7 +224,7 @@ async def get_buttons(edit_type=None, key=None):
             buttons.data_button("Close", "botset close", position="footer")
         else:
             msg = "Send one server as dictionary {}, like in config.env without [].\n"
-            msg += "<b>Timeout:</b> 60 sec"
+            msg += "<b>Timeout:</b> 30 sec"
             buttons.data_button("Back", "botset back nzbvar nzbserver", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
     elif edit_type.startswith("nzbsevar"):
@@ -233,7 +233,7 @@ async def get_buttons(edit_type=None, key=None):
         buttons.data_button("Close", "botset close", position="footer")
         msg = f"Send a valid value for <b>{key}</b> in server {config_dict['USENET_SERVERS'][index]['name']}.\n"
         msg += f"Current value is <b>'{config_dict['USENET_SERVERS'][index][key]}'</b>.\n"
-        msg += "<b>Timeout:</b> 60 sec"
+        msg += "<b>Timeout:</b> 30 sec"
     button = buttons.build_menu(2, 6, 4, 2)
     return msg, button
 
@@ -250,9 +250,6 @@ async def edit_variable(message, pre_message, key):
         value = False
         if key == "INCOMPLETE_TASK_NOTIFIER" and config_dict["DATABASE_URL"]:
             await database.trunc_table("tasks")
-    elif key in ["LEECH_DUMP_CHAT", "RSS_CHAT"]:
-        if value.isdigit() or value.startswith("-"):
-            value = int(value)
     elif key == "STATUS_UPDATE_INTERVAL":
         value = int(value)
         if len(task_dict) != 0 and (st := intervals["status"]):
@@ -885,8 +882,6 @@ async def load_config():
         STREAMWISH_API = ""
     RSS_CHAT = environ.get("RSS_CHAT", "")
     RSS_CHAT = "" if len(RSS_CHAT) == 0 else RSS_CHAT
-    if RSS_CHAT.isdigit() or RSS_CHAT.startswith("-"):
-        RSS_CHAT = int(RSS_CHAT)
     RSS_DELAY = environ.get("RSS_DELAY", "")
     RSS_DELAY = 600 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
     SEARCH_API_LINK = environ.get("SEARCH_API_LINK", "").rstrip("/")
