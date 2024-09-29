@@ -1,7 +1,7 @@
 from sys import exit
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aria2p import API as ariaAPI, Client as ariaClient
-from asyncio import Lock, get_running_loop, new_event_loop, set_event_loop
+from asyncio import Lock, new_event_loop, set_event_loop
 from dotenv import load_dotenv, dotenv_values
 from logging import (
     getLogger,
@@ -43,11 +43,8 @@ getLogger("databases").setLevel(ERROR)
 
 botStartTime = time()
 
-try:
-    bot_loop = get_running_loop()
-except RuntimeError:
-    bot_loop = new_event_loop()
-    set_event_loop(bot_loop)
+bot_loop = new_event_loop()
+set_event_loop(bot_loop)
 
 basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -74,7 +71,7 @@ except:
     pass
 
 intervals = {"status": {}, "qb": "", "jd": "", "nzb": "", "stopAll": False}
-QbTorrents = {}
+qb_torrents = {}
 jd_downloads = {}
 nzb_jobs = {}
 
