@@ -6,8 +6,6 @@ from bot import (
     task_dict,
     LOGGER,
     config_dict,
-    aria2_options,
-    aria2c_global,
     non_queued_dl,
     queue_dict_lock,
 )
@@ -18,8 +16,7 @@ from ...telegram_helper.message_utils import send_status_message, send_message
 
 
 async def add_aria2c_download(listener, dpath, header, ratio, seed_time):
-    a2c_opt = {**aria2_options}
-    [a2c_opt.pop(k) for k in aria2c_global if k in aria2_options]
+    a2c_opt = listener.user_dict.get("aria2_user", {})
     a2c_opt["dir"] = dpath
     if listener.name:
         a2c_opt["out"] = listener.name

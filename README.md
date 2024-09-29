@@ -338,7 +338,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 **8. JDownloader**
 
 - `JD_EMAIL`: jdownlaoder email sign up on [JDownloader](https://my.jdownloader.org/)
-- `JD_PASS`: jdownlaoder password
+- `jd_passwd`: jdownlaoder password
   - **JDownloader Config**: You can use your config from local device to bot by *zipping* cfg folder (cfg.zip) and add it in repo folder but *before zip* you must change the downloads directory to `/root/Downloads`.
 
 **9. Sabnzbd**

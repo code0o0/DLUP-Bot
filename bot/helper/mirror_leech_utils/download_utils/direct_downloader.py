@@ -2,8 +2,6 @@ from secrets import token_urlsafe
 
 from bot import (
     LOGGER,
-    aria2_options,
-    aria2c_global,
     task_dict,
     task_dict_lock,
     non_queued_dl,
@@ -48,8 +46,7 @@ async def add_direct_download(listener, path):
         async with queue_dict_lock:
             non_queued_dl.add(listener.mid)
 
-    a2c_opt = {**aria2_options}
-    [a2c_opt.pop(k) for k in aria2c_global if k in aria2_options]
+    a2c_opt = listener.user_dict.get("aria2_user", {})
     if header := details.get("header"):
         a2c_opt["header"] = header
     a2c_opt["follow-torrent"] = "false"

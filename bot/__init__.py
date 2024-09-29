@@ -39,6 +39,7 @@ getLogger("requests").setLevel(INFO)
 getLogger("urllib3").setLevel(INFO)
 getLogger("pyrogram").setLevel(ERROR)
 getLogger("httpx").setLevel(ERROR)
+getLogger("databases").setLevel(ERROR)
 
 botStartTime = time()
 
@@ -57,8 +58,9 @@ LOGGER = getLogger(__name__)
 
 LOCAL_DIR = '/usr/src/app/storage'
 CONFIG_DIR = '/usr/src/app/config'
-DATABASE_URL = f'{CONFIG_DIR}/data.db'
 DOWNLOAD_DIR = '/usr/src/app/downloads'
+DATABASE_URL = f'{CONFIG_DIR}/data.db'
+
 for dir in [LOCAL_DIR, CONFIG_DIR, DOWNLOAD_DIR, "Thumbnails", "rclone", "tokens"]:
     if not ospath.exists(dir):
         run(["mkdir", "-p", dir])
@@ -75,15 +77,20 @@ intervals = {"status": {}, "qb": "", "jd": "", "nzb": "", "stopAll": False}
 QbTorrents = {}
 jd_downloads = {}
 nzb_jobs = {}
+
+### Plan to delete
 drives_names = []
 drives_ids = []
 index_urls = []
 global_extension_filter = ["aria2", "!qB"]
+
 user_data = {}
 aria2_options = {}
 qbit_options = {}
-nzb_options = {}
 rclone_options = {}
+nzb_options = {}
+jd_options = {}
+
 queued_dl = {}
 queued_up = {}
 non_queued_dl = set()
@@ -125,6 +132,7 @@ if cur.fetchone():
     aria2_options = json.loads(row[3]) if row else {}
     qbit_options = json.loads(row[4]) if row else {}
     rclone_options = json.loads(row[5]) if row else {}
+    jd_options = json.loads(row[6]) if row else {}
 else:
     deploy_config = dict(dotenv_values("config.env"))
 
@@ -134,7 +142,7 @@ if cur.fetchone():
     rows = cur.fetchall()
     for row in rows:
         path = row[0]
-        pf_bin = json.loads(row[1])
+        pf_bin = row[1]
         with open(path, "wb+") as f:
             f.write(pf_bin)
 cur.close()
@@ -331,11 +339,6 @@ THUMBNAIL_LAYOUT = environ.get("THUMBNAIL_LAYOUT", "")
 THUMBNAIL_LAYOUT = "" if len(THUMBNAIL_LAYOUT) == 0 else THUMBNAIL_LAYOUT
 
 # Additional
-JD_EMAIL = environ.get("JD_EMAIL", "")
-JD_PASS = environ.get("JD_PASS", "")
-if len(JD_EMAIL) == 0 or len(JD_PASS) == 0:
-    JD_EMAIL = ""
-    JD_PASS = ""
 FILELION_API = environ.get("FILELION_API", "")
 if len(FILELION_API) == 0:
     FILELION_API = ""
@@ -362,7 +365,6 @@ else:
         SEARCH_PLUGINS = ""
 
 config_dict = {
-    # BOT_TOKEN, OWNER_ID, TELEGRAM_API, TELEGRAM_HASH, AUTHORIZED_CHATS, SUDO_USERS
     'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
     'STATUS_LIMIT': STATUS_LIMIT,
     'QUEUE_ALL': QUEUE_ALL,
@@ -396,8 +398,6 @@ config_dict = {
     'LEECH_DUMP_CHAT': LEECH_DUMP_CHAT,
     'MIXED_LEECH': MIXED_LEECH,
     "THUMBNAIL_LAYOUT": THUMBNAIL_LAYOUT,
-    'JD_EMAIL': JD_EMAIL,
-    'JD_PASS': JD_PASS,
     'FILELION_API': FILELION_API,
     'STREAMWISH_API': STREAMWISH_API,
     'RSS_CHAT': RSS_CHAT,
@@ -461,20 +461,14 @@ def get_qb_options(sync=False):
         qbittorrent_client.app_set_preferences(qb_opt)
 
 
-aria2c_edit = ['max-overall-download-limit', 'max-overall-upload-limit', 'max-download-limit', 'max-upload-limit',
-               'split', 'min-split-size', 'max-connection-per-server', 'disk-cache', 'file-allocation', 'user-agent',
-               'seed-ratio', 'seed-time', 'bt-max-peers', 'enable-dht', 'enable-dht6', 'bt-enable-lpd',
-               'enable-peer-exchange']
-aria2c_global = ["bt-max-open-files", "download-result", "keep-unfinished-download-result", "log", "log-level",
-                 "max-concurrent-downloads", "max-download-result", "max-overall-download-limit", "save-session",
-                 "max-overall-upload-limit", "optimize-concurrent-downloads", "save-cookies", "server-stat-of"]
+aria2c_uservar = ['max-download-limit', 'max-upload-limit', 'split', 'header', 'user-agent',
+                  'seed-ratio', 'seed-time', 'enable-dht', 'enable-dht6', 'bt-enable-lpd',
+                  'enable-peer-exchange']
 def get_aria2_options():
     if not aria2_options:
-        aria2_all_options = aria2.client.get_global_option()
-        aria2_options.update({key: aria2_all_options[key] for key in aria2c_edit})
+        aria2_options.update(aria2.get_global_options())
     else:
-        a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
-        aria2.set_global_options(a2c_glo)
+        aria2.set_global_options(aria2_options)
 
 async def get_nzb_options():
     nzb_options.update((await sabnzbd_client.get_config())["config"]["misc"])
@@ -487,6 +481,11 @@ if not rclone_options:
         "serve_pass": "password0",
     }
 
+if not jd_options:
+    jd_options = {
+        "jd_email": "admin",
+        "jd_passwd": "password0",
+    }
 
 get_qb_options()
 get_aria2_options()

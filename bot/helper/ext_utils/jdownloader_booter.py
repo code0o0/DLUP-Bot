@@ -5,7 +5,7 @@ from random import randint
 from asyncio import sleep
 from re import match
 
-from bot import config_dict, LOGGER, jd_lock, bot_name
+from bot import bot_name, jd_lock, jd_options, LOGGER
 from .bot_utils import cmd_exec, new_task
 from myjd import MyJdApi
 from myjd.exception import (
@@ -52,9 +52,9 @@ class JDownloader(MyJdApi):
             )
         jdata = {
             "autoconnectenabledv2": True,
-            "password": config_dict["JD_PASS"],
+            "password": jd_options["jd_passwd"],
             "devicename": f"{self._device_name}",
-            "email": config_dict["JD_EMAIL"],
+            "email": jd_options["jd_email"],
         }
         await makedirs("/JDownloader/cfg", exist_ok=True)
         with open(
@@ -79,10 +79,10 @@ class JDownloader(MyJdApi):
             await self.boot()
 
     async def jdconnect(self):
-        if not config_dict["JD_EMAIL"] or not config_dict["JD_PASS"]:
+        if not jd_options["jd_email"] or not jd_options["jd_passwd"]:
             return False
         try:
-            await self.connect(config_dict["JD_EMAIL"], config_dict["JD_PASS"])
+            await self.connect(jd_options["jd_email"], jd_options["jd_passwd"])
             LOGGER.info("MYJDownloader is connected!")
             return True
         except (
@@ -107,7 +107,7 @@ class JDownloader(MyJdApi):
         await sleep(0.5)
         while True:
             self.device = None
-            if not config_dict["JD_EMAIL"] or not config_dict["JD_PASS"]:
+            if not jd_options["jd_email"] or not jd_options["jd_passwd"]:
                 self.error = "JDownloader Credentials not provided!"
                 await cmd_exec(["pkill", "-9", "-f", "java"])
                 return False

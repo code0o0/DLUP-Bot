@@ -15,7 +15,7 @@ from sqlite3 import connect
 from subprocess import run as srun
 import json
 
-getLogger("pymongo").setLevel(ERROR)
+getLogger("databases").setLevel(ERROR)
 
 if path.exists("log.txt"):
     with open("log.txt", "r+") as f:
@@ -42,6 +42,7 @@ try:
         exit(1)
 except:
     pass
+
 BOT_ID = BOT_TOKEN.split(":", 1)[0]
 
 DATABASE_URL = '/usr/src/app/config/data.db'
@@ -53,11 +54,7 @@ if cur.fetchone():
     row = cur.fetchone()
     old_config = json.loads(row[1]) if row else None
     config_dict = json.loads(row[2]) if row else None
-    if (
-        old_config is not None
-        and old_config == dict(dotenv_values("config.env"))
-        or old_config is None
-    ) and config_dict is not None:
+    if old_config == dict(dotenv_values("config.env")):
         environ["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
         environ["UPSTREAM_BRANCH"] = config_dict["UPSTREAM_BRANCH"]
 cur.close()
