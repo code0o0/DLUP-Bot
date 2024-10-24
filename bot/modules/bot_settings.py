@@ -1,4 +1,4 @@
-from asyncio import create_subprocess_exec, create_subprocess_shell, gather, wait_for
+from asyncio import create_subprocess_exec, create_subprocess_shell, gather
 from os import environ, getcwd
 from os import path as ospath
 import secrets
@@ -33,7 +33,6 @@ from bot import (
 from ..helper.ext_utils.bot_utils import (
     SetInterval,
     new_task,
-    retry_function,
     sync_to_async,
 )
 from ..helper.ext_utils.db_handler import database
@@ -333,7 +332,7 @@ async def edit_jdownloader(message, pre_message, key):
     if value.lower() == "none":
         value = ""
     jd_options[key] = value
-    jdownloader.initiate()
+    await jdownloader.boot()
     await update_buttons(pre_message, "jdownloader")
     await delete_message(message)
     await database.update_jdownloader()
@@ -374,28 +373,9 @@ async def edit_nzb_server(message, pre_message, key, index=0):
 
 async def sync_jdownloader():
     async with jd_lock:
-        if jdownloader.device is None:
+        if not jdownloader.is_connected:
             return
-        try:
-            await wait_for(retry_function(jdownloader.update_devices), timeout=10)
-        except Exception as e:
-            LOGGER.error(f"Error updating devices: {e}")
-            is_connected = await jdownloader.jdconnect()
-            if not is_connected:
-                LOGGER.error(jdownloader.error)
-                return
-            isDeviceConnected = await jdownloader.connectToDevice()
-            if not isDeviceConnected:
-                LOGGER.error(jdownloader.error)
-                return
         await jdownloader.device.system.exit_jd()
-        is_connected = await jdownloader.jdconnect()
-        if not is_connected:
-            LOGGER.error(jdownloader.error)
-            return
-        isDeviceConnected = await jdownloader.connectToDevice()
-        if not isDeviceConnected:
-            LOGGER.error(jdownloader.error)
     if await aiopath.exists("/JDownloader/cfg.zip"):
         await remove("/JDownloader/cfg.zip")
     await (

@@ -20,7 +20,6 @@ myjdapi
 natsort
 pillow
 psutil
-pycryptodome
 pyrofork
 python-dotenv
 python-magic

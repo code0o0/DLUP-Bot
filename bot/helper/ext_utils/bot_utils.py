@@ -186,14 +186,6 @@ def update_user_ldata(id_, key=None, value=None):
 
 
 
-async def retry_function(func, *args, **kwargs):
-    try:
-        return await func(*args, **kwargs)
-    except:
-        await sleep(0.2)
-        return await retry_function(func, *args, **kwargs)
-
-
 async def cmd_exec(cmd, shell=False):
     if shell:
         proc = await create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
