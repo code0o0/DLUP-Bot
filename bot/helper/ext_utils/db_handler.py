@@ -1,13 +1,13 @@
 from aiofiles import open as aiopen
-from aiofiles.os import path as aiopath, makedirs
+from aiofiles.os import path as aiopath
 from databases import Database
 from dotenv import dotenv_values
 import json
 
 from bot import (
     user_data, rss_dict, deploy_config, config_dict,
-    aria2_options, qbit_options, rclone_options, jd_options,
-    LOGGER, BOT_ID,
+    aria2_options, qbit_options, fb_options, jd_options,
+    rclone_options, LOGGER, BOT_ID, CONFIG_PATH
 )
 
 
@@ -18,8 +18,8 @@ class DbManager:
     
     async def db_init(self):
         query1 = "CREATE TABLE IF NOT EXISTS settings (_id TEXT, deploy_config TEXT, \
-            config_dict TEXT, aria2_options TEXT, qbit_options TEXT, rclone_options TEXT, \
-            jd_options TEXT)"
+            config_dict TEXT, aria2_options TEXT, qbit_options TEXT, fb_options TEXT, \
+            jd_options TEXT, rclone_options TEXT)"
         query2 = "CREATE TABLE IF NOT EXISTS users (_id INTEGER, user_dict TEXT)"
         query3 = "CREATE TABLE IF NOT EXISTS files (_id TEXT, pf_bin BLOB, user_id INTEGER)"
         query4 = "CREATE TABLE IF NOT EXISTS rss (_id INTEGER, user_rss TEXT)"
@@ -37,18 +37,19 @@ class DbManager:
         _config_dict = json.dumps(config_dict)
         _aria2_options = json.dumps(aria2_options)
         _qbit_options = json.dumps(qbit_options)
-        _rclone_options = json.dumps(rclone_options)
+        _fb_options = json.dumps(fb_options)
         _jd_options = json.dumps(jd_options)
+        _rclone_options = json.dumps(rclone_options)
         async with self.__db.transaction():
             row = await self.__db.fetch_one(query='SELECT * FROM settings WHERE _id = :id', values={'id': BOT_ID})
             if not row:
                 query = 'INSERT INTO settings (_id, deploy_config, config_dict, aria2_options, qbit_options, \
-                        rclone_options, jd_options) VALUES (:id, :deploy_config, :config_dict, :aria2_options, \
-                        :qbit_options, :rclone_options, :jd_options)'
+                        fb_options, jd_options, rclone_options) VALUES (:id, :deploy_config, :config_dict, \
+                        :aria2_options, :qbit_options, :fb_options, :jd_options, :rclone_options)'
                 values = {
                     'id': BOT_ID, 'deploy_config': _deploy_config, 'config_dict': _config_dict,
-                    'aria2_options': _aria2_options, 'qbit_options': _qbit_options, 
-                    'rclone_options': _rclone_options, 'jd_options': _jd_options
+                    'aria2_options': _aria2_options, 'qbit_options': _qbit_options, 'fb_options': _fb_options, 
+                    'jd_options': _jd_options, 'rclone_options': _rclone_options
                     }
                 await self.__db.execute(query=query, values=values)
             else:
@@ -73,7 +74,7 @@ class DbManager:
                 LOGGER.info("Rss data has been imported from Database")
     
     async def update_deploy_config(self):
-        current_config = dict(dotenv_values("config.env"))
+        current_config = dict(dotenv_values(CONFIG_PATH))
         _deploy_config = json.dumps(current_config)
         async with self.__db.transaction():
             query = 'UPDATE settings SET deploy_config = :deploy_config  WHERE _id = :id'
@@ -105,6 +106,14 @@ class DbManager:
             await self.__db.execute(query=query, values=values)
         LOGGER.info("Qbittorrent data has been updated in Database")
     
+    async def update_filebrowser(self):
+        _fb_options = json.dumps(fb_options)
+        async with self.__db.transaction():
+            query = 'UPDATE settings SET fb_options = :fb_options  WHERE _id = :id'
+            values = {'id': BOT_ID, 'fb_options': _fb_options}
+            await self.__db.execute(query=query, values=values)
+        LOGGER.info("Filebrowser data has been updated in Database")
+    
     async def update_rclone(self):
         _rclone_options = json.dumps(rclone_options)
         async with self.__db.transaction():
@@ -123,13 +132,13 @@ class DbManager:
     
     async def update_user_data(self, user_id):
         data = user_data.get(user_id, {})
+        _data = json.dumps(data)
         async with self.__db.transaction():
             if not data:
                 await self.__db.execute(query='DELETE FROM users WHERE _id = :id', values={'id': user_id})
                 await self.__db.execute(query='DELETE FROM files WHERE user_id = :id', values={'id': user_id})
                 await self.__db.execute(query='DELETE FROM rss WHERE _id = :id', values={'id': user_id})
                 return
-            _data = json.dumps(data)
             row = await self.__db.fetch_one(query='SELECT * FROM users WHERE _id = :id', values={'id': user_id})
             if not row:
                 query = 'INSERT INTO users (_id, user_dict) VALUES (:id, :user_dict)'
@@ -160,7 +169,7 @@ class DbManager:
                     query = 'UPDATE files SET pf_bin = :pf_bin  WHERE _id = :id'
                     values = {'id': path, 'pf_bin': doc_bin}
                     await self.__db.execute(query=query, values=values)
-        if path == "config.env":
+        if path == CONFIG_PATH:
             await self.update_deploy_config()
         # await self.update_user_data(user_id)
         LOGGER.info(f"User doc for {user_id} has been updated in Database")

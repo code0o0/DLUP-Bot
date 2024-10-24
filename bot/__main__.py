@@ -39,7 +39,6 @@ from .helper.ext_utils.files_utils import clean_all, exit_clean_up
 from .helper.ext_utils.jdownloader_booter import jdownloader
 from .helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
 from .helper.listeners.aria2_listener import start_aria2_listener
-from .helper.mirror_leech_utils.rclone_utils.serve import rclone_serve_booter
 from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.button_build import ButtonMaker
 from .helper.telegram_helper.filters import CustomFilters
@@ -131,7 +130,7 @@ async def restart(_, message):
         "pkill",
         "-9",
         "-f",
-        "gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone|java|sabnzbdplus",
+        "gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone|java|sabnzbdplus|filebrowser",
     )
     proc2 = await create_subprocess_exec("python3", "update.py")
     await gather(proc1.wait(), proc2.wait())
@@ -283,7 +282,6 @@ async def main():
         bot_settings.initiate_search_tools(),
         restart_notification(),
         telegraph.create_account(),
-        rclone_serve_booter(),
         sync_to_async(start_aria2_listener, wait=False),
     )
     create_help_buttons()

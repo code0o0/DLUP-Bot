@@ -1,0 +1,72 @@
+settings:
+  signup: false
+  createuserdir: false
+  userhomebasepath: /users
+  defaults:
+    scope: .
+    locale: zh-cn
+    viewmode: list
+    singleclick: true
+    sorting:
+      by: name
+      asc: false
+    perm:
+      admin: false
+      execute: true
+      create: true
+      rename: true
+      modify: true
+      delete: true
+      share: true
+      download: true
+    commands:
+    - find
+    - ls
+    - mv
+    - cp
+    - rm
+    - 7z
+    - tar
+    hidedotfiles: false
+    dateformat: false
+  authmethod: json
+  branding:
+    name: ""
+    disableexternal: false
+    disableusedpercentage: false
+    files: ""
+    theme: ""
+    color: ""
+  tus:
+    chunksize: 10485760
+    retrycount: 5
+  commands:
+    after_copy: []
+    after_delete: []
+    after_rename: []
+    after_save: []
+    after_upload: []
+    before_copy: []
+    before_delete: []
+    before_rename: []
+    before_save: []
+    before_upload: []
+  shell: []
+  rules: []
+server:
+  root: /usr/src/app/storage
+  baseurl: ""
+  socket: ""
+  tlskey: ""
+  tlscert: ""
+  port: "9003"
+  address: 0.0.0.0
+  log: stdout
+  enablethumbnails: false
+  resizepreview: false
+  enableexec: false
+  typedetectionbyheader: false
+  authhook: ""
+  tokenexpirationtime: ""
+auther:
+  recaptcha: null

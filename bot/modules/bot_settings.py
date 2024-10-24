@@ -1,39 +1,57 @@
-from aiofiles import open as aiopen
-from aiofiles.os import remove, rename, path as aiopath
-from aioshutil import rmtree
-from asyncio import (
-    create_subprocess_exec, create_subprocess_shell,
-    gather, wait_for
-    )
-from configparser import ConfigParser
-from dotenv import load_dotenv
+from asyncio import create_subprocess_exec, create_subprocess_shell, gather, wait_for
 from os import environ, getcwd
+from os import path as ospath
+import secrets
+
+from aiofiles import open as aiopen
+from aiofiles.os import path as aiopath
+from aiofiles.os import remove, rename
+from dotenv import load_dotenv
 from pyrogram import filters
-from pyrogram.errors import ListenerTimeout, ListenerStopped
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.errors import ListenerStopped, ListenerTimeout
+from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 
 from bot import (
-    config_dict, aria2_options, qbit_options, nzb_options, rclone_options, jd_options, jd_lock,
-    bot, aria2, qbittorrent_client, sabnzbd_client, intervals, task_dict, jd_downloads,
-    get_nzb_options, get_qb_options, MAX_SPLIT_SIZE, CONFIG_DIR, LOGGER
-    )
+    CONFIG_DIR,
+    LOGGER,
+    aria2,
+    aria2_options,
+    bot,
+    config_dict,
+    intervals,
+    jd_lock,
+    jd_options,
+    nzb_options,
+    qbit_options,
+    qbittorrent_client,
+    fb_options,
+    sabnzbd_client,
+    task_dict,
+    BASE_URL_PORT
+)
+
 from ..helper.ext_utils.bot_utils import (
     SetInterval,
-    sync_to_async,
-    retry_function,
     new_task,
-    )
+    retry_function,
+    sync_to_async,
+)
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.jdownloader_booter import jdownloader
 from ..helper.ext_utils.task_manager import start_from_queued
-from ..helper.mirror_leech_utils.rclone_utils.serve import RcloneServe, rclone_serve_booter, rclone_serve_shutdown
+from ..helper.mirror_leech_utils.rclone_utils.serve import (
+    rclone_serve_booter,
+    rclone_serve_shutdown,
+)
 from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.button_build import ButtonMaker
 from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import (
-    send_message, edit_message, update_status_message,
-    delete_message, auto_delete_message,
-    )
+    delete_message,
+    edit_message,
+    send_message,
+    update_status_message,
+)
 from .rss import add_job
 from .torrent_search import initiate_search_tools
 
@@ -71,28 +89,28 @@ async def get_buttons(edit_type=None, key=None):
         buttons.data_button("Private Files", "botset private")
         buttons.data_button("Aria2c Settings", "botset aria")
         buttons.data_button("Qbit Settings", "botset qbit")
-        buttons.data_button("Rclone Settings", "botset rclone")
         buttons.data_button("Sabnzbd Settings", "botset nzb")
         buttons.data_button("JDownloader Settings", "botset jdownloader")
+        buttons.data_button("FileBrowser Settings", "botset fb")
         buttons.data_button("Close", "botset close", position="footer")
         msg = "Bot Settings:"
-    elif edit_type in ["var", "private", "aria", "qbit", "rclone", "nzb", "jdownloader"]:
+    elif edit_type in ["var", "private", "aria", "qbit", "fb", "nzb", "jdownloader"]:
         if edit_type == "var":
             var_list = [
                 "STATUS_UPDATE_INTERVAL", "STATUS_LIMIT", "QUEUE_ALL", "QUEUE_DOWNLOAD", "QUEUE_UPLOAD",
-                "USER_SESSION_STRING", "CMD_SUFFIX", "UPSTREAM_REPO", "UPSTREAM_BRANCH", "BASE_URL_PORT",
-                "BASE_URL", "WEB_PINCODE", "INCOMPLETE_TASK_NOTIFIER", "TORRENT_TIMEOUT", "USENET_SERVERS",
-                "FILELION_API", "STREAMWISH_API", "RSS_CHAT", "RSS_DELAY", "SEARCH_API_LINK", "SEARCH_LIMIT", 
-                "SEARCH_PLUGINS"]
+                "USER_SESSION_STRING", "CMD_SUFFIX", "BASE_URL", "WEB_PINCODE", "INCOMPLETE_TASK_NOTIFIER",
+                "TORRENT_TIMEOUT", "USENET_SERVERS", "FILELION_API", "STREAMWISH_API", "RSS_CHAT", "RSS_DELAY",
+                "SEARCH_API_LINK", "SEARCH_LIMIT", "SEARCH_PLUGINS"
+                ]
             content_dict = {k: config_dict[k] for k in var_list}
             buttons, msg = get_content_buttons(content_dict, "botvar", "var")
-            buttons.data_button("Default", f"botset resetvar", position="body")
+            buttons.data_button("Default", "botset resetvar", position="body")
             buttons.data_button("Back", "botset back", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
         elif edit_type == "private":
             buttons.data_button("Back", "botset back", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
-            msg = "Send private file: config.env, token.pickle, rclone.conf, accounts.zip, list_drives.txt, cookies.txt, .netrc or any other private file!\n"
+            msg = "Send private file: cookies.txt, .netrc or any other private file!\n"
             msg += "<b>Note:</b> To delete private file send only the file name as text message.Changing .netrc will not take effect for aria2c until restart.\n"
             msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "aria":
@@ -108,12 +126,16 @@ async def get_buttons(edit_type=None, key=None):
             buttons.data_button("Sync Qbittorrent", "botset syncqbit", position="body")
             buttons.data_button("Back", "botset back", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
-        elif edit_type == "rclone":
-            buttons, msg = get_content_buttons(rclone_options, "rcvar", "rclone")
-            if RcloneServe:
-                buttons.data_button("Stop Webdav", "botset rcwebdav", position="body")
+        elif edit_type == "fb":
+            for index, key in enumerate(list(fb_options.keys()), 1):
+                value = str(fb_options[key])
+                msg += f'{index}. <b>{key}</b> is <u>{value}</u>\n'
+            buttons.data_button("Reset Password", "botset fbpwd")
+            buttons.data_button("Reset Config", "botset fbconfig")
+            if fb_options["enable"]:
+                buttons.data_button("Stop FileBrowser", "botset fbserve", position="body")
             else:
-                buttons.data_button("Start Webdav", "botset rcwebdav", position="body")
+                buttons.data_button("Start FileBrowser", "botset fbserve", position="body")
             buttons.data_button("Back", "botset back", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
         elif edit_type == "nzb":
@@ -124,7 +146,7 @@ async def get_buttons(edit_type=None, key=None):
                 buttons.data_button("Start WebUI", "botset nzbwebui", position="body")
             else:
                 buttons.data_button("Stop WebUI", "botset nzbwebui", position="body")
-            buttons.data_button("Default", f"botset resetnzb", position="body")
+            buttons.data_button("Default", "botset resetnzb", position="body")
             buttons.data_button("Back", "botset back", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
         elif edit_type == "jdownloader":
@@ -132,7 +154,7 @@ async def get_buttons(edit_type=None, key=None):
             buttons.data_button("Sync Config", "botset jdsync", position="body")
             buttons.data_button("Back", "botset back", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
-    elif edit_type in ["botvar", "ariavar", "qbitvar", "rcvar", "nzbvar", "jdvar"]:
+    elif edit_type in ["botvar", "ariavar", "qbitvar", "nzbvar", "jdvar"]:
         if edit_type == "botvar":
             msg = ""
             buttons.data_button("Back", "botset back var", position="footer")
@@ -150,11 +172,6 @@ async def get_buttons(edit_type=None, key=None):
             buttons.data_button("Back", "botset back qbit", position="footer")
             buttons.data_button("Close", "botset close", position="footer")
             msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{qbit_options[key]}'</b>.\n"
-            msg += "<b>Timeout:</b> 30 sec"
-        elif edit_type == "rcvar":
-            buttons.data_button("Back", "botset back rclone", position="footer")
-            buttons.data_button("Close", "botset close", position="footer")
-            msg = f"Send a valid value for <b>{key}</b>.\nCurrent value is <b>'{rclone_options[key]}'</b>.\n"
             msg += "<b>Timeout:</b> 30 sec"
         elif edit_type == "nzbvar" and key != "nzbserver":
             buttons.data_button("Back", "botset back nzb", position="footer")
@@ -235,15 +252,6 @@ async def edit_variable(message, pre_message, key):
                     )
                 except Exception as e:
                     LOGGER.error(e)
-    elif key == "LEECH_SPLIT_SIZE":
-        value = min(int(value), MAX_SPLIT_SIZE)
-    elif key == "BASE_URL_PORT":
-        value = int(value)
-        if config_dict["BASE_URL"]:
-            await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
-            await create_subprocess_shell(
-                f"gunicorn web.wserver:app --bind 0.0.0.0:{value} --worker-class gevent"
-            )
     elif value.isdigit():
         value = int(value)
     elif value.startswith("[") and value.endswith("]"):
@@ -251,8 +259,7 @@ async def edit_variable(message, pre_message, key):
     config_dict[key] = value
     await update_buttons(pre_message, "var")
     await delete_message(message)
-    if config_dict["DATABASE_URL"]:
-        await database.update_config()
+    await database.update_config()
     if key in ["SEARCH_PLUGINS", "SEARCH_API_LINK"]:
         await initiate_search_tools()
     elif key in ["QUEUE_ALL", "QUEUE_DOWNLOAD", "QUEUE_UPLOAD"]:
@@ -275,8 +282,7 @@ async def edit_aria(message, pre_message, key):
     aria2_options[key] = value
     await update_buttons(pre_message, "aria")
     await delete_message(message)
-    if config_dict["DATABASE_URL"]:
-        await database.update_aria2()
+    await database.update_aria2()
 
 async def edit_qbit(message, pre_message, key):
     value = message.text
@@ -294,18 +300,7 @@ async def edit_qbit(message, pre_message, key):
     qbit_options[key] = value
     await update_buttons(pre_message, "qbit")
     await delete_message(message)
-    if config_dict["DATABASE_URL"]:
-        await database.update_qbittorrent()
-
-async def edit_rclone(message, pre_message, key):
-    value = message.text
-    rclone_options[key] = value
-    if RcloneServe:
-        await rclone_serve_booter()
-    await update_buttons(pre_message, "rclone")
-    await delete_message(message)
-    if config_dict["DATABASE_URL"]:
-        await database.update_rclone()
+    await database.update_qbittorrent()
 
 async def edit_nzb(message, pre_message, key):
     value = message.text
@@ -316,9 +311,9 @@ async def edit_nzb(message, pre_message, key):
     elif value.startswith("[") and value.endswith("]"):
         value = ",".join(eval(value))
     if key == "inet_exposure":
-        with open('sabnzbd/SABnzbd.ini', 'r', encoding='utf-8') as file:
+        async with aiopen('sabnzbd/SABnzbd.ini', 'r', encoding='utf-8') as file:
             lines = file.readlines()
-        with open('sabnzbd/SABnzbd.ini', 'w', encoding='utf-8') as file:
+        async with aiopen('sabnzbd/SABnzbd.ini', 'w', encoding='utf-8') as file:
             for line in lines:
                 if line.startswith("inet_exposure"):
                     file.write(f"{key} = {value}\n")
@@ -331,8 +326,7 @@ async def edit_nzb(message, pre_message, key):
         nzb_options[key] = res["config"]["misc"][key]
     await update_buttons(pre_message, "nzb")
     await delete_message(message)
-    if config_dict["DATABASE_URL"]:
-        await database.update_nzb_config()
+    await database.update_nzb_config()
 
 async def edit_jdownloader(message, pre_message, key):
     value = message.text
@@ -342,8 +336,7 @@ async def edit_jdownloader(message, pre_message, key):
     jdownloader.initiate()
     await update_buttons(pre_message, "jdownloader")
     await delete_message(message)
-    if config_dict["DATABASE_URL"]:
-        await database.update_jdownloader()
+    await database.update_jdownloader()
 
 async def edit_nzb_server(message, pre_message, key, index=0):
     value = message.text
@@ -353,9 +346,10 @@ async def edit_nzb_server(message, pre_message, key, index=0):
         if key == "newser":
             try:
                 value = eval(value)
-            except:
+            except Exception as e:
                 await send_message(message, "Invalid dict format!")
                 await update_buttons(pre_message, edit_type="nzbvar", key="nzbserver")
+                LOGGER.error(f"Error in nzb server dict format: {e}")
                 return
             res = await sabnzbd_client.add_server(value)
             if not res["config"]["servers"][0]["host"]:
@@ -376,8 +370,7 @@ async def edit_nzb_server(message, pre_message, key, index=0):
         config_dict["USENET_SERVERS"][index][key] = value
         await update_buttons(pre_message, f"nzbser{index}")
     await delete_message(message)
-    if config_dict["DATABASE_URL"]:
-        await database.update_config()
+    await database.update_config()
 
 async def sync_jdownloader():
     async with jd_lock:
@@ -385,7 +378,8 @@ async def sync_jdownloader():
             return
         try:
             await wait_for(retry_function(jdownloader.update_devices), timeout=10)
-        except:
+        except Exception as e:
+            LOGGER.error(f"Error updating devices: {e}")
             is_connected = await jdownloader.jdconnect()
             if not is_connected:
                 LOGGER.error(jdownloader.error)
@@ -402,79 +396,39 @@ async def sync_jdownloader():
         isDeviceConnected = await jdownloader.connectToDevice()
         if not isDeviceConnected:
             LOGGER.error(jdownloader.error)
-    if await aiopath.exists("cfg.zip"):
-        await remove("cfg.zip")
+    if await aiopath.exists("/JDownloader/cfg.zip"):
+        await remove("/JDownloader/cfg.zip")
     await (
-        await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
+        await create_subprocess_exec("7z", "a", "/JDownloader/cfg.zip", "/JDownloader/cfg")
     ).wait()
-    await database.update_user_doc(0, "cfg.zip")
+    await database.update_user_doc(0, "/JDownloader/cfg.zip")
 
 async def update_private_file(message, pre_message):
     if not message.media and (file_name := message.text):
-        fn = file_name.rsplit(".zip", 1)[0] if file_name != "rclone.conf" \
-             else f"{CONFIG_DIR}/rclone.conf"
-        if await aiopath.isfile(fn) and file_name != "config.env":
-            await remove(fn)
-        elif file_name in [".netrc", "netrc"]:
+        if file_name == "config.env":
+            LOGGER.error("Cannot change config.env file!")
+        elif await aiopath.isfile(file_name):
+            await remove(file_name)  
+        if file_name in [".netrc", "netrc"]:
             await (await create_subprocess_exec("touch", ".netrc")).wait()
             await (await create_subprocess_exec("chmod", "600", ".netrc")).wait()
             await (await create_subprocess_exec("cp", ".netrc", "/root/.netrc")).wait()
-        elif file_name == "rclone.conf" and RcloneServe:
-            file_name = f"{CONFIG_DIR}/rclone.conf"
-            await rclone_serve_booter()
-        await delete_message(message)
     elif doc := message.document:
         file_name = doc.file_name
         await message.download(file_name=f"{getcwd()}/{file_name}")
-        if file_name == "accounts.zip":
-            if await aiopath.exists("accounts"):
-                await rmtree("accounts", ignore_errors=True)
-            if await aiopath.exists("rclone_sa"):
-                await rmtree("rclone_sa", ignore_errors=True)
-            await (
-                await create_subprocess_exec(
-                    "7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"
-                )
-            ).wait()
-            await (
-                await create_subprocess_exec("chmod", "-R", "777", "accounts")
-            ).wait()
-        elif file_name in [".netrc", "netrc"]:
+        if file_name in [".netrc", "netrc"]:
             if file_name == "netrc":
                 await rename("netrc", ".netrc")
                 file_name = ".netrc"
             await (await create_subprocess_exec("chmod", "600", ".netrc")).wait()
             await (await create_subprocess_exec("cp", ".netrc", "/root/.netrc")).wait()
         elif file_name == "config.env":
-            load_dotenv("config.env", override=True)
+            file_name = ospath.join(CONFIG_DIR, "config.env")
+            load_dotenv(file_name, override=True)
             await load_config()
-        elif file_name == "rclone.conf":
-            config = ConfigParser()
-            try:
-                config.read(f"rclone.conf")
-            except:
-                LOGGER.error("Invalid rclone.conf file!")
-                await delete_message(message)
-                await remove("rclone.conf")
-                await update_buttons(pre_message)
-                return
-            file_name = f"{CONFIG_DIR}/rclone.conf"
-            await (await create_subprocess_exec("mv", "rclone.conf", f"{CONFIG_DIR}/rclone.conf")).wait()
-            if RcloneServe:
-                await rclone_serve_booter()
-        if "@github.com" in config_dict["UPSTREAM_REPO"]:
-            buttons = ButtonMaker()
-            msg = "Push to UPSTREAM_REPO ?"
-            buttons.data_button("Yes!", f"botset push {file_name}")
-            buttons.data_button("No", "botset close")
-            await send_message(message, msg, buttons.build_menu(2))
-        else:
-            await delete_message(message)
+    await delete_message(message)
     await update_buttons(pre_message)
-    if config_dict["DATABASE_URL"]:
-        await database.update_user_doc(0, file_name)
-    if await aiopath.exists("accounts.zip"):
-        await remove("accounts.zip")
+    await database.update_user_doc(0, file_name)
 
 async def conversation_handler(client, query, document=False, edit_type=None, key=None):
     message = query.message
@@ -520,7 +474,7 @@ async def edit_bot_settings(client, query):
             globals()["bs_start"] -= 1
         await update_buttons(message, data[2])
 
-    elif data[1] in ["var", "private", "aria", "qbit", "rclone", "nzb", "jdownloader"]:
+    elif data[1] in ["var", "private", "aria", "qbit", "fb", "nzb", "jdownloader"]:
         await query.answer()
         await update_buttons(message, data[1])
         event = (
@@ -548,12 +502,6 @@ async def edit_bot_settings(client, query):
         event = await conversation_handler(client, query, edit_type="qbit")
         if event:
             await edit_qbit(event, message, data[2])
-    elif data[1] == "rcvar":
-        await query.answer()
-        await update_buttons(message, data[1], data[2])
-        event = await conversation_handler(client, query, edit_type="rclone")
-        if event:
-            await edit_rclone(event, message, data[2])
     elif data[1] == "nzbvar":
         await query.answer()
         if data[2] == "nzbserver":
@@ -574,46 +522,72 @@ async def edit_bot_settings(client, query):
     
     elif data[1] == "resetvar":
         await query.answer()
-        load_dotenv("config.env", override=True)
+        load_dotenv(ospath.join(CONFIG_DIR, "config.env"), override=True)
         await load_config()
         await update_buttons(message, "var")
     elif data[1] == "syncqbit":
         await query.answer(
             "Syncronization Started. It takes up to 2 sec!", show_alert=True
         )
-        await sync_to_async(get_qb_options, True)
-        if config_dict["DATABASE_URL"]:
-            await database.update_qbittorrent()
+        _dict = await sync_to_async(qbittorrent_client.get_app_preferences())
+        qbit_options.update(
+            {k: v for k, v in _dict.items() if not k.startswith(("rss", "listen_port"))}
+        )
+        await database.update_qbittorrent()
     elif data[1] == "qbwebui":
         if qbit_options["web_ui_address"] == "*":
             qbit_options["web_ui_address"] = "127.0.0.1"
             await query.answer("WebUI Stopped", show_alert=True)
             await sync_to_async(qbittorrent_client.app_set_preferences, {"web_ui_address": "127.0.0.1"})
-            if config_dict["DATABASE_URL"]:
-                await database.update_qbittorrent()
+            await database.update_qbittorrent()
         else:
             qbit_options["web_ui_address"] = "*"
             await query.answer("WebUI Started!", show_alert=True)
             await sync_to_async(qbittorrent_client.app_set_preferences, {"web_ui_address": "*"})
-            if config_dict["DATABASE_URL"]:
-                await database.update_qbittorrent()
+            await database.update_qbittorrent()
         await update_buttons(message, "qbit")
-    elif data[1] == "rcwebdav":
-        if RcloneServe:
-            await rclone_serve_shutdown()
-            await query.answer("WebDAV Stopped!", show_alert=True)
+    elif data[1] == "fbserve":
+        if fb_options["enable"]:
+            fb_options["enable"] = False
+            await query.answer("FileBrowser Stopped!", show_alert=True)
+            await create_subprocess_exec("pkill", "-9", "-f", "filebrowser")
         else:
-            await rclone_serve_booter()
-            await query.answer("WebDAV Started!", show_alert=True)
-        await update_buttons(message, "rclone")
+            fb_options["enable"] = True
+            await query.answer("FileBrowser Started!", show_alert=True)
+            await create_subprocess_shell(
+                "nohup", "filebrowser", "--database", f"{CONFIG_DIR}/filebrowser.db", "> /dev/null", "2>&1", "&",
+            )
+        await update_buttons(message, "fb")
+        await database.update_filebrowser()
+    elif data[1] in ["fbpwd", "fbconfig"]:
+        if fb_options["enable"]:
+            await (await create_subprocess_exec("pkill", "-9", "-f", "filebrowser")).wait()
+        if data[1] == "fbpwd":
+            fb_options["password"] = secrets.token_urlsafe(8)
+            await (await create_subprocess_exec(
+                "filebrowser", "users", "update", fb_options["user"], "--password", fb_options["password"],
+                "--database", f"{CONFIG_DIR}/filebrowser.db"
+            )).wait()
+            await database.update_filebrowser()
+            await query.answer("Password Reset!", show_alert=True)
+        elif data[1] == "fbconfig":
+            await (await create_subprocess_exec(
+                "filebrowser", "config", "import", f"{getcwd()}/filebrowser/filebrowser.yaml",
+                "--database", f"{CONFIG_DIR}/filebrowser.db"
+            )).wait()
+            await query.answer("Config Reset!", show_alert=True)
+        if fb_options["enable"]:
+            await create_subprocess_shell(
+                "nohup", "filebrowser", "--database", f"{CONFIG_DIR}/filebrowser.db", "> /dev/null", "2>&1", "&",
+            )
     elif data[1] == "syncnzb":
         await query.answer(
             "Syncronization Started. It takes up to 2 sec!", show_alert=True
         )
-        await get_nzb_options()
+        _dict = await sabnzbd_client.get_config()
+        nzb_options.update(_dict["config"]["misc"])
         await update_buttons(message, "nzb")
-        if config_dict["DATABASE_URL"]:
-            await database.update_nzb_config()
+        await database.update_nzb_config()
     elif data[1] == "nzbwebui":
         if nzb_options["inet_exposure"] == 0:
             nzb_options["inet_exposure"] = 4
@@ -621,9 +595,9 @@ async def edit_bot_settings(client, query):
         else:
             nzb_options["inet_exposure"] = 0
             await query.answer("WebUI Stopped!", show_alert=True)
-        with open('sabnzbd/SABnzbd.ini', 'r', encoding='utf-8') as file:
+        async with aiopen('sabnzbd/SABnzbd.ini', 'r', encoding='utf-8') as file:
                 lines = file.readlines()
-        with open('sabnzbd/SABnzbd.ini', 'w', encoding='utf-8') as file:
+        async with aiopen('sabnzbd/SABnzbd.ini', 'w', encoding='utf-8') as file:
             for line in lines:
                 if line.startswith("inet_exposure"):
                     file.write(f"inet_exposure = {nzb_options['inet_exposure']}\n")
@@ -631,8 +605,7 @@ async def edit_bot_settings(client, query):
                     file.write(line)
         await update_buttons(message, "nzb")
         await sabnzbd_client.restart()
-        if config_dict["DATABASE_URL"]:
-            await database.update_nzb_config()
+        await database.update_nzb_config()
     elif data[1] == "resetnzb":
         res = await sabnzbd_client.set_config_default([key for key in nzb_options.keys()])
         if not res['status']:
@@ -641,8 +614,7 @@ async def edit_bot_settings(client, query):
         await query.answer(f"{data[2]} has been reset to default!", show_alert=True)
         nzb_options.update(await sabnzbd_client.get_config()['config']['misc'])
         await update_buttons(message, "nzb")
-        if config_dict["DATABASE_URL"]:
-            await database.update_nzb_config()
+        await database.update_nzb_config()
     elif data[1] == "jdsync":
         if not jd_options["jd_email"] or not jd_options["jd_passwd"]:
             await query.answer("No Email or Password provided!", show_alert=True)
@@ -669,8 +641,7 @@ async def edit_bot_settings(client, query):
         )
         del config_dict["USENET_SERVERS"][index]
         await update_buttons(message, "nzbvar", "nzbserver")
-        if config_dict["DATABASE_URL"]:
-            await database.update_config()
+        await database.update_config()
     elif data[1].startswith("nzbsevar"):
         index = int(data[1].replace("nzbsevar", ""))
         await query.answer()
@@ -678,28 +649,6 @@ async def edit_bot_settings(client, query):
         event = await conversation_handler(client, query, edit_type="nzbserver", key=f"nzbser{index}")
         if event:
             await edit_nzb_server(event, message, data[2], index)
-            
-    elif data[1] == "push":
-        await query.answer()
-        filename = data[2].rsplit(".zip", 1)[0]
-        if await aiopath.exists(filename):
-            await (
-                await create_subprocess_shell(
-                    f"git add -f {filename} \
-                                                    && git commit -sm botsettings -q \
-                                                    && git push origin {config_dict['UPSTREAM_BRANCH']} -qf"
-                )
-            ).wait()
-        else:
-            await (
-                await create_subprocess_shell(
-                    f"git rm -r --cached {filename} \
-                                                    && git commit -sm botsettings -q \
-                                                    && git push origin {config_dict['UPSTREAM_BRANCH']} -qf"
-                )
-            ).wait()
-        await delete_message(message.reply_to_message)
-        await delete_message(message)
 
 @new_task
 async def bot_settings(client, message):
@@ -729,15 +678,7 @@ async def load_config():
     QUEUE_UPLOAD = "" if len(QUEUE_UPLOAD) == 0 else int(QUEUE_UPLOAD)
     USER_SESSION_STRING = environ.get("USER_SESSION_STRING", "")
     CMD_SUFFIX = environ.get("CMD_SUFFIX", "")
-    UPSTREAM_REPO = environ.get("UPSTREAM_REPO", "")
-    if len(UPSTREAM_REPO) == 0:
-        UPSTREAM_REPO = ""
-    UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH", "")
-    if len(UPSTREAM_BRANCH) == 0:
-        UPSTREAM_BRANCH = "master"
     #DOWNLOAD
-    BASE_URL_PORT = environ.get("BASE_URL_PORT", "")
-    BASE_URL_PORT = 9001 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
     await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
     BASE_URL = environ.get("BASE_URL", "").rstrip("/")
     if len(BASE_URL) == 0:
@@ -786,8 +727,8 @@ async def load_config():
             USENET_SERVERS = []
         else:
             USENET_SERVERS = eval(USENET_SERVERS)
-    except:
-        LOGGER.error(f"Wrong USENET_SERVERS format: {USENET_SERVERS}")
+    except Exception as e:
+        LOGGER.error(f"Error loading usenet servers: {e}")
         USENET_SERVERS = []
     # Additional
     FILELION_API = environ.get("FILELION_API", "")
@@ -818,9 +759,6 @@ async def load_config():
             'QUEUE_UPLOAD': QUEUE_UPLOAD,
             'USER_SESSION_STRING': USER_SESSION_STRING,
             'CMD_SUFFIX': CMD_SUFFIX,
-            'UPSTREAM_REPO': UPSTREAM_REPO,
-            'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
-            'BASE_URL_PORT': BASE_URL_PORT,
             'BASE_URL': BASE_URL,
             'WEB_PINCODE': WEB_PINCODE,
             'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,

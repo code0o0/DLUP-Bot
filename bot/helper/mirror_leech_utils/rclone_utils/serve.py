@@ -3,7 +3,7 @@ from aiofiles.os import path as aiopath
 from asyncio import create_subprocess_exec
 from configparser import ConfigParser
 
-from bot import rclone_options, CONFIG_DIR, LOCAL_DIR
+from bot import RC_PORT, LOCAL_DIR, LOGGER, rclone_options
 
 RcloneServe = []
 
@@ -12,17 +12,17 @@ async def rclone_serve_booter():
         try:
             RcloneServe[0].kill()
             RcloneServe.clear()
-        except:
-            pass
+        except Exception as e:
+            LOGGER.error(f"Error in killing rclone serve: {e}")
+    if not await aiopath.exists("rclone.conf"):
+        await (await create_subprocess_exec("touch", "rclone.conf")).wait()
     config = ConfigParser()
-    if not await aiopath.exists(f"{CONFIG_DIR}/rclone.conf"):
-        async with aiopen(f"{CONFIG_DIR}/rclone.conf", "w") as f:
-            await f.write(rclone_options)
-    else:
-        async with aiopen("rclone.conf", "r") as f:
-            contents = await f.read()
-            config.read_string(contents)
+    async with aiopen("rclone.conf", "r") as f:
+        contents = await f.read()
+        config.read_string(contents)
     if not config.has_section("local"):
+        if config.has_section("combine"):
+            config.remove_section("combine")
         config.add_section("local")
         config.set("local", "type", "alias")
         config.set("local", "remote", LOCAL_DIR)
@@ -31,18 +31,18 @@ async def rclone_serve_booter():
         config.add_section("combine")
         config.set("combine", "type", "combine")
         config.set("combine", "upstreams", upstreams)
-        with open("rclone.conf", "w") as f:
+        async with aiopen("rclone.conf", "w") as f:
             config.write(f, space_around_delimiters=False)
     cmd = [
         "rclone",
         "serve",
         "webdav",
         "--config",
-        f"{CONFIG_DIR}/rclone.conf",
+        "rclone.conf",
         "--no-modtime",
         "combine:",
         "--addr",
-        f"{rclone_options['SERVE_ADRESS']}:{rclone_options['SERVE_PORT']}",
+        f"[::]:{RC_PORT}",
         "--vfs-cache-mode",
         "full",
         "--vfs-cache-max-age",
@@ -50,9 +50,9 @@ async def rclone_serve_booter():
         "--buffer-size",
         "64M",
         "--user",
-        rclone_options["SERVE_USER"],
+        rclone_options["user"],
         "--pass",
-        rclone_options["SERVE_PASS"],
+        rclone_options["passwd"],
     ]
     rcs = await create_subprocess_exec(*cmd)
     RcloneServe.append(rcs)
@@ -62,6 +62,6 @@ async def rclone_serve_shutdown():
         try:
             RcloneServe[0].kill()
             RcloneServe.clear()
-        except:
-            pass
+        except Exception as e:
+            LOGGER.error(f"Error in killing rclone serve: {e}")
     return

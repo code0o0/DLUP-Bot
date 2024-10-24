@@ -166,9 +166,24 @@ async def get_content_type(url):
         return None
 
 
-def update_user_ldata(id_, key, value):
-    user_data.setdefault(id_, {})
-    user_data[id_][key] = value
+def update_user_ldata(id_, key=None, value=None):
+    user_default_dict = {
+        "aria2_user": {},
+        "yt_user": "",
+        "upload_user": {},
+        "leech_user": {},
+        "rclone_user": {},
+        "gdrive_user": {},
+    }
+    if id_ not in user_data:
+        user_data[id_] = user_default_dict
+    if key is None and value:
+        user_data[id_] = value
+    elif key and value is None:
+        user_data[id_][key] = user_default_dict[key]
+    elif key and value:
+        user_data[id_][key] = value
+
 
 
 async def retry_function(func, *args, **kwargs):
